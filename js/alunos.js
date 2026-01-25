@@ -36,18 +36,18 @@ const alunos = {
     },
 
     // Renderizar lista de alunos
-    renderizarAlunos(alunos) {
+    renderizarAlunos(alunosArray) {
         const container = document.getElementById('lista-alunos');
         
-        if (alunos.length === 0) {
+        if (alunosArray.length === 0) {
             container.innerHTML = '<div class="empty-state"><p>Nenhum aluno encontrado</p></div>';
             return;
         }
 
         // Ordenar por nome
-        alunos.sort((a, b) => a.nome.localeCompare(b.nome));
+        alunosArray.sort((a, b) => a.nome.localeCompare(b.nome));
 
-        container.innerHTML = alunos.map(aluno => {
+        container.innerHTML = alunosArray.map(aluno => {
             const iniciais = utils.getIniciais(aluno.nome);
             const cor = utils.getCorFromString(aluno.nome);
             
@@ -61,16 +61,29 @@ const alunos = {
                         <p>Matrícula: ${utils.escapeHtml(aluno.matricula)}${aluno.email ? ' • ' + aluno.email : ''}</p>
                     </div>
                     <div class="aluno-actions">
-                        <button class="btn-icon-sm" onclick="alunos.editar('${aluno.matricula}')" title="Editar">
+                        <button class="btn-icon-sm btn-editar-aluno" data-matricula="${aluno.matricula}" title="Editar">
                             ✏️
                         </button>
-                        <button class="btn-icon-sm" onclick="alunos.deletar('${aluno.matricula}')" title="Excluir">
+                        <button class="btn-icon-sm btn-deletar-aluno" data-matricula="${aluno.matricula}" title="Excluir">
                             🗑️
                         </button>
                     </div>
                 </div>
             `;
         }).join('');
+
+        // Adicionar event listeners
+        document.querySelectorAll('.btn-editar-aluno').forEach(btn => {
+            btn.addEventListener('click', function() {
+                alunos.editar(this.dataset.matricula);
+            });
+        });
+
+        document.querySelectorAll('.btn-deletar-aluno').forEach(btn => {
+            btn.addEventListener('click', function() {
+                alunos.deletar(this.dataset.matricula);
+            });
+        });
     },
 
     // Mostrar modal de novo aluno

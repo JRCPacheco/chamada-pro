@@ -23,17 +23,17 @@ const chamadas = {
     },
 
     // Renderizar histórico
-    renderizarHistorico(chamadas) {
+    renderizarHistorico(chamadasArray) {
         const container = document.getElementById('lista-historico');
         const turma = storage.getTurmaById(turmas.turmaAtual.id);
         const totalAlunos = turma.alunos ? Object.keys(turma.alunos).length : 0;
 
-        container.innerHTML = chamadas.map(chamada => {
+        container.innerHTML = chamadasArray.map(chamada => {
             const presentes = chamada.presencas.length;
             const percentual = utils.calcularPercentual(presentes, totalAlunos);
             
             return `
-                <div class="historico-card" onclick="chamadas.verDetalhes('${chamada.id}')">
+                <div class="historico-card" data-chamada-id="${chamada.id}">
                     <div class="historico-header">
                         <h4>${utils.formatarData(chamada.data)}</h4>
                         <span class="historico-badge">${percentual}%</span>
@@ -45,6 +45,13 @@ const chamadas = {
                 </div>
             `;
         }).join('');
+
+        // Adicionar event listeners
+        document.querySelectorAll('.historico-card').forEach(card => {
+            card.addEventListener('click', function() {
+                chamadas.verDetalhes(this.dataset.chamadaId);
+            });
+        });
     },
 
     // Ver detalhes de uma chamada

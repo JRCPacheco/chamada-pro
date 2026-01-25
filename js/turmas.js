@@ -34,20 +34,20 @@ const turmas = {
     },
 
     // Renderizar lista de turmas
-    renderizarTurmas(turmas) {
+    renderizarTurmas(turmasArray) {
         const container = document.getElementById('lista-turmas');
         
-        if (turmas.length === 0) {
+        if (turmasArray.length === 0) {
             container.innerHTML = '<div class="empty-state"><p>Nenhuma turma encontrada</p></div>';
             return;
         }
 
-        container.innerHTML = turmas.map(turma => {
+        container.innerHTML = turmasArray.map(turma => {
             const totalAlunos = turma.alunos ? Object.keys(turma.alunos).length : 0;
             const chamadas = storage.getChamadasByTurma(turma.id);
             
             return `
-                <div class="turma-card" onclick="turmas.abrirDetalhes('${turma.id}')">
+                <div class="turma-card" data-turma-id="${turma.id}">
                     <h3>${utils.escapeHtml(turma.nome)}</h3>
                     <p>${turma.descricao ? utils.escapeHtml(turma.descricao) : 'Sem descrição'}</p>
                     <div class="turma-meta">
@@ -57,6 +57,14 @@ const turmas = {
                 </div>
             `;
         }).join('');
+
+        // Adicionar event listeners após renderizar
+        document.querySelectorAll('.turma-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const turmaId = this.dataset.turmaId;
+                turmas.abrirDetalhes(turmaId);
+            });
+        });
     },
 
     // Atualizar estatísticas gerais
