@@ -88,6 +88,12 @@ const alunos = {
 
     // Mostrar modal de novo aluno
     mostrarModalNovoAluno() {
+        // Validar se há uma turma selecionada
+        if (!turmas.turmaAtual) {
+            utils.mostrarToast('Erro: Nenhuma turma selecionada', 'error');
+            return;
+        }
+        
         this.alunoEmEdicao = null;
         
         const modal = document.getElementById('modal-novo-aluno');
@@ -110,6 +116,12 @@ const alunos = {
 
     // Salvar novo aluno
     salvarNovoAluno() {
+        // Validar se há uma turma selecionada
+        if (!turmas.turmaAtual) {
+            utils.mostrarToast('Erro: Nenhuma turma selecionada', 'error');
+            return;
+        }
+        
         const nome = document.getElementById('input-aluno-nome').value.trim();
         const matricula = document.getElementById('input-aluno-matricula').value.trim();
         const email = document.getElementById('input-aluno-email').value.trim();
@@ -176,6 +188,12 @@ const alunos = {
 
     // Editar aluno
     editar(matricula) {
+        // Validar se há uma turma selecionada
+        if (!turmas.turmaAtual) {
+            utils.mostrarToast('Erro: Nenhuma turma selecionada', 'error');
+            return;
+        }
+        
         const turma = storage.getTurmaById(turmas.turmaAtual.id);
         const aluno = turma.alunos[matricula];
         
@@ -203,6 +221,12 @@ const alunos = {
 
     // Deletar aluno
     deletar(matricula) {
+        // Validar se há uma turma selecionada
+        if (!turmas.turmaAtual) {
+            utils.mostrarToast('Erro: Nenhuma turma selecionada', 'error');
+            return;
+        }
+        
         if (!utils.confirmar('Tem certeza que deseja excluir este aluno?')) {
             return;
         }
@@ -221,6 +245,12 @@ const alunos = {
 
     // Importar alunos via CSV
     importarCSV() {
+        // Validar se há uma turma selecionada
+        if (!turmas.turmaAtual) {
+            utils.mostrarToast('Erro: Nenhuma turma selecionada', 'error');
+            return;
+        }
+        
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.csv,.txt';
@@ -274,6 +304,12 @@ const alunos = {
 
     // Gerar QR Codes em PDF
     gerarQRCodesPDF() {
+        // Validar se há uma turma selecionada
+        if (!turmas.turmaAtual) {
+            utils.mostrarToast('Erro: Nenhuma turma selecionada', 'error');
+            return;
+        }
+        
         const turma = storage.getTurmaById(turmas.turmaAtual.id);
         const alunosArray = Object.values(turma.alunos || {});
         
