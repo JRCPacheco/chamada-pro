@@ -4,6 +4,7 @@
 const turmas = {
 
     turmaAtual: null,
+    listaTurmasListenerBound: false,
 
     // Carregar e exibir lista de turmas
     listar() {
@@ -36,7 +37,7 @@ const turmas = {
     // Renderizar lista de turmas
     renderizarTurmas(turmasArray) {
         const container = document.getElementById('lista-turmas');
-        
+
         if (turmasArray.length === 0) {
             container.innerHTML = '<div class="empty-state"><p>Nenhuma turma encontrada</p></div>';
             return;
@@ -45,7 +46,7 @@ const turmas = {
         container.innerHTML = turmasArray.map(turma => {
             const totalAlunos = turma.alunos ? Object.keys(turma.alunos).length : 0;
             const chamadas = storage.getChamadasByTurma(turma.id);
-            
+
             return `
                 <div class="turma-card" data-turma-id="${turma.id}">
                     <h3>${utils.escapeHtml(turma.nome)}</h3>
@@ -58,19 +59,22 @@ const turmas = {
             `;
         }).join('');
 
-        // Adicionar event listeners após renderizar
-        document.querySelectorAll('.turma-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const turmaId = this.dataset.turmaId;
-                turmas.abrirDetalhes(turmaId);
+        if (container && !this.listaTurmasListenerBound) {
+            container.addEventListener('click', (e) => {
+                const card = e.target.closest('.turma-card');
+                if (!card || !container.contains(card)) return;
+                const turmaId = card.dataset.turmaId;
+                if (!turmaId) return;
+                this.abrirDetalhes(turmaId);
             });
-        });
+            this.listaTurmasListenerBound = true;
+        }
     },
 
     // Atualizar estatísticas gerais
     atualizarStats() {
         const stats = storage.getStats();
-        
+
         document.getElementById('total-turmas').textContent = stats.totalTurmas;
         document.getElementById('total-alunos').textContent = stats.totalAlunos;
         document.getElementById('total-chamadas').textContent = stats.totalChamadas;
@@ -80,11 +84,11 @@ const turmas = {
     mostrarModalNovaTurma() {
         const modal = document.getElementById('modal-nova-turma');
         modal.classList.add('active');
-        
+
         // Limpar campos
         document.getElementById('input-turma-nome').value = '';
         document.getElementById('input-turma-descricao').value = '';
-        
+
         // Focar no primeiro campo
         setTimeout(() => {
             document.getElementById('input-turma-nome').focus();
@@ -108,7 +112,7 @@ const turmas = {
         };
 
         const turmaId = storage.addTurma(novaTurma);
-        
+
         if (turmaId) {
             utils.mostrarToast('Turma criada com sucesso!', 'success');
             utils.vibrar([50, 50, 50]);
@@ -122,7 +126,7 @@ const turmas = {
     // Abrir detalhes da turma
     abrirDetalhes(turmaId) {
         this.turmaAtual = storage.getTurmaById(turmaId);
-        
+
         if (!this.turmaAtual) {
             utils.mostrarToast('Turma não encontrada', 'error');
             return;
@@ -130,14 +134,14 @@ const turmas = {
 
         // Atualizar informações da turma
         document.getElementById('turma-nome-detalhe').textContent = this.turmaAtual.nome;
-        document.getElementById('turma-descricao-detalhe').textContent = 
+        document.getElementById('turma-descricao-detalhe').textContent =
             this.turmaAtual.descricao || 'Sem descrição';
-        
+
         const totalAlunos = this.turmaAtual.alunos ? Object.keys(this.turmaAtual.alunos).length : 0;
-        const chamadas = storage.getChamadasByTurma(turmaId);
-        
+        const chamadasTurma = storage.getChamadasByTurma(turmaId);
+
         document.getElementById('turma-total-alunos').textContent = totalAlunos;
-        document.getElementById('turma-total-chamadas-realizadas').textContent = chamadas.length;
+        document.getElementById('turma-total-chamadas-realizadas').textContent = chamadasTurma.length;
 
         // Atualizar título do header
         document.getElementById('header-title').textContent = this.turmaAtual.nome;
