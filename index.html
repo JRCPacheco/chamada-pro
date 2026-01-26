@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Chamada PRO - Scanner de Presença</title>
-    
+
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#4A90E2">
     <meta name="mobile-web-app-capable" content="yes">
@@ -12,23 +13,25 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Chamada PRO">
     <meta name="description" content="Sistema inteligente de controle de presença via QR Code para professores">
-    
+
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
-    
+
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
-    
+    <link rel="icon" type="image/png"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+
     <!-- Styles -->
     <link rel="stylesheet" href="css/styles.css">
-    
+
     <!-- Libraries -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
+
 <body>
-    
+
     <!-- Loading Screen -->
     <div id="loading-screen" class="loading-screen">
         <div class="loading-content">
@@ -46,7 +49,7 @@
                 <h1>📋 Chamada PRO</h1>
                 <p class="subtitle">Controle de presença inteligente</p>
             </div>
-            
+
             <div class="onboarding-steps">
                 <div class="step">
                     <div class="step-icon">📚</div>
@@ -64,7 +67,7 @@
                     <p>CSV, PDF e compartilhamento direto</p>
                 </div>
             </div>
-            
+
             <button class="btn btn-primary btn-large" onclick="app.iniciarApp()">
                 Começar Agora
             </button>
@@ -73,7 +76,7 @@
 
     <!-- Main App Container -->
     <div id="app" class="app-container" style="display: none;">
-        
+
         <!-- Header -->
         <header class="app-header">
             <button class="btn-icon btn-back" id="btn-back" style="display: none;">
@@ -266,7 +269,7 @@
             <div class="resumo-lista">
                 <h3>Presentes</h3>
                 <div id="resumo-lista-presentes"></div>
-                
+
                 <h3>Ausentes</h3>
                 <div id="resumo-lista-ausentes"></div>
             </div>
@@ -288,7 +291,7 @@
         <div id="tela-config" class="screen">
             <div class="config-section">
                 <h3>Preferências</h3>
-                
+
                 <div class="config-item">
                     <label>
                         <input type="checkbox" id="config-som" checked>
@@ -322,11 +325,11 @@
 
             <div class="config-section">
                 <h3>Dados</h3>
-                
+
                 <button class="btn btn-secondary btn-block" onclick="app.exportarBackup()">
                     📦 Exportar Backup
                 </button>
-                
+
                 <button class="btn btn-secondary btn-block" onclick="app.importarBackup()">
                     📥 Importar Backup
                 </button>
@@ -360,7 +363,8 @@
                 </div>
                 <div class="form-group">
                     <label>Descrição</label>
-                    <textarea id="input-turma-descricao" placeholder="Informações adicionais (opcional)" rows="3"></textarea>
+                    <textarea id="input-turma-descricao" placeholder="Informações adicionais (opcional)"
+                        rows="3"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -430,15 +434,16 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- Scripts -->
-    <script src="js/storage.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/turmas.js"></script>
-    <script src="js/alunos.js"></script>
-    <script src="js/scanner.js"></script>
-    <script src="js/chamadas.js"></script>
-    <script src="js/export.js"></script>
-    <script src="js/qrgen.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/storage.js?v=2"></script>
+    <script src="js/utils.js?v=2"></script>
+    <script src="js/chamadas.js?v=2"></script>
+    <script src="js/alunos.js?v=2"></script>
+    <script src="js/turmas.js?v=2"></script>
+    <script src="js/scanner.js?v=2"></script>
+    <script src="js/export.js?v=2"></script>
+    <script src="js/qrgen.js?v=2"></script>
+    <script src="js/app.js?v=2"></script>
 
 </body>
+
 </html>
