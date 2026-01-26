@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chamada PRO - Scanner de Presença</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#4A90E2">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Chamada PRO">
+    <meta name="description" content="Sistema inteligente de controle de presença via QR Code para professores">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Libraries -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+
+<body>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="logo">📋</div>
+            <h1>Chamada PRO</h1>
+            <div class="loading-spinner"></div>
+            <p>Carregando...</p>
+        </div>
+    </div>
+
+    <!-- Onboarding Screen -->
+    <div id="onboarding-screen" class="screen" style="display: none;">
+        <div class="onboarding-content">
+            <div class="onboarding-header">
+                <h1>📋 Chamada PRO</h1>
+                <p class="subtitle">Controle de presença inteligente</p>
+            </div>
+
+            <div class="onboarding-steps">
+                <div class="step">
+                    <div class="step-icon">📚</div>
+                    <h3>Crie suas turmas</h3>
+                    <p>Organize alunos por turmas e matérias</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">📱</div>
+                    <h3>Escaneie QR Codes</h3>
+                    <p>Registro rápido com a câmera</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">📊</div>
+                    <h3>Exporte relatórios</h3>
+                    <p>CSV, PDF e compartilhamento direto</p>
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-large" onclick="app.iniciarApp()">
+                Começar Agora
+            </button>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app" class="app-container" style="display: none;">
+
+        <!-- Header -->
+        <header class="app-header">
+            <button class="btn-icon btn-back" id="btn-back" style="display: none;">
+                ←
+            </button>
+            <h1 id="header-title">Minhas Turmas</h1>
+            <button class="btn-icon btn-menu" id="btn-menu">
+                ☰
+            </button>
+        </header>
+
+        <!-- Tela 1: Lista de Turmas -->
+        <div id="tela-turmas" class="screen active">
+            <div class="turmas-header">
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-turmas">0</div>
+                        <div class="stat-label">Turmas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-alunos">0</div>
+                        <div class="stat-label">Alunos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-chamadas">0</div>
+                        <div class="stat-label">Chamadas</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="search-turmas" placeholder="🔍 Buscar turma..." />
+            </div>
+
+            <div id="lista-turmas" class="turmas-list">
+                <!-- Turmas serão inseridas aqui -->
+            </div>
+
+            <button class="btn-fab" onclick="turmas.mostrarModalNovaTurma()">
+                +
+            </button>
+
+            <div class="empty-state" id="empty-turmas" style="display: none;">
+                <div class="empty-icon">📚</div>
+                <h3>Nenhuma turma cadastrada</h3>
+                <p>Crie sua primeira turma para começar</p>
+                <button class="btn btn-primary" onclick="turmas.mostrarModalNovaTurma()">
+                    Criar Turma
+                </button>
+            </div>
+        </div>
+
+        <!-- Tela 2: Detalhes da Turma -->
+        <div id="tela-turma-detalhe" class="screen">
+            <div class="turma-info-card">
+                <h2 id="turma-nome-detalhe"></h2>
+                <p id="turma-descricao-detalhe"></p>
+                <div class="turma-stats">
+                    <span>👥 <strong id="turma-total-alunos">0</strong> alunos</span>
+                    <span>📅 <strong id="turma-total-chamadas-realizadas">0</strong> chamadas</span>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="alunos">Alunos</button>
+                <button class="tab-btn" data-tab="historico">Histórico</button>
+            </div>
+
+            <!-- Tab Alunos -->
+            <div id="tab-alunos" class="tab-content active">
+                <div class="section-header">
+                    <h3>Lista de Alunos</h3>
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary btn-sm" onclick="alunos.importarCSV()">
+                            📥 Importar CSV
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="alunos.gerarQRCodesPDF()">
+                            📄 Gerar QR Codes
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="alunos.mostrarModalNovoAluno()">
+                            + Adicionar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="search-box">
+                    <input type="text" id="search-alunos" placeholder="🔍 Buscar aluno..." />
+                </div>
+
+                <div id="lista-alunos" class="alunos-list">
+                    <!-- Alunos serão inseridos aqui -->
+                </div>
+
+                <div class="empty-state" id="empty-alunos" style="display: none;">
+                    <div class="empty-icon">👥</div>
+                    <h3>Nenhum aluno cadastrado</h3>
+                    <p>Adicione alunos manualmente ou importe uma lista CSV</p>
+                </div>
+            </div>
+
+            <!-- Tab Histórico -->
+            <div id="tab-historico" class="tab-content">
+                <div class="section-header">
+                    <h3>Histórico de Chamadas</h3>
+                    <button class="btn btn-secondary btn-sm" onclick="chamadas.exportarHistorico()">
+                        📊 Exportar Tudo
+                    </button>
+                </div>
+
+                <div id="lista-historico" class="historico-list">
+                    <!-- Histórico será inserido aqui -->
+                </div>
+
+                <div class="empty-state" id="empty-historico" style="display: none;">
+                    <div class="empty-icon">📅</div>
+                    <h3>Nenhuma chamada realizada</h3>
+                    <p>Inicie uma chamada para começar o histórico</p>
+                </div>
+            </div>
+
+            <button class="btn-fab" onclick="scanner.iniciarChamada()">
+                📷
+            </button>
+        </div>
+
+        <!-- Tela 3: Scanner de QR Code -->
+        <div id="tela-scanner" class="screen">
+            <div class="scanner-info">
+                <div class="chamada-info-card">
+                    <h3 id="scanner-turma-nome"></h3>
+                    <p id="scanner-data-hora"></p>
+                    <div class="presencas-counter">
+                        <span class="counter-label">Presenças:</span>
+                        <span class="counter-value" id="contador-presencas">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="reader" class="qr-reader"></div>
+
+            <div id="feedback" class="feedback"></div>
+
+            <div class="scanner-controls">
+                <button class="btn btn-secondary" id="btn-toggle-camera">
+                    🔄 Alternar
+                </button>
+                <button class="btn btn-warning" id="btn-torch">
+                    💡 Lanterna
+                </button>
+                <button class="btn btn-success" id="btn-finalizar-chamada">
+                    ✓ Finalizar
+                </button>
+            </div>
+
+            <div class="presencas-live-list">
+                <h4>Presenças Confirmadas</h4>
+                <div id="lista-presencas-live">
+                    <!-- Presenças aparecerão aqui em tempo real -->
+                </div>
+            </div>
+
+            <div id="camera-status" class="camera-status">
+                Câmera: Inativa
+            </div>
+        </div>
+
+        <!-- Tela 4: Resumo da Chamada -->
+        <div id="tela-resumo" class="screen">
+            <div class="resumo-header">
+                <div class="resumo-icon">✓</div>
+                <h2>Chamada Finalizada!</h2>
+                <p id="resumo-info"></p>
+            </div>
+
+            <div class="resumo-stats">
+                <div class="stat-large">
+                    <div class="stat-value" id="resumo-presentes">0</div>
+                    <div class="stat-label">Presentes</div>
+                </div>
+                <div class="stat-large">
+                    <div class="stat-value" id="resumo-ausentes">0</div>
+                    <div class="stat-label">Ausentes</div>
+                </div>
+                <div class="stat-large">
+                    <div class="stat-value" id="resumo-percentual">0%</div>
+                    <div class="stat-label">Frequência</div>
+                </div>
+            </div>
+
+            <div class="resumo-lista">
+                <h3>Presentes</h3>
+                <div id="resumo-lista-presentes"></div>
+
+                <h3>Ausentes</h3>
+                <div id="resumo-lista-ausentes"></div>
+            </div>
+
+            <div class="resumo-actions">
+                <button class="btn btn-secondary btn-large" onclick="chamadas.compartilhar()">
+                    📤 Compartilhar
+                </button>
+                <button class="btn btn-primary btn-large" onclick="chamadas.exportarCSV()">
+                    📥 Baixar CSV
+                </button>
+                <button class="btn btn-success btn-large" onclick="app.voltarParaTurma()">
+                    ✓ Concluir
+                </button>
+            </div>
+        </div>
+
+        <!-- Tela 5: Configurações -->
+        <div id="tela-config" class="screen">
+            <div class="config-section">
+                <h3>Preferências</h3>
+
+                <div class="config-item">
+                    <label>
+                        <input type="checkbox" id="config-som" checked>
+                        <span>Som de confirmação</span>
+                    </label>
+                </div>
+
+                <div class="config-item">
+                    <label>
+                        <input type="checkbox" id="config-vibracao" checked>
+                        <span>Vibração</span>
+                    </label>
+                </div>
+
+                <div class="config-item">
+                    <label>
+                        <input type="checkbox" id="config-wake-lock" checked>
+                        <span>Manter tela ligada durante escaneamento</span>
+                    </label>
+                </div>
+
+                <div class="config-item">
+                    <label for="config-tema">Tema</label>
+                    <select id="config-tema">
+                        <option value="light">Claro</option>
+                        <option value="dark">Escuro</option>
+                        <option value="auto">Automático</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h3>Dados</h3>
+
+                <button class="btn btn-secondary btn-block" onclick="app.exportarBackup()">
+                    📦 Exportar Backup
+                </button>
+
+                <button class="btn btn-secondary btn-block" onclick="app.importarBackup()">
+                    📥 Importar Backup
+                </button>
+
+                <button class="btn btn-danger btn-block" onclick="app.limparTodosDados()">
+                    🗑️ Limpar Todos os Dados
+                </button>
+            </div>
+
+            <div class="config-section">
+                <h3>Sobre</h3>
+                <p><strong>Chamada PRO</strong> v1.0</p>
+                <p>Sistema de controle de presença via QR Code</p>
+                <p class="text-muted">© 2026 - Todos os direitos reservados</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal: Nova Turma -->
+    <div id="modal-nova-turma" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nova Turma</h3>
+                <button class="btn-close" onclick="app.fecharModal('modal-nova-turma')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nome da Turma *</label>
+                    <input type="text" id="input-turma-nome" placeholder="Ex: 3º Ano A - Matemática" />
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <textarea id="input-turma-descricao" placeholder="Informações adicionais (opcional)"
+                        rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.fecharModal('modal-nova-turma')">Cancelar</button>
+                <button class="btn btn-primary" onclick="turmas.salvarNovaTurma()">Criar Turma</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Novo Aluno -->
+    <div id="modal-novo-aluno" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-aluno-titulo">Novo Aluno</h3>
+                <button class="btn-close" onclick="app.fecharModal('modal-novo-aluno')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nome Completo *</label>
+                    <input type="text" id="input-aluno-nome" placeholder="Ex: Maria da Silva" />
+                </div>
+                <div class="form-group">
+                    <label>Matrícula / ID *</label>
+                    <input type="text" id="input-aluno-matricula" placeholder="Ex: 2024001" />
+                </div>
+                <div class="form-group">
+                    <label>Email (opcional)</label>
+                    <input type="email" id="input-aluno-email" placeholder="aluno@email.com" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.fecharModal('modal-novo-aluno')">Cancelar</button>
+                <button class="btn btn-primary" id="btn-salvar-aluno" onclick="alunos.salvarNovoAluno()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Menu -->
+    <div id="modal-menu" class="modal modal-menu">
+        <div class="modal-content modal-menu-content">
+            <div class="modal-header">
+                <h3>Menu</h3>
+                <button class="btn-close" onclick="app.fecharModal('modal-menu')">×</button>
+            </div>
+            <div class="modal-body">
+                <button class="menu-item" onclick="app.mostrarTela('tela-turmas'); app.fecharModal('modal-menu');">
+                    <span class="menu-icon">🏠</span>
+                    <span>Minhas Turmas</span>
+                </button>
+                <button class="menu-item" onclick="app.mostrarTela('tela-config'); app.fecharModal('modal-menu');">
+                    <span class="menu-icon">⚙️</span>
+                    <span>Configurações</span>
+                </button>
+                <button class="menu-item" onclick="app.exportarBackup(); app.fecharModal('modal-menu');">
+                    <span class="menu-icon">📦</span>
+                    <span>Exportar Backup</span>
+                </button>
+                <button class="menu-item" onclick="app.mostrarAjuda(); app.fecharModal('modal-menu');">
+                    <span class="menu-icon">❓</span>
+                    <span>Ajuda</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="js/storage.js?v=2"></script>
+    <script src="js/utils.js?v=2"></script>
+    <script src="js/chamadas.js?v=2"></script>
+    <script src="js/alunos.js?v=2"></script>
+    <script src="js/turmas.js?v=2"></script>
+    <script src="js/scanner.js?v=2"></script>
+    <script src="js/export.js?v=2"></script>
+    <script src="js/qrgen.js?v=2"></script>
+    <script src="js/app.js?v=2"></script>
+
+</body>
+
+</html>
