@@ -19,6 +19,20 @@ const app = {
 
         // Aplicar tema
         this.aplicarTema();
+
+        // Restaurar estado anterior (Turma Aberta)
+        this.restaurarEstado();
+    },
+
+    // Restaurar estado anterior
+    restaurarEstado() {
+        const ultimaTurmaId = sessionStorage.getItem('chamada_pro_ultima_turma');
+        if (ultimaTurmaId && this.telaAtual === 'tela-turmas') {
+            console.log('[LAPIDAÇÃO] Restaurando última turma aberta:', ultimaTurmaId);
+            setTimeout(() => {
+                turmas.abrirDetalhes(ultimaTurmaId);
+            }, 100);
+        }
     },
 
     // Mostrar onboarding
@@ -97,6 +111,7 @@ const app = {
     // Voltar para tela anterior
     voltar() {
         if (this.telaAtual === 'tela-turma-detalhe') {
+            sessionStorage.removeItem('chamada_pro_ultima_turma');
             this.mostrarTela('tela-turmas');
             turmas.listar();
         } else if (this.telaAtual === 'tela-scanner') {

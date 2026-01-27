@@ -153,6 +153,9 @@ const turmas = {
         alunos.listar();
         chamadas.listarHistorico();
 
+        // Salvar estado para persistência (Lapidação)
+        sessionStorage.setItem('chamada_pro_ultima_turma', turmaId);
+
         // Mudar para tela de detalhes
         app.mostrarTela('tela-turma-detalhe');
     },
