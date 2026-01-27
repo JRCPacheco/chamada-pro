@@ -12,7 +12,7 @@ const alunos = {
         const turma = storage.getTurmaById(turmas.turmaAtual.id);
         const alunosObj = turma.alunos || {};
         const alunosArray = Object.values(alunosObj);
-        
+
         const container = document.getElementById('lista-alunos');
         const emptyState = document.getElementById('empty-alunos');
         const searchInput = document.getElementById('search-alunos');
@@ -38,7 +38,7 @@ const alunos = {
     // Renderizar lista de alunos
     renderizarAlunos(alunosArray) {
         const container = document.getElementById('lista-alunos');
-        
+
         if (alunosArray.length === 0) {
             container.innerHTML = '<div class="empty-state"><p>Nenhum aluno encontrado</p></div>';
             return;
@@ -50,10 +50,10 @@ const alunos = {
         container.innerHTML = alunosArray.map(aluno => {
             const iniciais = utils.getIniciais(aluno.nome);
             const cor = utils.getCorFromString(aluno.nome);
-            
+
             return `
                 <div class="aluno-card">
-                    <div class="aluno-avatar" style="background: ${cor}">
+                    <div class="aluno-avatar" style="background: linear-gradient(135deg, ${cor} 0%, ${utils.adjustColor(cor, -40)} 100%)">
                         ${iniciais}
                     </div>
                     <div class="aluno-info">
@@ -74,13 +74,13 @@ const alunos = {
 
         // Adicionar event listeners
         document.querySelectorAll('.btn-editar-aluno').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 alunos.editar(this.dataset.matricula);
             });
         });
 
         document.querySelectorAll('.btn-deletar-aluno').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 alunos.deletar(this.dataset.matricula);
             });
         });
@@ -93,21 +93,21 @@ const alunos = {
             utils.mostrarToast('Erro: Nenhuma turma selecionada', 'error');
             return;
         }
-        
+
         this.alunoEmEdicao = null;
-        
+
         const modal = document.getElementById('modal-novo-aluno');
         modal.classList.add('active');
-        
+
         // Atualizar título
         document.getElementById('modal-aluno-titulo').textContent = 'Novo Aluno';
         document.getElementById('btn-salvar-aluno').textContent = 'Salvar';
-        
+
         // Limpar campos
         document.getElementById('input-aluno-nome').value = '';
         document.getElementById('input-aluno-matricula').value = '';
         document.getElementById('input-aluno-email').value = '';
-        
+
         // Focar no primeiro campo
         setTimeout(() => {
             document.getElementById('input-aluno-nome').focus();
@@ -121,7 +121,7 @@ const alunos = {
             utils.mostrarToast('Erro: Nenhuma turma selecionada', 'error');
             return;
         }
-        
+
         const nome = document.getElementById('input-aluno-nome').value.trim();
         const matricula = document.getElementById('input-aluno-matricula').value.trim();
         const email = document.getElementById('input-aluno-email').value.trim();
@@ -193,26 +193,26 @@ const alunos = {
             utils.mostrarToast('Erro: Nenhuma turma selecionada', 'error');
             return;
         }
-        
+
         const turma = storage.getTurmaById(turmas.turmaAtual.id);
         const aluno = turma.alunos[matricula];
-        
+
         if (!aluno) return;
 
         this.alunoEmEdicao = matricula;
-        
+
         const modal = document.getElementById('modal-novo-aluno');
         modal.classList.add('active');
-        
+
         // Atualizar título
         document.getElementById('modal-aluno-titulo').textContent = 'Editar Aluno';
         document.getElementById('btn-salvar-aluno').textContent = 'Atualizar';
-        
+
         // Preencher campos
         document.getElementById('input-aluno-nome').value = aluno.nome;
         document.getElementById('input-aluno-matricula').value = aluno.matricula;
         document.getElementById('input-aluno-email').value = aluno.email || '';
-        
+
         // Focar no primeiro campo
         setTimeout(() => {
             document.getElementById('input-aluno-nome').focus();
@@ -226,7 +226,7 @@ const alunos = {
             utils.mostrarToast('Erro: Nenhuma turma selecionada', 'error');
             return;
         }
-        
+
         if (!utils.confirmar('Tem certeza que deseja excluir este aluno?')) {
             return;
         }
@@ -250,11 +250,11 @@ const alunos = {
             utils.mostrarToast('Erro: Nenhuma turma selecionada', 'error');
             return;
         }
-        
+
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.csv,.txt';
-        
+
         input.onchange = (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -263,7 +263,7 @@ const alunos = {
             reader.onload = (event) => {
                 const csvText = event.target.result;
                 const alunos = utils.parseCSV(csvText);
-                
+
                 if (alunos.length === 0) {
                     utils.mostrarToast('Nenhum aluno encontrado no arquivo', 'warning');
                     return;
@@ -286,12 +286,12 @@ const alunos = {
                 });
 
                 storage.updateTurma(turma.id, { alunos: turma.alunos });
-                
+
                 utils.mostrarToast(
                     `${adicionados} aluno(s) importado(s)${duplicados > 0 ? ` (${duplicados} duplicado(s) ignorado(s))` : ''}`,
                     'success'
                 );
-                
+
                 this.listar();
                 turmas.abrirDetalhes(turmas.turmaAtual.id);
             };
@@ -309,17 +309,17 @@ const alunos = {
             utils.mostrarToast('Erro: Nenhuma turma selecionada', 'error');
             return;
         }
-        
+
         const turma = storage.getTurmaById(turmas.turmaAtual.id);
         const alunosArray = Object.values(turma.alunos || {});
-        
+
         if (alunosArray.length === 0) {
             utils.mostrarToast('Nenhum aluno cadastrado', 'warning');
             return;
         }
 
         utils.mostrarToast('Gerando PDF...', 'info');
-        
+
         setTimeout(() => {
             qrgen.gerarPDFTurma(turma, alunosArray);
         }, 100);

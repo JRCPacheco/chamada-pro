@@ -163,10 +163,19 @@ const scanner = {
         feedback.textContent = mensagem;
         feedback.className = `feedback ${tipo}`;
 
+        // Feedback visual na tela inteira (Pulse)
+        const scannerEl = document.querySelector('.qr-reader');
+        if (scannerEl) {
+            scannerEl.classList.remove('pulse-success', 'pulse-error');
+            void scannerEl.offsetWidth; // Trigger reflow
+            scannerEl.classList.add(tipo === 'success' ? 'pulse-success' : 'pulse-error');
+        }
+
         // Limpar após 3 segundos
         setTimeout(() => {
             feedback.textContent = '';
             feedback.className = 'feedback';
+            if (scannerEl) scannerEl.classList.remove('pulse-success', 'pulse-error');
         }, 3000);
     },
 
@@ -183,7 +192,7 @@ const scanner = {
         container.innerHTML = ultimas.map(p => {
             const iniciais = utils.getIniciais(p.nome);
             const cor = utils.getCorFromString(p.nome);
-            
+
             return `
                 <div class="presenca-item">
                     <div class="presenca-item-icon" style="background: ${cor}">
@@ -211,7 +220,7 @@ const scanner = {
     // Alternar câmera
     async alternarCamera() {
         this.currentFacingMode = this.currentFacingMode === 'environment' ? 'user' : 'environment';
-        
+
         if (this.scanning) {
             await this.pararScanner();
             await this.iniciarScanner();
@@ -223,7 +232,7 @@ const scanner = {
     // Alternar lanterna
     async alternarLanterna() {
         const supports = !!(navigator.mediaDevices?.getSupportedConstraints()?.torch);
-        
+
         if (!supports) {
             utils.mostrarToast('Lanterna não suportada neste dispositivo', 'warning');
             return;
@@ -244,7 +253,7 @@ const scanner = {
         try {
             if ('wakeLock' in navigator) {
                 this.wakeLock = await navigator.wakeLock.request('screen');
-                
+
                 this.wakeLock.addEventListener('release', () => {
                     this.wakeLock = null;
                 });
@@ -288,7 +297,7 @@ const scanner = {
 
         if (chamadaId) {
             utils.mostrarToast('Chamada finalizada!', 'success');
-            
+
             // Mostrar resumo
             chamadas.mostrarResumo(this.chamadaAtual);
         } else {

@@ -49,15 +49,20 @@ const utils = {
         return cores[Math.abs(hash) % cores.length];
     },
 
+    // Ajustar brilho da cor (HEX)
+    adjustColor(color, amount) {
+        return '#' + color.replace(/^#/, '').replace(/../g, color => ('0' + Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
+    },
+
     // Mostrar toast notification
     mostrarToast(mensagem, tipo = 'info', duracao = 3000) {
         const container = document.getElementById('toast-container');
         const toast = document.createElement('div');
         toast.className = `toast ${tipo}`;
         toast.textContent = mensagem;
-        
+
         container.appendChild(toast);
-        
+
         setTimeout(() => {
             toast.style.animation = 'toastIn 0.3s ease-out reverse';
             setTimeout(() => {
@@ -78,15 +83,15 @@ const utils = {
     tocarSom(tipo = 'success') {
         const config = storage.getConfig();
         if (!config.som) return;
-        
+
         // Criar som usando Web Audio API
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
-        
+
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
-        
+
         if (tipo === 'success') {
             oscillator.frequency.value = 800;
             gainNode.gain.value = 0.3;
@@ -179,9 +184,9 @@ const utils = {
     // Filtrar array por busca
     filtrarPorBusca(array, busca, campos) {
         if (!busca || busca.trim() === '') return array;
-        
+
         const termo = busca.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        
+
         return array.filter(item => {
             return campos.some(campo => {
                 const valor = item[campo];
@@ -230,7 +235,7 @@ const utils = {
         return array.sort((a, b) => {
             const valorA = a[campo];
             const valorB = b[campo];
-            
+
             if (valorA < valorB) return ordem === 'asc' ? -1 : 1;
             if (valorA > valorB) return ordem === 'asc' ? 1 : -1;
             return 0;
@@ -241,9 +246,9 @@ const utils = {
     formatarTelefone(tel) {
         const cleaned = tel.replace(/\D/g, '');
         if (cleaned.length === 11) {
-            return `(${cleaned.substr(0,2)}) ${cleaned.substr(2,5)}-${cleaned.substr(7)}`;
+            return `(${cleaned.substr(0, 2)}) ${cleaned.substr(2, 5)}-${cleaned.substr(7)}`;
         } else if (cleaned.length === 10) {
-            return `(${cleaned.substr(0,2)}) ${cleaned.substr(2,4)}-${cleaned.substr(6)}`;
+            return `(${cleaned.substr(0, 2)}) ${cleaned.substr(2, 4)}-${cleaned.substr(6)}`;
         }
         return tel;
     },
@@ -252,11 +257,11 @@ const utils = {
     parseCSV(csvText) {
         const lines = csvText.split('\n').filter(line => line.trim());
         const result = [];
-        
+
         for (let i = 1; i < lines.length; i++) {
             const line = lines[i].trim();
             if (!line) continue;
-            
+
             const values = line.split(/[;,\t]/).map(v => v.trim());
             if (values.length >= 2) {
                 result.push({
@@ -266,17 +271,17 @@ const utils = {
                 });
             }
         }
-        
+
         return result;
     },
 
     // Gerar CSV
     gerarCSV(dados, colunas) {
         let csv = '\uFEFF'; // BOM para UTF-8
-        
+
         // Cabeçalho
         csv += colunas.map(c => c.label).join(';') + '\n';
-        
+
         // Dados
         dados.forEach(item => {
             const linha = colunas.map(c => {
@@ -285,7 +290,7 @@ const utils = {
             });
             csv += linha.join(';') + '\n';
         });
-        
+
         return csv;
     }
 };
