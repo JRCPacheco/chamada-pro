@@ -1,14 +1,17 @@
 // ===== STORAGE MODULE =====
 // Gerenciamento de dados com localStorage
 
+const STORAGE_VERSION = '1.1';
+
 const storage = {
-    
+
     // Chaves de armazenamento
     keys: {
         TURMAS: 'chamada_pro_turmas',
         CHAMADAS: 'chamada_pro_chamadas',
         CONFIG: 'chamada_pro_config',
-        ONBOARDING: 'chamada_pro_onboarding_done'
+        ONBOARDING: 'chamada_pro_onboarding_done',
+        ESCOLAS: 'chamada_pro_escolas' // MULTI ESCOLA
     },
 
     // Salvar dados
@@ -56,6 +59,74 @@ const storage = {
         }
     },
 
+    // Inicialização e Migração Silenciosa
+    init() {
+        console.log('📦 Storage: Inicializando...');
+
+        // 0. Inicializar Configuração (Persistência de Defaults)
+        const currentConfig = this.getConfig();
+        const configDefaults = {
+            som: true,
+            vibracao: true,
+            wakeLock: true,
+            tema: 'light',
+            multi_escola: false // MULTI ESCOLA
+        };
+
+        // Merge: Defaults < Config Atual (preserva escolhas do usuário)
+        const mergedConfig = { ...configDefaults, ...currentConfig };
+        this.save(this.keys.CONFIG, mergedConfig);
+
+        // 1. Garantir Escola Padrão
+        const escolas = this.getEscolas();
+        if (!escolas || escolas.length === 0) {
+            console.log('📦 Storage: Criando escola padrão...');
+            this.saveEscolas([{
+                id: 'default',
+                nome: 'Minha Escola',
+                criadaEm: new Date().toISOString()
+            }]);
+        }
+
+        // 2. Migração Silenciosa de Turmas
+        const turmas = this.getTurmas();
+        let turmasModificadas = false;
+
+        turmas.forEach(turma => {
+            if (!turma.escola_id) {
+                turma.escola_id = 'default';
+                turmasModificadas = true;
+            }
+        });
+
+        if (turmasModificadas) {
+            console.log('📦 Storage: Migrando turmas para escola padrão...');
+            this.saveTurmas(turmas);
+        }
+    },
+
+    // === ESCOLAS (MULTI ESCOLA) ===
+
+    getEscolas() {
+        return this.load(this.keys.ESCOLAS, []);
+    },
+
+    saveEscolas(escolas) {
+        return this.save(this.keys.ESCOLAS, escolas);
+    },
+
+    addEscola(escola) {
+        const escolas = this.getEscolas();
+        if (!escola.id) {
+            escola.id = 'escola_' + Date.now();
+        }
+        escola.criadaEm = escola.criadaEm || new Date().toISOString();
+        escolas.push(escola);
+        return this.saveEscolas(escolas) ? escola.id : null;
+    },
+
+    // === TURMAS ===
+
     // Obter todas as turmas
     getTurmas() {
         return this.load(this.keys.TURMAS, []);
@@ -78,6 +149,12 @@ const storage = {
         turma.id = 'turma_' + Date.now();
         turma.criadaEm = new Date().toISOString();
         turma.alunos = turma.alunos || {};
+
+        // MULTI ESCOLA: Garantir vinculação
+        if (!turma.escola_id) {
+            turma.escola_id = 'default';
+        }
+
         turmas.push(turma);
         return this.saveTurmas(turmas) ? turma.id : null;
     },
@@ -99,6 +176,8 @@ const storage = {
         const filtered = turmas.filter(t => t.id !== id);
         return this.saveTurmas(filtered);
     },
+
+    // === CHAMADAS ===
 
     // Obter todas as chamadas
     getChamadas() {
@@ -125,19 +204,19 @@ const storage = {
             .sort((a, b) => new Date(b.data) - new Date(a.data));
     },
 
+    // === CONFIGURAÇÕES ===
+
     // Obter configurações
     getConfig() {
-        return this.load(this.keys.CONFIG, {
-            som: true,
-            vibracao: true,
-            wakeLock: true,
-            tema: 'light'
-        });
+        return this.load(this.keys.CONFIG, {});
     },
 
     // Salvar configurações
     saveConfig(config) {
-        return this.save(this.keys.CONFIG, config);
+        // Garantir merge com config existente para não perder campos novos
+        const currentConfig = this.getConfig();
+        const newConfig = { ...currentConfig, ...config };
+        return this.save(this.keys.CONFIG, newConfig);
     },
 
     // Verificar se é primeira vez
@@ -156,7 +235,8 @@ const storage = {
             turmas: this.getTurmas(),
             chamadas: this.getChamadas(),
             config: this.getConfig(),
-            version: '1.0',
+            escolas: this.getEscolas(), // MULTI ESCOLA
+            version: STORAGE_VERSION, // Bump version imply schema change
             exportedAt: new Date().toISOString()
         };
     },
@@ -167,6 +247,11 @@ const storage = {
             if (backup.turmas) this.saveTurmas(backup.turmas);
             if (backup.chamadas) this.saveChamadas(backup.chamadas);
             if (backup.config) this.saveConfig(backup.config);
+            if (backup.escolas) this.saveEscolas(backup.escolas); // MULTI ESCOLA
+
+            // Re-executar init para garantir integridade após importação
+            this.init();
+
             return true;
         } catch (error) {
             console.error('Erro ao importar backup:', error);
@@ -178,7 +263,7 @@ const storage = {
     getStats() {
         const turmas = this.getTurmas();
         const chamadas = this.getChamadas();
-        
+
         let totalAlunos = 0;
         turmas.forEach(turma => {
             if (turma.alunos) {
@@ -193,3 +278,10 @@ const storage = {
         };
     }
 };
+
+// Auto-inicialização segura
+try {
+    storage.init();
+} catch (e) {
+    console.error('Falha crítica na inicialização do Storage:', e);
+}

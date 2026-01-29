@@ -20,6 +20,9 @@ const app = {
         // Aplicar tema
         this.aplicarTema();
 
+        // Aplicar configurações de Interface (Multi Escola)
+        this.aplicarConfiguracoesInterface();
+
         // Restaurar estado anterior (Turma Aberta)
         this.restaurarEstado();
     },
@@ -211,6 +214,7 @@ const app = {
         const configVibracao = document.getElementById('config-vibracao');
         const configWakeLock = document.getElementById('config-wake-lock');
         const configTema = document.getElementById('config-tema');
+        const configMultiEscola = document.getElementById('config-multi-escola');
 
         if (configSom) {
             configSom.onchange = () => this.salvarConfig();
@@ -227,6 +231,12 @@ const app = {
                 this.aplicarTema();
             };
         }
+        if (configMultiEscola) {
+            configMultiEscola.onchange = () => {
+                this.salvarConfig();
+                this.aplicarConfiguracoesInterface();
+            };
+        }
 
         // Carregar configurações
         this.carregarConfig();
@@ -239,12 +249,15 @@ const app = {
         const configSom = document.getElementById('config-som');
         const configVibracao = document.getElementById('config-vibracao');
         const configWakeLock = document.getElementById('config-wake-lock');
+
         const configTema = document.getElementById('config-tema');
+        const configMultiEscola = document.getElementById('config-multi-escola'); // MULTI ESCOLA
 
         if (configSom) configSom.checked = config.som;
         if (configVibracao) configVibracao.checked = config.vibracao;
         if (configWakeLock) configWakeLock.checked = config.wakeLock;
         if (configTema) configTema.value = config.tema;
+        if (configMultiEscola) configMultiEscola.checked = config.multi_escola; // MULTI ESCOLA
     },
 
     // Salvar configurações
@@ -253,7 +266,8 @@ const app = {
             som: document.getElementById('config-som').checked,
             vibracao: document.getElementById('config-vibracao').checked,
             wakeLock: document.getElementById('config-wake-lock').checked,
-            tema: document.getElementById('config-tema').value
+            tema: document.getElementById('config-tema').value,
+            multi_escola: document.getElementById('config-multi-escola').checked // MULTI ESCOLA
         };
 
         storage.saveConfig(config);
@@ -271,6 +285,61 @@ const app = {
 
         document.body.classList.remove('theme-light', 'theme-dark');
         document.body.classList.add(`theme-${tema}`);
+    },
+
+    // Aplicar configurações de Interface (Multi Escola)
+    aplicarConfiguracoesInterface() {
+        const { multi_escola } = storage.getConfig();
+
+        console.log('🔄 UI: Atualizando interface Multi-Escola:', multi_escola);
+
+        // Elementos exclusivos multi-escola
+        const multiEscolaElements = document.querySelectorAll('.multi-escola-only');
+        const escolaFilter = document.getElementById('filter-escola-container');
+        const filterSelect = document.getElementById('filter-escola');
+
+        const updateVisibility = (el) => {
+            if (el) {
+                // 1. Classe hidden controla visibilidade (com !important no CSS)
+                el.classList.toggle('hidden', !multi_escola);
+
+                // 2. Limpar style inline original (display: none) quando ativo
+                if (multi_escola) {
+                    el.style.display = '';
+                }
+            }
+        };
+
+        // Toggle lista de elementos
+        multiEscolaElements.forEach(el => updateVisibility(el));
+
+        // Toggle elemento único
+        updateVisibility(escolaFilter);
+
+        // MULTI ESCOLA: Popularizar filtro e setup listener
+        if (multi_escola) {
+            escolas.renderizarDropdown('filter-escola');
+
+            // Setup listener para filtro
+            if (filterSelect) {
+                // Remover listener antigo se existir para evitar duplicação ou conflitos
+                filterSelect.onchange = null;
+
+                filterSelect.onchange = () => {
+                    turmas.filtrarPorEscola(filterSelect.value);
+                };
+            }
+        } else {
+            // Resetar filtro se desativado
+            if (filterSelect) {
+                filterSelect.value = '';
+                filterSelect.onchange = null;
+            }
+            // Atualizar lista de turmas para mostrar tudo (sem o badge que o renderizarTurmas já trata)
+            if (this.telaAtual === 'tela-turmas') {
+                turmas.listar();
+            }
+        }
     },
 
     // Exportar backup

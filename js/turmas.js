@@ -12,13 +12,27 @@ const turmas = {
         const container = document.getElementById('lista-turmas');
         const emptyState = document.getElementById('empty-turmas');
         const searchInput = document.getElementById('search-turmas');
+        const filterEscola = document.getElementById('filter-escola');
 
         if (turmas.length === 0) {
             container.innerHTML = '';
             emptyState.style.display = 'block';
         } else {
             emptyState.style.display = 'none';
-            this.renderizarTurmas(turmas);
+
+            // Respect current filter and search
+            let turmasFiltradas = turmas;
+            const { multi_escola } = storage.getConfig();
+
+            if (multi_escola && filterEscola && filterEscola.value) {
+                turmasFiltradas = turmasFiltradas.filter(t => t.escola_id === filterEscola.value);
+            }
+
+            if (searchInput && searchInput.value.trim()) {
+                turmasFiltradas = utils.filtrarPorBusca(turmasFiltradas, searchInput.value, ['nome', 'descricao']);
+            }
+
+            this.renderizarTurmas(turmasFiltradas);
         }
 
         // Atualizar estatísticas
@@ -27,9 +41,7 @@ const turmas = {
         // Busca em tempo real
         if (searchInput) {
             searchInput.oninput = utils.debounce(() => {
-                const busca = searchInput.value;
-                const turmasFiltradas = utils.filtrarPorBusca(turmas, busca, ['nome', 'descricao']);
-                this.renderizarTurmas(turmasFiltradas);
+                this.listar(); // Re-use the listar logic for consistent filtering
             }, 300);
         }
     },
@@ -37,6 +49,7 @@ const turmas = {
     // Renderizar lista de turmas
     renderizarTurmas(turmasArray) {
         const container = document.getElementById('lista-turmas');
+        const { multi_escola } = storage.getConfig();
 
         if (turmasArray.length === 0) {
             container.innerHTML = '<div class="empty-state"><p>Nenhuma turma encontrada</p></div>';
@@ -47,8 +60,19 @@ const turmas = {
             const totalAlunos = turma.alunos ? Object.keys(turma.alunos).length : 0;
             const chamadas = storage.getChamadasByTurma(turma.id);
 
+            // MULTI ESCOLA: Badge de escola
+            let escolaBadge = '';
+            if (multi_escola && turma.escola_id) {
+                const escolasArray = storage.getEscolas();
+                const escola = escolasArray.find(e => e.id === turma.escola_id);
+                if (escola) {
+                    escolaBadge = `<span class="escola-badge">🏫 ${utils.escapeHtml(escola.nome)}</span>`;
+                }
+            }
+
             return `
                 <div class="turma-card" data-turma-id="${turma.id}">
+                    ${escolaBadge}
                     <h3>${utils.escapeHtml(turma.nome)}</h3>
                     <p>${turma.descricao ? utils.escapeHtml(turma.descricao) : 'Sem descrição'}</p>
                     <div class="turma-meta">
@@ -89,6 +113,12 @@ const turmas = {
         document.getElementById('input-turma-nome').value = '';
         document.getElementById('input-turma-descricao').value = '';
 
+        // MULTI ESCOLA: Popularizar dropdown de escolas
+        const { multi_escola } = storage.getConfig();
+        if (multi_escola) {
+            escolas.renderizarDropdown('input-turma-escola');
+        }
+
         // Focar no primeiro campo
         setTimeout(() => {
             document.getElementById('input-turma-nome').focus();
@@ -100,6 +130,19 @@ const turmas = {
         const nome = document.getElementById('input-turma-nome').value.trim();
         const descricao = document.getElementById('input-turma-descricao').value.trim();
 
+        // MULTI ESCOLA: Capturar escola_id
+        const { multi_escola } = storage.getConfig();
+        let escola_id = 'default';
+
+        if (multi_escola) {
+            escola_id = document.getElementById('input-turma-escola').value;
+            if (!escola_id) {
+                utils.mostrarToast('Por favor, selecione uma escola', 'warning');
+                document.getElementById('input-turma-escola').focus();
+                return;
+            }
+        }
+
         if (!nome) {
             utils.mostrarToast('Por favor, informe o nome da turma', 'warning');
             document.getElementById('input-turma-nome').focus();
@@ -108,7 +151,8 @@ const turmas = {
 
         const novaTurma = {
             nome: nome,
-            descricao: descricao
+            descricao: descricao,
+            escola_id: escola_id // MULTI ESCOLA
         };
 
         const turmaId = storage.addTurma(novaTurma);
@@ -189,5 +233,11 @@ const turmas = {
         } else {
             utils.mostrarToast('Erro ao excluir turma', 'error');
         }
+    },
+
+    // MULTI ESCOLA: Filtrar turmas por escola
+    filtrarPorEscola(escolaId) {
+        console.log('🏫 Filtrando por escola:', escolaId);
+        this.listar(); // Simple: let listar handle the current state of filters
     }
 };

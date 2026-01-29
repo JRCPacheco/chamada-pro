@@ -112,6 +112,15 @@
                 </div>
             </div>
 
+            <!-- MULTI ESCOLA -->
+            <div id="filter-escola-container" class="filter-container multi-escola-only hidden" style="display: none;">
+                <label for="filter-escola">🏫 Filtrar por Escola:</label>
+                <select id="filter-escola">
+                    <option value="">Todas as Escolas</option>
+                </select>
+            </div>
+            <!-- MULTI ESCOLA -->
+
             <div class="search-box">
                 <input type="text" id="search-turmas" placeholder="🔍 Buscar turma..." />
             </div>
@@ -304,6 +313,15 @@
                     </label>
                 </div>
 
+                <!-- MULTI ESCOLA -->
+                <div class="config-item">
+                    <label>
+                        <input type="checkbox" id="config-multi-escola">
+                        <span>Trabalhar com várias escolas</span>
+                    </label>
+                </div>
+                <!-- MULTI ESCOLA -->
+
                 <div class="config-item">
                     <label>
                         <input type="checkbox" id="config-vibracao" checked>
@@ -362,6 +380,15 @@
                 <button class="btn-close" onclick="app.fecharModal('modal-nova-turma')">×</button>
             </div>
             <div class="modal-body">
+                <!-- MULTI ESCOLA: exibido somente quando config.multi_escola === true -->
+                <div class="form-group multi-escola-only hidden">
+                    <label>Escola</label>
+                    <select id="input-turma-escola">
+                        <option value="">Selecione uma escola...</option>
+                    </select>
+                </div>
+                <!-- MULTI ESCOLA -->
+
                 <div class="form-group">
                     <label>Nome da Turma *</label>
                     <input type="text" id="input-turma-nome" placeholder="Ex: 3º Ano A - Matemática" />
@@ -430,6 +457,11 @@
                     <span class="menu-icon">⚙️</span>
                     <span>Configurações</span>
                 </button>
+                <button class="menu-item multi-escola-only hidden"
+                    onclick="escolas.mostrarModalGerenciar(); app.fecharModal('modal-menu');">
+                    <span class="menu-icon">🏫</span>
+                    <span>Gerenciar Escolas</span>
+                </button>
                 <button class="menu-item" onclick="app.exportarBackup(); app.fecharModal('modal-menu');">
                     <span class="menu-icon">📦</span>
                     <span>Exportar Backup</span>
@@ -438,6 +470,32 @@
                     <span class="menu-icon">❓</span>
                     <span>Ajuda</span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Gerenciar Escolas -->
+    <div id="modal-gerenciar-escolas" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🏫 Gerenciar Escolas</h3>
+                <button class="btn-close" onclick="app.fecharModal('modal-gerenciar-escolas')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nome da Escola *</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="input-nova-escola" placeholder="Ex: Colégio São José" style="flex: 1;" />
+                        <button class="btn btn-primary" onclick="escolas.adicionarEscola()">
+                            + Adicionar
+                        </button>
+                    </div>
+                </div>
+
+                <h4 style="margin-top: 24px; margin-bottom: 12px;">Escolas Cadastradas</h4>
+                <div id="lista-escolas-gerenciar" class="escolas-list">
+                    <!-- Escolas serão inseridas aqui -->
+                </div>
             </div>
         </div>
     </div>
@@ -454,6 +512,7 @@
     <script src="js/scanner.js?v=2"></script>
     <script src="js/export.js?v=2"></script>
     <script src="js/qrgen.js?v=2"></script>
+    <script src="js/escolas.js?v=2"></script>
     <script src="js/app.js?v=2"></script>
 
 </body>
