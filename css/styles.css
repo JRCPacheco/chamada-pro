@@ -234,6 +234,19 @@ body {
     text-align: center;
 }
 
+.header-logo {
+    display: flex;
+    align-items: center;
+    margin-right: 8px;
+}
+
+.logo-img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
 .btn-icon {
     width: 44px;
     height: 44px;
@@ -556,10 +569,17 @@ body {
     display: flex;
     gap: 20px;
     font-size: 14px;
+    margin-bottom: 20px;
 }
 
 .turma-stats strong {
     font-size: 18px;
+}
+
+.turma-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
 }
 
 /* ===== TABS ===== */

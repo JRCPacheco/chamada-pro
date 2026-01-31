@@ -123,7 +123,7 @@ const exportModule = {
         // Calcular frequência por aluno
         const frequencia = alunos.map(aluno => {
             const presencas = chamadas.filter(c => 
-                c.presencas.some(p => p.matricula === aluno.matricula)
+                c.presencas.some(p => p.matricula === aluno.matricula && (p.status || 'P') === 'P')
             ).length;
 
             const percentual = utils.calcularPercentual(presencas, chamadas.length);

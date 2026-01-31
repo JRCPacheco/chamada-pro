@@ -220,7 +220,67 @@ const turmas = {
         }
     },
 
-    // Deletar turma
+    // Confirmar exclusão de turma
+    confirmarExcluirTurma() {
+        if (!this.turmaAtual) {
+            utils.mostrarToast('Nenhuma turma selecionada', 'error');
+            return;
+        }
+
+        const totalAlunos = this.turmaAtual.alunos ? Object.keys(this.turmaAtual.alunos).length : 0;
+        const chamadasTurma = storage.getChamadasByTurma(this.turmaAtual.id);
+        const totalChamadas = chamadasTurma.length;
+
+        const mensagem = `⚠️ **EXCLUSÃO IRREVERSÍVEL** ⚠️\n\n` +
+            `Tem certeza que deseja excluir a turma "${this.turmaAtual.nome}"?\n\n` +
+            `📊 **Serão excluídos permanentemente:**\n` +
+            `• ${totalAlunos} aluno(s) cadastrado(s)\n` +
+            `• ${totalChamadas} registro(s) de chamada\n` +
+            `• Todos os dados associados\n\n` +
+            `Esta ação NÃO pode ser desfeita!`;
+
+        if (confirm(mensagem)) {
+            this.excluirTurmaCompleta(this.turmaAtual.id);
+        }
+    },
+
+    // Excluir turma e todos os dados associados
+    excluirTurmaCompleta(turmaId) {
+        try {
+            // 1. Excluir todos os registros de chamada da turma
+            const chamadas = storage.getChamadas();
+            const chamadasParaExcluir = chamadas.filter(c => c.turmaId === turmaId);
+            
+            chamadasParaExcluir.forEach(chamada => {
+                storage.deleteChamada(chamada.id);
+            });
+
+            // 2. Excluir a turma (isso já exclui os alunos associados)
+            if (storage.deleteTurma(turmaId)) {
+                utils.mostrarToast('Turma e todos os dados associados foram excluídos', 'success');
+                
+                // Limpar estado atual
+                this.turmaAtual = null;
+                
+                // Voltar para lista de turmas
+                this.listar();
+                app.mostrarTela('tela-turmas');
+                
+                // Limpar título do header
+                document.getElementById('header-title').textContent = 'Turmas';
+                
+                // Esconder botão voltar
+                document.getElementById('btn-back').style.display = 'none';
+            } else {
+                utils.mostrarToast('Erro ao excluir turma', 'error');
+            }
+        } catch (error) {
+            console.error('Erro ao excluir turma:', error);
+            utils.mostrarToast('Erro ao excluir turma. Tente novamente.', 'error');
+        }
+    },
+
+    // Deletar turma (mantido para compatibilidade)
     deletar(turmaId) {
         if (!utils.confirmar('Tem certeza que deseja excluir esta turma? Esta ação não pode ser desfeita.')) {
             return;

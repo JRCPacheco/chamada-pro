@@ -139,10 +139,11 @@ const scanner = {
 
         // Registrar presença
         const presenca = {
-            matricula: aluno.matricula,
+            matricula: decodedText,
             nome: aluno.nome,
             hora: new Date().toISOString(),
-            horaFormatada: utils.formatarHora(new Date())
+            horaFormatada: utils.formatarHora(new Date()),
+            status: 'P' // Default: Presente
         };
 
         this.presencasTemp.push(presenca);

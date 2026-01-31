@@ -197,6 +197,13 @@ const storage = {
         return this.saveChamadas(chamadas) ? chamada.id : null;
     },
 
+    // Deletar chamada
+    deleteChamada(id) {
+        const chamadas = this.getChamadas();
+        const filtered = chamadas.filter(c => c.id !== id);
+        return this.saveChamadas(filtered);
+    },
+
     // Obter chamadas por turma
     getChamadasByTurma(turmaId) {
         const chamadas = this.getChamadas();

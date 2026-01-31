@@ -87,6 +87,9 @@
             <button class="btn-icon btn-back" id="btn-back" style="display: none;">
                 ←
             </button>
+            <div class="header-logo">
+                <img src="assets/logo1024.svg" alt="Chamada PRO" class="logo-img">
+            </div>
             <h1 id="header-title">Minhas Turmas</h1>
             <button class="btn-icon btn-menu" id="btn-menu">
                 ☰
@@ -151,6 +154,11 @@
                 <div class="turma-stats">
                     <span>👥 <strong id="turma-total-alunos">0</strong> alunos</span>
                     <span>📅 <strong id="turma-total-chamadas-realizadas">0</strong> chamadas</span>
+                </div>
+                <div class="turma-actions">
+                    <button class="btn btn-danger btn-sm" onclick="turmas.confirmarExcluirTurma()">
+                        🗑️ Excluir Turma
+                    </button>
                 </div>
             </div>
 
@@ -411,15 +419,20 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modal-aluno-titulo">Novo Aluno</h3>
-                <button class="btn-close" onclick="app.fecharModal('modal-novo-aluno')">×</button>
+                <button class="btn-close"
+                    onclick="alunos.resetarPreviewFoto(); app.fecharModal('modal-novo-aluno')">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group center-content" style="text-align: center; margin-bottom: 20px;">
-                    <div class="avatar-placeholder" onclick="utils.mostrarToast('Funcionalidade em breve!', 'info')">
-                        <span style="font-size: 24px;">📷</span>
-                        <span style="font-size: 12px; display: block; margin-top: 4px; color: var(--primary);">Adicionar
+                    <div id="aluno-foto-preview" class="avatar-placeholder"
+                        onclick="document.getElementById('input-aluno-foto').click()">
+                        <span id="foto-placeholder-icon" style="font-size: 24px;">📷</span>
+                        <span id="foto-placeholder-text"
+                            style="font-size: 12px; display: block; margin-top: 4px; color: var(--primary);">Adicionar
                             Foto</span>
                     </div>
+                    <input type="file" id="input-aluno-foto" accept="image/*" capture="environment"
+                        style="display: none;" onchange="alunos.processarFoto(this.files[0])">
                 </div>
                 <div class="form-group">
                     <label>Nome Completo *</label>
@@ -435,7 +448,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="app.fecharModal('modal-novo-aluno')">Cancelar</button>
+                <button class="btn btn-secondary"
+                    onclick="alunos.resetarPreviewFoto(); app.fecharModal('modal-novo-aluno')">Cancelar</button>
                 <button class="btn btn-primary" id="btn-salvar-aluno" onclick="alunos.salvarNovoAluno()">Salvar</button>
             </div>
         </div>

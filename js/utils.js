@@ -292,5 +292,37 @@ const utils = {
         });
 
         return csv;
+    },
+
+    // Calcular faltas mensais do aluno
+    calcularFaltasMensais(chamadas, matricula, mes = null, ano = null) {
+        const agora = new Date();
+        const mesAtual = mes !== null ? mes : agora.getMonth();
+        const anoAtual = ano !== null ? ano : agora.getFullYear();
+
+        let faltasCount = 0;
+
+        chamadas.forEach(chamada => {
+            // Proteção contra estrutura inesperada
+            if (!Array.isArray(chamada.presencas)) return;
+            
+            const dataChamada = new Date(chamada.data);
+            
+            // Verificar se é do mês/ano solicitado
+            if (dataChamada.getMonth() === mesAtual && dataChamada.getFullYear() === anoAtual) {
+                // Procurar presença do aluno nesta chamada
+                const presencaAluno = chamada.presencas.find(p => p.matricula === matricula);
+                
+                // Compatibilidade com registros antigos
+                const status = presencaAluno?.status || 'P';
+                
+                // Contar apenas se status === 'F' (falta)
+                if (status === 'F') {
+                    faltasCount++;
+                }
+            }
+        });
+
+        return faltasCount;
     }
 };

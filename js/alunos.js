@@ -4,6 +4,7 @@
 const alunos = {
 
     alunoEmEdicao: null,
+    fotoTemp: null,
 
     // Listar alunos da turma atual
     listar() {
@@ -50,12 +51,13 @@ const alunos = {
         container.innerHTML = alunosArray.map(aluno => {
             const iniciais = utils.getIniciais(aluno.nome);
             const cor = utils.getCorFromString(aluno.nome);
+            const avatarHtml = aluno.foto
+                ? `<img src="${aluno.foto}" class="aluno-avatar" style="object-fit: cover;">`
+                : `<div class="aluno-avatar" style="background: linear-gradient(135deg, ${cor} 0%, ${utils.adjustColor(cor, -40)} 100%)">${iniciais}</div>`;
 
             return `
                 <div class="aluno-card">
-                    <div class="aluno-avatar" style="background: linear-gradient(135deg, ${cor} 0%, ${utils.adjustColor(cor, -40)} 100%)">
-                        ${iniciais}
-                    </div>
+                    ${avatarHtml}
                     <div class="aluno-info">
                         <h4>${utils.escapeHtml(aluno.nome)}</h4>
                         <p>Matrícula: ${utils.escapeHtml(aluno.matricula)}${aluno.email ? ' • ' + aluno.email : ''}</p>
@@ -145,20 +147,11 @@ const alunos = {
             return;
         }
 
-        // Verificar se matrícula já existe (somente para novo aluno)
-        if (!this.alunoEmEdicao) {
-            const turma = storage.getTurmaById(turmas.turmaAtual.id);
-            if (turma.alunos && turma.alunos[matricula]) {
-                utils.mostrarToast('Já existe um aluno com esta matrícula', 'warning');
-                document.getElementById('input-aluno-matricula').focus();
-                return;
-            }
-        }
-
         const aluno = {
             nome: nome,
             matricula: matricula,
-            email: email
+            email: email,
+            foto: this.fotoTemp || undefined
         };
 
         // Adicionar ou atualizar aluno
@@ -183,6 +176,92 @@ const alunos = {
             turmas.abrirDetalhes(turmas.turmaAtual.id); // Atualizar contadores
         } else {
             utils.mostrarToast('Erro ao salvar aluno', 'error');
+        }
+    },
+
+    // Resetar preview e variável temporária
+    resetarPreviewFoto() {
+        this.fotoTemp = null;
+        const preview = document.getElementById('aluno-foto-preview');
+        if (preview) {
+            preview.style.backgroundImage = 'none';
+            document.getElementById('foto-placeholder-icon').style.display = 'block';
+            document.getElementById('foto-placeholder-text').style.display = 'block';
+        }
+    },
+
+    // Processar foto (redimensionar e comprimir)
+    processarFoto(file) {
+        if (!file) return;
+
+        try {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        const maxSide = 256;
+
+                        // Redimensionamento proporcional (Maior lado = 256px)
+                        if (width > height) {
+                            if (width > maxSide) {
+                                height *= maxSide / width;
+                                width = maxSide;
+                            }
+                        } else {
+                            if (height > maxSide) {
+                                width *= maxSide / height;
+                                height = maxSide;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // JPEG 0.7 para economia de espaço
+                        const base64 = canvas.toDataURL('image/jpeg', 0.7);
+
+                        // Blindagem extra (60KB)
+                        if (base64.length > 60000) {
+                            utils.mostrarToast('Foto muito grande, tente outra', 'warning');
+                            return;
+                        }
+
+                        this.fotoTemp = base64;
+                        this.atualizarPreviewFoto(base64);
+                    } catch (err) {
+                        console.error('Erro no processamento canvas:', err);
+                        utils.mostrarToast('Erro ao processar imagem', 'error');
+                        this.resetarPreviewFoto();
+                    }
+                };
+                img.onerror = () => {
+                    utils.mostrarToast('Erro ao carregar imagem', 'error');
+                    this.resetarPreviewFoto();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        } catch (err) {
+            console.error('Erro ao ler arquivo:', err);
+            utils.mostrarToast('Falha na leitura do arquivo', 'error');
+        }
+    },
+
+    // Atualizar preview visual no modal
+    atualizarPreviewFoto(base64) {
+        const preview = document.getElementById('aluno-foto-preview');
+        if (preview) {
+            preview.style.backgroundImage = `url(${base64})`;
+            preview.style.backgroundSize = 'cover';
+            preview.style.backgroundPosition = 'center';
+            document.getElementById('foto-placeholder-icon').style.display = 'none';
+            document.getElementById('foto-placeholder-text').style.display = 'none';
         }
     },
 
@@ -212,6 +291,14 @@ const alunos = {
         document.getElementById('input-aluno-nome').value = aluno.nome;
         document.getElementById('input-aluno-matricula').value = aluno.matricula;
         document.getElementById('input-aluno-email').value = aluno.email || '';
+
+        // Carregar foto
+        if (aluno.foto) {
+            this.fotoTemp = aluno.foto;
+            this.atualizarPreviewFoto(aluno.foto);
+        } else {
+            this.resetarPreviewFoto();
+        }
 
         // Focar no primeiro campo
         setTimeout(() => {

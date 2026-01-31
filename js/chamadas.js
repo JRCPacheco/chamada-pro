@@ -29,7 +29,8 @@ const chamadas = {
         const totalAlunos = turma.alunos ? Object.keys(turma.alunos).length : 0;
 
         container.innerHTML = chamadasArray.map(chamada => {
-            const presentes = chamada.presencas.length;
+            // Contar presentes (P) e não contar faltas (F) e justificadas (J)
+            const presentes = chamada.presencas.filter(p => p.status === 'P').length;
             const percentual = utils.calcularPercentual(presentes, totalAlunos);
             
             return `
@@ -70,8 +71,12 @@ const chamadas = {
 
         const turma = storage.getTurmaById(chamada.turmaId);
         const totalAlunos = turma.alunos ? Object.keys(turma.alunos).length : 0;
-        const presentes = chamada.presencas.length;
-        const ausentes = totalAlunos - presentes;
+        
+        // Contar por status: P = presente, F = falta, J = falta justificada
+        const presentes = chamada.presencas.filter(p => p.status === 'P').length;
+        const faltas = chamada.presencas.filter(p => p.status === 'F').length;
+        const justificadas = chamada.presencas.filter(p => p.status === 'J').length;
+        const ausentes = totalAlunos - presentes - justificadas; // Apenas faltas não justificadas
         const percentual = utils.calcularPercentual(presentes, totalAlunos);
 
         // Atualizar informações
@@ -84,8 +89,9 @@ const chamadas = {
 
         // Lista de presentes
         const listaPresentes = document.getElementById('resumo-lista-presentes');
-        if (presentes > 0) {
-            listaPresentes.innerHTML = chamada.presencas
+        const presentesComStatus = chamada.presencas.filter(p => p.status === 'P');
+        if (presentesComStatus.length > 0) {
+            listaPresentes.innerHTML = presentesComStatus
                 .sort((a, b) => a.nome.localeCompare(b.nome))
                 .map(p => `
                     <div class="resumo-lista-item">
@@ -96,14 +102,14 @@ const chamadas = {
             listaPresentes.innerHTML = '<p class="text-muted">Nenhum aluno presente</p>';
         }
 
-        // Lista de ausentes
+        // Lista de ausentes (faltas não justificadas)
         const listaAusentes = document.getElementById('resumo-lista-ausentes');
-        if (ausentes > 0) {
-            const presencasMatriculas = chamada.presencas.map(p => p.matricula);
-            const alunosAusentes = Object.values(turma.alunos)
-                .filter(a => !presencasMatriculas.includes(a.matricula))
-                .sort((a, b) => a.nome.localeCompare(b.nome));
+        const presencasMatriculas = chamada.presencas.map(p => p.matricula);
+        const alunosAusentes = Object.values(turma.alunos)
+            .filter(a => !presencasMatriculas.includes(a.matricula))
+            .sort((a, b) => a.nome.localeCompare(b.nome));
 
+        if (alunosAusentes.length > 0) {
             listaAusentes.innerHTML = alunosAusentes.map(a => `
                 <div class="resumo-lista-item">
                     ✗ ${utils.escapeHtml(a.nome)}
@@ -127,11 +133,33 @@ const chamadas = {
 
         const dados = todosAlunos.map(aluno => {
             const presenca = this.chamadaResumo.presencas.find(p => p.matricula === aluno.matricula);
+            let status = 'Ausente';
+            let hora = '-';
+            
+            if (presenca) {
+                // Tratar registros antigos sem status como "P"
+                const statusTratado = presenca.status || 'P';
+                switch (statusTratado) {
+                    case 'P':
+                        status = 'Presente';
+                        hora = presenca.horaFormatada;
+                        break;
+                    case 'F':
+                        status = 'Falta';
+                        hora = presenca.horaFormatada || '-';
+                        break;
+                    case 'J':
+                        status = 'Falta Justificada';
+                        hora = presenca.horaFormatada || '-';
+                        break;
+                }
+            }
+            
             return {
                 matricula: aluno.matricula,
                 nome: aluno.nome,
-                status: presenca ? 'Presente' : 'Ausente',
-                hora: presenca ? presenca.horaFormatada : '-'
+                status: status,
+                hora: hora
             };
         });
 
@@ -155,22 +183,30 @@ const chamadas = {
         if (!this.chamadaResumo) return;
 
         const turma = storage.getTurmaById(this.chamadaResumo.turmaId);
-        const presentes = this.chamadaResumo.presencas.length;
         const totalAlunos = turma.alunos ? Object.keys(turma.alunos).length : 0;
+        
+        // Contar por status
+        const presentes = this.chamadaResumo.presencas.filter(p => p.status === 'P').length;
+        const faltas = this.chamadaResumo.presencas.filter(p => p.status === 'F').length;
+        const justificadas = this.chamadaResumo.presencas.filter(p => p.status === 'J').length;
         const percentual = utils.calcularPercentual(presentes, totalAlunos);
 
         let texto = `📋 Chamada - ${turma.nome}\n`;
         texto += `📅 ${utils.formatarDataHora(this.chamadaResumo.data)}\n\n`;
-        texto += `✅ Presentes: ${presentes} de ${totalAlunos} (${percentual}%)\n\n`;
+        texto += `✅ Presentes: ${presentes} de ${totalAlunos} (${percentual}%)\n`;
+        if (faltas > 0) texto += `❌ Faltas: ${faltas}\n`;
+        if (justificadas > 0) texto += `📄 Faltas Justificadas: ${justificadas}\n`;
+        texto += '\n';
         
         texto += '--- PRESENTES ---\n';
         this.chamadaResumo.presencas
+            .filter(p => (p.status || 'P') === 'P')
             .sort((a, b) => a.nome.localeCompare(b.nome))
             .forEach(p => {
                 texto += `✓ ${p.nome}\n`;
             });
 
-        const ausentes = totalAlunos - presentes;
+        const ausentes = totalAlunos - presentes - justificadas;
         if (ausentes > 0) {
             texto += '\n--- AUSENTES ---\n';
             const presencasMatriculas = this.chamadaResumo.presencas.map(p => p.matricula);
@@ -179,6 +215,16 @@ const chamadas = {
                 .sort((a, b) => a.nome.localeCompare(b.nome))
                 .forEach(a => {
                     texto += `✗ ${a.nome}\n`;
+                });
+        }
+
+        if (justificadas > 0) {
+            texto += '\n--- FALTAS JUSTIFICADAS ---\n';
+            this.chamadaResumo.presencas
+                .filter(p => p.status === 'J')
+                .sort((a, b) => a.nome.localeCompare(b.nome))
+                .forEach(p => {
+                    texto += `📄 ${p.nome}\n`;
                 });
         }
 
@@ -208,11 +254,28 @@ const chamadas = {
         const dados = [];
         chamadas.forEach(chamada => {
             chamada.presencas.forEach(presenca => {
+                // Tratar registros antigos sem status como "P"
+                const statusTratado = presenca.status || 'P';
+                let statusTexto = 'Presente';
+                
+                switch (statusTratado) {
+                    case 'P':
+                        statusTexto = 'Presente';
+                        break;
+                    case 'F':
+                        statusTexto = 'Falta';
+                        break;
+                    case 'J':
+                        statusTexto = 'Falta Justificada';
+                        break;
+                }
+                
                 dados.push({
                     data: utils.formatarData(chamada.data),
                     hora: utils.formatarHora(chamada.data),
                     matricula: presenca.matricula,
                     nome: presenca.nome,
+                    status: statusTexto,
                     horaPresenca: presenca.horaFormatada
                 });
             });
@@ -223,6 +286,7 @@ const chamadas = {
             { field: 'hora', label: 'Hora Chamada' },
             { field: 'matricula', label: 'Matrícula' },
             { field: 'nome', label: 'Nome' },
+            { field: 'status', label: 'Status' },
             { field: 'horaPresenca', label: 'Hora Presença' }
         ];
 
