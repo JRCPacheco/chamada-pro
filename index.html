@@ -126,8 +126,17 @@
             </div>
             <!-- MULTI ESCOLA -->
 
-            <div class="search-box">
-                <input type="text" id="search-turmas" placeholder="🔍 Buscar turma..." />
+            <div class="search-controls">
+                <div class="search-box">
+                    <input type="text" id="search-turmas" placeholder="🔍 Buscar turma..." />
+                </div>
+                <div class="multi-escola-toggle-wrapper">
+                    <label class="multi-escola-toggle">
+                        <input type="checkbox" id="config-multi-escola">
+                        <span>Várias escolas</span>
+                    </label>
+                    <small class="multi-escola-hint">Gerenciar escolas no menu ☰</small>
+                </div>
             </div>
 
             <div id="lista-turmas" class="turmas-list">
@@ -183,6 +192,14 @@
                         <button class="btn btn-primary btn-sm" onclick="alunos.mostrarModalNovoAluno()">
                             + Adicionar
                         </button>
+                    </div>
+                    <div class="csv-modelo-download">
+                        <a href="assets/modelos/modelo_alunos.csv" download class="btn btn-secondary btn-sm">
+                            ⬇️ Baixar modelo de planilha
+                        </a>
+                        <small class="csv-modelo-hint">
+                            Abra no Excel ou Google Sheets e não altere os nomes das colunas.
+                        </small>
                     </div>
                 </div>
 
@@ -323,14 +340,6 @@
                     </label>
                 </div>
 
-                <!-- MULTI ESCOLA -->
-                <div class="config-item">
-                    <label>
-                        <input type="checkbox" id="config-multi-escola">
-                        <span>Trabalhar com várias escolas</span>
-                    </label>
-                </div>
-                <!-- MULTI ESCOLA -->
 
                 <div class="config-item">
                     <label>
@@ -447,6 +456,15 @@
                 <div class="form-group">
                     <label>Email (opcional)</label>
                     <input type="email" id="input-aluno-email" placeholder="aluno@email.com" />
+                </div>
+                <div class="form-group">
+                    <label for="input-aluno-pontos">⭐ Pontos extras</label>
+                    <input type="number" id="input-aluno-pontos" value="0" min="0" max="100">
+                </div>
+
+                <div class="form-group">
+                    <label for="input-aluno-obs">📝 Observações</label>
+                    <textarea id="input-aluno-obs" rows="2" placeholder="Anotações sobre o aluno"></textarea>
                 </div>
             </div>
             <div class="modal-footer">

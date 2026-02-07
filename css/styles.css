@@ -241,8 +241,8 @@ body {
 }
 
 .logo-img {
-    width: 32px;
-    height: 32px;
+    width: 48px;
+    height: 48px;
     object-fit: contain;
     border-radius: 4px;
 }
@@ -348,6 +348,86 @@ body {
     border-color: var(--primary);
     background: white;
     box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+}
+
+/* ===== SEARCH CONTROLS & MULTI-ESCOLA TOGGLE ===== */
+.search-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 20px 20px;
+}
+
+@media (min-width: 600px) {
+    .search-controls {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+
+    .search-controls .search-box {
+        flex: 1;
+    }
+}
+
+.search-controls .search-box {
+    padding: 0;
+}
+
+.multi-escola-toggle-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.multi-escola-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--gray-700);
+    cursor: pointer;
+    white-space: nowrap;
+    padding: 0 16px;
+    background: var(--white);
+    border: 2px solid var(--gray-300);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    height: 48px;
+    user-select: none;
+}
+
+.multi-escola-toggle:hover {
+    border-color: var(--primary-light);
+    background: var(--gray-100);
+}
+
+.multi-escola-toggle input {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--primary);
+}
+
+/* .multi-escola-hint {
+    font-size: 11px;
+    color: var(--gray-500);
+    margin-left: 4px;
+    font-style: italic;
+} */
+
+
+.multi-escola-hint {
+    font-size: 12px;
+    color: var(--gray-500);
+    margin-left: 4px;
+    font-style: italic;
+}
+
+@media (max-width: 480px) {
+    .multi-escola-hint {
+        font-size: 13px;
+    }
 }
 
 /* ===== TURMAS LIST ===== */
@@ -1471,4 +1551,16 @@ body {
 .escola-item-actions .btn-icon:hover {
     background: var(--gray-200);
     transform: scale(1.05);
+}
+
+.csv-modelo-download {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.csv-modelo-hint {
+    font-size: 12px;
+    color: var(--gray-500);
 }

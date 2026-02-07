@@ -109,6 +109,8 @@ const alunos = {
         document.getElementById('input-aluno-nome').value = '';
         document.getElementById('input-aluno-matricula').value = '';
         document.getElementById('input-aluno-email').value = '';
+        document.getElementById('input-aluno-obs').value = '';
+        document.getElementById('input-aluno-pontos').value = 0;
 
         // Focar no primeiro campo
         setTimeout(() => {
@@ -148,10 +150,12 @@ const alunos = {
         }
 
         const aluno = {
-            nome: nome,
             matricula: matricula,
+            nome: nome,
             email: email,
-            foto: this.fotoTemp || undefined
+            foto: this.fotoTemp,
+            observacoes: document.getElementById('input-aluno-obs')?.value || '',
+            pontosExtra: parseInt(document.getElementById('input-aluno-pontos')?.value || '0', 10)
         };
 
         // Adicionar ou atualizar aluno
@@ -291,6 +295,8 @@ const alunos = {
         document.getElementById('input-aluno-nome').value = aluno.nome;
         document.getElementById('input-aluno-matricula').value = aluno.matricula;
         document.getElementById('input-aluno-email').value = aluno.email || '';
+        document.getElementById('input-aluno-obs').value = aluno.observacoes || '';
+        document.getElementById('input-aluno-pontos').value = aluno.pontosExtra || 0;
 
         // Carregar foto
         if (aluno.foto) {
@@ -346,10 +352,8 @@ const alunos = {
             const file = e.target.files[0];
             if (!file) return;
 
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const csvText = event.target.result;
-                const alunos = utils.parseCSV(csvText);
+            const processCsvText = (text) => {
+                const alunos = utils.parseCSV(text);
 
                 if (alunos.length === 0) {
                     utils.mostrarToast('Nenhum aluno encontrado no arquivo', 'warning');
@@ -383,7 +387,24 @@ const alunos = {
                 turmas.abrirDetalhes(turmas.turmaAtual.id);
             };
 
-            reader.readAsText(file);
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const text = e.target.result;
+
+                const looksBroken = /Ã.|�|\uFFFD/.test(text);
+
+                if (looksBroken) {
+                    const readerLatin = new FileReader();
+                    readerLatin.onload = function (ev) {
+                        processCsvText(ev.target.result);
+                    };
+                    readerLatin.readAsText(file, 'ISO-8859-1');
+                } else {
+                    processCsvText(text);
+                }
+            };
+
+            reader.readAsText(file, 'UTF-8');
         };
 
         input.click();
