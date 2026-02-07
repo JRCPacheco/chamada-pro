@@ -438,6 +438,10 @@ const app = {
                 }
             });
         });
+    },
+
+    abrirLanding() {
+        window.open('https://www.chamadafacil.net.br', '_blank');
     }
 };
 
