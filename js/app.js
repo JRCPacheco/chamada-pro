@@ -17,8 +17,7 @@ const app = {
         // Setup de event listeners
         this.setupEventListeners();
 
-        // Aplicar tema
-        this.aplicarTema();
+
 
         // Aplicar configurações de Interface (Multi Escola)
         this.aplicarConfiguracoesInterface();
@@ -225,12 +224,6 @@ const app = {
         if (configWakeLock) {
             configWakeLock.onchange = () => this.salvarConfig();
         }
-        if (configTema) {
-            configTema.onchange = () => {
-                this.salvarConfig();
-                this.aplicarTema();
-            };
-        }
         if (configMultiEscola) {
             configMultiEscola.onchange = () => {
                 this.salvarConfig();
@@ -256,7 +249,6 @@ const app = {
         if (configSom) configSom.checked = config.som;
         if (configVibracao) configVibracao.checked = config.vibracao;
         if (configWakeLock) configWakeLock.checked = config.wakeLock;
-        if (configTema) configTema.value = config.tema;
         if (configMultiEscola) configMultiEscola.checked = config.multi_escola; // MULTI ESCOLA
     },
 
@@ -266,7 +258,6 @@ const app = {
             som: document.getElementById('config-som').checked,
             vibracao: document.getElementById('config-vibracao').checked,
             wakeLock: document.getElementById('config-wake-lock').checked,
-            tema: document.getElementById('config-tema').value,
             multi_escola: document.getElementById('config-multi-escola').checked // MULTI ESCOLA
         };
 
@@ -274,18 +265,6 @@ const app = {
         utils.mostrarToast('Configurações salvas', 'success');
     },
 
-    // Aplicar tema
-    aplicarTema() {
-        const config = storage.getConfig();
-        let tema = config.tema;
-
-        if (tema === 'auto') {
-            tema = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-
-        document.body.classList.remove('theme-light', 'theme-dark');
-        document.body.classList.add(`theme-${tema}`);
-    },
 
     // Aplicar configurações de Interface (Multi Escola)
     aplicarConfiguracoesInterface() {
@@ -442,7 +421,8 @@ const app = {
 
     abrirLanding() {
         window.open('https://www.chamadafacil.net.br', '_blank');
-    }
+    },
+
 };
 
 // Inicializar app quando DOM estiver pronto

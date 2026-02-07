@@ -69,7 +69,6 @@ const storage = {
             som: true,
             vibracao: true,
             wakeLock: true,
-            tema: 'light',
             multi_escola: false // MULTI ESCOLA
         };
 
