@@ -537,6 +537,16 @@
         </div>
     </div>
 
+    <!-- Scanner Overlay para Cadastro (Fix Android) -->
+    <div id="qr-scan-overlay"
+        style="position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column;">
+        <div id="reader-temp" style="flex:1;"></div>
+        <button type="button" onclick="scanner.fecharOverlay()"
+            style="padding:16px; font-size:18px; background:#fff; border:none; cursor:pointer;">
+            Fechar
+        </button>
+    </div>
+
     <!-- Toast Notifications -->
     <div id="toast-container" class="toast-container"></div>
 

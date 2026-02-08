@@ -336,8 +336,12 @@ const scanner = {
 
     // Ler QR Code para cadastro (não marca presença)
     lerQrParaCadastro(callback) {
+        // Mostrar overlay (Fix Android)
+        const overlay = document.getElementById('qr-scan-overlay');
+        if (overlay) overlay.style.display = 'flex';
+
         // Criar nova instância temporária
-        const readerTemp = new Html5Qrcode('reader');
+        const readerTemp = new Html5Qrcode('reader-temp');
         let lido = false;
 
         const onSuccess = (texto) => {
@@ -350,6 +354,8 @@ const scanner = {
             // Parar scanner imediatamente
             readerTemp.stop()
                 .then(() => {
+                    if (overlay) overlay.style.display = 'none';
+
                     if (dados) {
                         utils.mostrarToast('QR Code lido com sucesso!', 'success');
                         callback(dados);
@@ -359,6 +365,7 @@ const scanner = {
                     }
                 })
                 .catch(err => {
+                    if (overlay) overlay.style.display = 'none';
                     console.error('Erro ao parar scanner:', err);
                     callback(dados);
                 });
@@ -374,10 +381,25 @@ const scanner = {
             onSuccess,
             () => { } // Ignorar erros contínuos
         ).catch(err => {
+            if (overlay) overlay.style.display = 'none';
             console.error('Erro ao iniciar câmera:', err);
             utils.mostrarToast('Erro ao acessar câmera', 'error');
             callback(null);
         });
+    },
+
+    // Fechar overlay do scanner manualmente
+    fecharOverlay() {
+        const el = document.getElementById('qr-scan-overlay');
+        if (el) el.style.display = 'none';
+
+        // Tentar parar qualquer scanner ativo no reader-temp (limpeza preventiva)
+        try {
+            const tempScanner = new Html5Qrcode('reader-temp');
+            if (tempScanner.isScanning) {
+                tempScanner.stop();
+            }
+        } catch (e) { }
     },
 
     // Finalizar chamada
