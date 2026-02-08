@@ -434,7 +434,7 @@ body {
 
 /* ===== TURMAS LIST ===== */
 .turmas-list {
-    padding: 0 20px 100px;
+    padding: 0 20px 56px;
 }
 
 .turma-card {
@@ -723,7 +723,7 @@ body {
 
 /* ===== ALUNOS LIST ===== */
 .alunos-list {
-    padding: 0 20px 100px;
+    padding: 0 20px 56px;
 }
 
 .aluno-card {
@@ -1567,4 +1567,17 @@ body {
 .csv-modelo-hint {
     font-size: 12px;
     color: var(--gray-500);
+}
+
+/* ===== MOBILE EMPTY STATE SPACING FIX ===== */
+@media (max-width: 600px) {
+
+    .turmas-list,
+    .alunos-list {
+        padding-bottom: 56px !important;
+    }
+
+    .empty-state {
+        padding: 12px 20px !important;
+    }
 }
