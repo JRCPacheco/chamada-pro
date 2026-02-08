@@ -437,6 +437,14 @@
                     <input type="file" id="input-aluno-foto" accept="image/*" capture="environment"
                         style="display: none;" onchange="alunos.processarFoto(this.files[0])">
                 </div>
+                <div class="form-group center-content" style="text-align: center; margin-bottom: 20px;">
+                    <input type="file" id="input-foto-arquivo" accept="image/*" style="display:none"
+                        onchange="alunos.carregarFotoDeArquivo(event)">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="document.getElementById('input-foto-arquivo').click()">
+                        🖼️ Escolher foto
+                    </button>
+                </div>
                 <div class="form-group" style="text-align: center; margin-bottom: 20px;">
                     <button type="button" class="btn btn-secondary" onclick="alunos.lerQrExistente()">
                         📷 Ler QR Existente
@@ -499,7 +507,7 @@
                     <span class="menu-icon">📦</span>
                     <span>Exportar Backup</span>
                 </button>
-                <button class="menu-item" onclick="app.abrirLanding(); app.fecharModal('modal-menu')">
+                <button class="menu-item" onclick="app.abrirSobre()">
                     <span class="menu-icon">🌐</span>
                     <span>Sobre o Chamada Fácil</span>
                 </button>
@@ -532,6 +540,38 @@
                 <h4 style="margin-top: 24px; margin-bottom: 12px;">Escolas Cadastradas</h4>
                 <div id="lista-escolas-gerenciar" class="escolas-list">
                     <!-- Escolas serão inseridas aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Sobre -->
+    <div id="modal-sobre" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Sobre o Chamada Fácil</h3>
+                <button class="btn-close" onclick="app.fecharModal('modal-sobre')">×</button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Chamada Fácil</strong></p>
+                <p>Sistema de chamada escolar com QR Code, focado em agilidade para professores.</p>
+
+                <p style="margin-top: 12px;">
+                    Versão: <strong>v0.3.0-alpha</strong><br>
+                </p>
+
+                <p style="margin-top: 12px;">
+                    📧 E-mail:
+                    <a href="mailto:contato@chamadafacil.net.br">
+                        contato@chamadafacil.net.br
+                    </a>
+                </p>
+
+                <div style="margin-top: 24px; text-align: center;">
+                    <a href="https://www.chamadafacil.net.br" target="_blank" class="btn btn-primary"
+                        style="text-decoration: none; display: inline-block;">
+                        🌐 Site Oficial
+                    </a>
                 </div>
             </div>
         </div>

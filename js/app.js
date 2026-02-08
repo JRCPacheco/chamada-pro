@@ -207,6 +207,20 @@ const app = {
         }
     },
 
+    // Abrir modal
+    abrirModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('active');
+        }
+    },
+
+    // Abrir modal Sobre
+    abrirSobre() {
+        this.fecharModal('modal-menu');
+        this.abrirModal('modal-sobre');
+    },
+
     // Setup de listeners de configurações
     setupConfigListeners() {
         const configSom = document.getElementById('config-som');

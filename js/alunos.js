@@ -263,6 +263,43 @@ const alunos = {
         }
     },
 
+    // Escolher foto do dispositivo (galeria/arquivos)
+    carregarFotoDeArquivo(event) {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        // Limite de 5MB
+        if (file.size > 5 * 1024 * 1024) {
+            utils.mostrarToast('Imagem muito grande (máx 5MB)', 'warning');
+            event.target.value = '';
+            return;
+        }
+
+        // Garantir tipo MIME válido
+        if (!file.type || !file.type.startsWith('image/')) {
+            utils.mostrarToast('Arquivo não é imagem', 'warning');
+            event.target.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            this.fotoTemp = e.target.result;
+            this.atualizarPreviewFoto(this.fotoTemp);
+            utils.mostrarToast('Foto carregada!', 'success');
+            // Limpar input file após leitura
+            event.target.value = '';
+        };
+
+        reader.onerror = () => {
+            utils.mostrarToast('Erro ao ler imagem', 'error');
+            event.target.value = '';
+        };
+
+        reader.readAsDataURL(file);
+    },
+
     // Atualizar preview visual no modal
     atualizarPreviewFoto(base64) {
         const preview = document.getElementById('aluno-foto-preview');
