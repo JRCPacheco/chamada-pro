@@ -13,7 +13,7 @@ const qrgen = {
             const pageWidth = doc.internal.pageSize.getWidth();
             const pageHeight = doc.internal.pageSize.getHeight();
             const margin = 20;
-            const qrSize = 60;
+            const qrSize = 55;
             const cols = 2;
             const rows = 3;
             // Calcular espaçamento horizontal para centralizar
@@ -21,7 +21,7 @@ const qrgen = {
             const remainingSpaceX = pageWidth - (2 * margin) - contentWidth;
             const spacingX = remainingSpaceX / (cols - 1);
 
-            const spacingY = 40;
+            const spacingY = 18;
 
             let currentPage = 1;
             let currentRow = 0;
@@ -79,19 +79,24 @@ const qrgen = {
                     // Limpar container anterior
                     qrContainer.innerHTML = '';
 
-                    // Payload mínimo para evitar overflow
+                    const nomeCurto = (aluno.nome || '')
+                        .replace(/\s+/g, ' ')
+                        .trim()
+                        .slice(0, 24);
+
                     const dados = {
                         v: 1,
                         id: aluno.qrId,
-                        m: aluno.matricula
+                        m: aluno.matricula,
+                        n: nomeCurto
                     };
 
                     const payload = "CF1|" + JSON.stringify(dados);
 
                     const qrCode = new QRCode(qrContainer, {
                         text: payload,
-                        width: 180,
-                        height: 180,
+                        width: 160,
+                        height: 160,
                         colorDark: '#000000',
                         colorLight: '#ffffff',
                         correctLevel: QRCode.CorrectLevel.L
@@ -107,7 +112,7 @@ const qrgen = {
                             doc.addImage(qrDataUrl, 'PNG', x, y, qrSize, qrSize);
 
                             // Adicionar nome do aluno
-                            doc.setFontSize(10);
+                            doc.setFontSize(9);
                             doc.setFont(undefined, 'bold');
                             const nomeX = x + (qrSize / 2);
 
@@ -121,7 +126,7 @@ const qrgen = {
                             // Ajustar Y baseado na altura do nome (pode ter múltiplas linhas)
                             const nameHeight = splitName.length * 4; // aprox 4mm por linha
 
-                            doc.setFontSize(8);
+                            doc.setFontSize(7);
                             doc.setFont(undefined, 'normal');
                             doc.text(`Mat: ${aluno.matricula}`, nomeX, y + qrSize + 5 + nameHeight, {
                                 align: 'center'
@@ -129,7 +134,7 @@ const qrgen = {
 
                             // Adicionar borda leve
                             doc.setDrawColor(220, 220, 220); // Cinza bem claro
-                            doc.rect(x - 5, y - 5, qrSize + 10, qrSize + 15 + nameHeight);
+                            doc.rect(x - 3, y - 3, qrSize + 6, qrSize + 10 + nameHeight);
                         }
                         resolve();
                     }, 50); // 50ms é suficiente para geração síncrona do QRCode.js
