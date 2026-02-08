@@ -79,13 +79,22 @@ const qrgen = {
                     // Limpar container anterior
                     qrContainer.innerHTML = '';
 
+                    // Payload mínimo para evitar overflow
+                    const dados = {
+                        v: 1,
+                        id: aluno.qrId,
+                        m: aluno.matricula
+                    };
+
+                    const payload = "CF1|" + JSON.stringify(dados);
+
                     const qrCode = new QRCode(qrContainer, {
-                        text: aluno.matricula,
-                        width: 256,
-                        height: 256,
+                        text: payload,
+                        width: 180,
+                        height: 180,
                         colorDark: '#000000',
                         colorLight: '#ffffff',
-                        correctLevel: QRCode.CorrectLevel.H
+                        correctLevel: QRCode.CorrectLevel.L
                     });
 
                     // Pequeno delay para garantir que o canvas foi desenhado

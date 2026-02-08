@@ -5,6 +5,7 @@ const alunos = {
 
     alunoEmEdicao: null,
     fotoTemp: null,
+    qrImportado: null,
 
     // Listar alunos da turma atual
     listar() {
@@ -149,17 +150,21 @@ const alunos = {
             return;
         }
 
+        // Obter aluno em edição se existir
+        const turma = storage.getTurmaById(turmas.turmaAtual.id);
+        const alunoEditando = this.alunoEmEdicao ? turma.alunos[this.alunoEmEdicao] : null;
+
         const aluno = {
             matricula: matricula,
             nome: nome,
             email: email,
             foto: this.fotoTemp,
             observacoes: document.getElementById('input-aluno-obs')?.value || '',
-            pontosExtra: parseInt(document.getElementById('input-aluno-pontos')?.value || '0', 10)
+            pontosExtra: parseInt(document.getElementById('input-aluno-pontos')?.value || '0', 10),
+            qrId: alunoEditando?.qrId || this.qrImportado?.id || utils.gerarQrId()
         };
 
         // Adicionar ou atualizar aluno
-        const turma = storage.getTurmaById(turmas.turmaAtual.id);
         if (!turma.alunos) turma.alunos = {};
 
         // Se está editando e a matrícula mudou, remove o antigo
@@ -175,6 +180,7 @@ const alunos = {
                 'success'
             );
             utils.vibrar([50, 50, 50]);
+            this.qrImportado = null;
             app.fecharModal('modal-novo-aluno');
             this.listar();
             turmas.abrirDetalhes(turmas.turmaAtual.id); // Atualizar contadores
@@ -267,6 +273,25 @@ const alunos = {
             document.getElementById('foto-placeholder-icon').style.display = 'none';
             document.getElementById('foto-placeholder-text').style.display = 'none';
         }
+    },
+
+    // Aplicar dados do QR importado ao formulário
+    aplicarDadosQrImportado(dados) {
+        this.qrImportado = dados;
+        if (dados.n) document.getElementById('input-aluno-nome').value = dados.n;
+        if (dados.m) document.getElementById('input-aluno-matricula').value = dados.m;
+        if (dados.e) document.getElementById('input-aluno-email').value = dados.e;
+        if (dados.o) document.getElementById('input-aluno-obs').value = dados.o;
+        utils.mostrarToast('Dados importados do QR Code!', 'success');
+    },
+
+    // Ler QR existente para importar dados
+    lerQrExistente() {
+        scanner.lerQrParaCadastro((dados) => {
+            if (dados) {
+                this.aplicarDadosQrImportado(dados);
+            }
+        });
     },
 
     // Editar aluno

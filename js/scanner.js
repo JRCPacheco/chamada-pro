@@ -12,6 +12,36 @@ const scanner = {
     presencasTemp: [],
     ultimaLeitura: 0,
 
+    // Parse QR Code no formato novo (CF1|JSON)
+    parseQrAluno(texto) {
+        if (!texto.startsWith("CF1|")) return null;
+        try {
+            const json = texto.slice(4);
+            return JSON.parse(json);
+        } catch {
+            return null;
+        }
+    },
+
+    // Buscar aluno por qrId em todas as turmas
+    buscarAlunoPorQrId(qrId) {
+        const turmas = storage.getTurmas();
+        for (const t of turmas) {
+            if (!t.alunos) continue;
+            // Suportar tanto objeto quanto array
+            const alunosArray = Array.isArray(t.alunos)
+                ? t.alunos
+                : Object.values(t.alunos);
+
+            for (const a of alunosArray) {
+                if (a.qrId === qrId) {
+                    return { aluno: a, turma: t };
+                }
+            }
+        }
+        return null;
+    },
+
     // Iniciar nova chamada
     iniciarChamada() {
         if (!turmas.turmaAtual) {
@@ -120,30 +150,52 @@ const scanner = {
         if (agora - this.ultimaLeitura < 1500) return;
         this.ultimaLeitura = agora;
 
-        // Verificar se já foi registrado
-        if (this.presencasTemp.some(p => p.matricula === decodedText)) {
-            this.mostrarFeedback('Aluno já registrado!', 'warning');
+        let aluno = null;
+        let matricula = null;
+
+        // 1. Tentar formato novo (CF1|JSON)
+        const dadosQr = this.parseQrAluno(decodedText);
+        if (dadosQr && dadosQr.id) {
+            // QR novo: buscar por qrId
+            const resultado = this.buscarAlunoPorQrId(dadosQr.id);
+            if (resultado) {
+                // Validar se pertence à turma atual
+                if (resultado.turma.id !== this.chamadaAtual.turmaId) {
+                    this.mostrarFeedback('Aluno de outra turma!', 'warning');
+                    utils.tocarSom('error');
+                    return;
+                }
+                aluno = resultado.aluno;
+                matricula = aluno.matricula;
+            }
+        } else {
+            // 2. Fallback: formato antigo (matricula direta)
+            matricula = decodedText;
+            const turma = storage.getTurmaById(this.chamadaAtual.turmaId);
+            aluno = turma.alunos ? turma.alunos[matricula] : null;
+        }
+
+        // Verificar se aluno foi encontrado
+        if (!aluno) {
+            this.mostrarFeedback(`Aluno não encontrado`, 'warning');
             utils.tocarSom('error');
             return;
         }
 
-        // Buscar aluno
-        const turma = storage.getTurmaById(this.chamadaAtual.turmaId);
-        const aluno = turma.alunos ? turma.alunos[decodedText] : null;
-
-        if (!aluno) {
-            this.mostrarFeedback(`Matrícula ${decodedText} não encontrada`, 'warning');
+        // Verificar se já foi registrado
+        if (this.presencasTemp.some(p => p.matricula === matricula)) {
+            this.mostrarFeedback('Aluno já registrado!', 'warning');
             utils.tocarSom('error');
             return;
         }
 
         // Registrar presença
         const presenca = {
-            matricula: decodedText,
+            matricula: matricula,
             nome: aluno.nome,
             hora: new Date().toISOString(),
             horaFormatada: utils.formatarHora(new Date()),
-            status: 'P' // Default: Presente
+            status: 'P'
         };
 
         this.presencasTemp.push(presenca);
@@ -280,6 +332,52 @@ const scanner = {
             this.wakeLock.release();
             this.wakeLock = null;
         }
+    },
+
+    // Ler QR Code para cadastro (não marca presença)
+    lerQrParaCadastro(callback) {
+        // Criar nova instância temporária
+        const readerTemp = new Html5Qrcode('reader');
+        let lido = false;
+
+        const onSuccess = (texto) => {
+            if (lido) return;
+            lido = true;
+
+            // Parse QR
+            const dados = this.parseQrAluno(texto);
+
+            // Parar scanner imediatamente
+            readerTemp.stop()
+                .then(() => {
+                    if (dados) {
+                        utils.mostrarToast('QR Code lido com sucesso!', 'success');
+                        callback(dados);
+                    } else {
+                        utils.mostrarToast('QR Code inválido ou formato antigo', 'warning');
+                        callback(null);
+                    }
+                })
+                .catch(err => {
+                    console.error('Erro ao parar scanner:', err);
+                    callback(dados);
+                });
+        };
+
+        // Iniciar scanner temporário
+        readerTemp.start(
+            { facingMode: 'environment' },
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 250 }
+            },
+            onSuccess,
+            () => { } // Ignorar erros contínuos
+        ).catch(err => {
+            console.error('Erro ao iniciar câmera:', err);
+            utils.mostrarToast('Erro ao acessar câmera', 'error');
+            callback(null);
+        });
     },
 
     // Finalizar chamada

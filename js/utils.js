@@ -305,17 +305,17 @@ const utils = {
         chamadas.forEach(chamada => {
             // Proteção contra estrutura inesperada
             if (!Array.isArray(chamada.presencas)) return;
-            
+
             const dataChamada = new Date(chamada.data);
-            
+
             // Verificar se é do mês/ano solicitado
             if (dataChamada.getMonth() === mesAtual && dataChamada.getFullYear() === anoAtual) {
                 // Procurar presença do aluno nesta chamada
                 const presencaAluno = chamada.presencas.find(p => p.matricula === matricula);
-                
+
                 // Compatibilidade com registros antigos
                 const status = presencaAluno?.status || 'P';
-                
+
                 // Contar apenas se status === 'F' (falta)
                 if (status === 'F') {
                     faltasCount++;
@@ -324,5 +324,10 @@ const utils = {
         });
 
         return faltasCount;
+    },
+
+    // Gerar ID único para QR Code
+    gerarQrId() {
+        return "qr_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     }
 };
