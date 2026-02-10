@@ -5,25 +5,70 @@ const app = {
 
     telaAtual: null,
 
-    // Inicializar aplicação
-    init() {
-        // Verificar primeira vez
-        if (storage.isFirstTime()) {
-            this.mostrarOnboarding();
-        } else {
-            this.iniciarApp();
+    // Flag de inicilização
+    _initRunning: false,
+    _configCache: null, // Cache de configuração
+
+    // Helper interno de config
+    async _getAppConfig() {
+        if (this._configCache) return this._configCache;
+        let cfg = await db.get('config', 'app');
+
+        if (!cfg) {
+            cfg = {
+                key: 'app',
+                onboarding_done: false,
+                som: true,
+                vibracao: true,
+                wakeLock: false,
+                multi_escola: false
+            };
+            await db.put('config', cfg);
+            this._configCache = cfg;
+            console.log("[config] default criado");
         }
 
-        // Setup de event listeners
-        this.setupEventListeners();
+        this._configCache = cfg;
+        return cfg;
+    },
 
+    // Inicializar aplicação
+    async init() {
+        if (this._initRunning) {
+            console.warn("[app] init já em execução");
+            return;
+        }
+        this._initRunning = true;
+        console.log("[app] init start");
 
+        try {
+            // 1. Inicializar Banco de Dados
+            await db.init();
+        } catch (e) {
+            console.error("[app] falha ao inicializar DB", e);
+            alert("Erro ao inicializar banco de dados: " + e.message);
+            this._initRunning = false;
+            return;
+        }
 
-        // Aplicar configurações de Interface (Multi Escola)
-        this.aplicarConfiguracoesInterface();
+        // Verificar primeira vez
+        const cfg = await this._getAppConfig();
 
-        // Restaurar estado anterior (Turma Aberta)
+        if (!cfg.onboarding_done) {
+            this.mostrarOnboarding();
+            await this.setupEventListeners();
+            await this.aplicarConfiguracoesInterface();
+            this._initRunning = false;
+            return;
+        }
+
+        await this.iniciarApp();
+        await this.setupEventListeners();
+        await this.aplicarConfiguracoesInterface();
         this.restaurarEstado();
+
+        this._initRunning = false;
+        console.log("[app] init ok");
     },
 
     // Restaurar estado anterior
@@ -44,9 +89,12 @@ const app = {
     },
 
     // Iniciar app
-    iniciarApp() {
+    async iniciarApp() {
         // Marcar onboarding como completo
-        storage.completeOnboarding();
+        const cfg = await this._getAppConfig();
+        cfg.onboarding_done = true;
+        await db.put('config', cfg);
+        this._configCache = cfg;
 
         // Esconder loading e onboarding
         document.getElementById('loading-screen').style.display = 'none';
@@ -139,7 +187,7 @@ const app = {
     },
 
     // Setup de event listeners
-    setupEventListeners() {
+    async setupEventListeners() {
         // Botão voltar
         const btnBack = document.getElementById('btn-back');
         if (btnBack) {
@@ -161,7 +209,7 @@ const app = {
         });
 
         // Configurações
-        this.setupConfigListeners();
+        await this.setupConfigListeners();
 
         // Prevenir zoom em inputs
         this.preventZoomOnInputs();
@@ -222,7 +270,7 @@ const app = {
     },
 
     // Setup de listeners de configurações
-    setupConfigListeners() {
+    async setupConfigListeners() {
         const configSom = document.getElementById('config-som');
         const configVibracao = document.getElementById('config-vibracao');
         const configWakeLock = document.getElementById('config-wake-lock');
@@ -239,19 +287,19 @@ const app = {
             configWakeLock.onchange = () => this.salvarConfig();
         }
         if (configMultiEscola) {
-            configMultiEscola.onchange = () => {
-                this.salvarConfig();
-                this.aplicarConfiguracoesInterface();
+            configMultiEscola.onchange = async () => {
+                await this.salvarConfig();
+                await this.aplicarConfiguracoesInterface();
             };
         }
 
         // Carregar configurações
-        this.carregarConfig();
+        await this.carregarConfig();
     },
 
     // Carregar configurações
-    carregarConfig() {
-        const config = storage.getConfig();
+    async carregarConfig() {
+        const config = await this._getAppConfig();
 
         const configSom = document.getElementById('config-som');
         const configVibracao = document.getElementById('config-vibracao');
@@ -267,22 +315,23 @@ const app = {
     },
 
     // Salvar configurações
-    salvarConfig() {
-        const config = {
-            som: document.getElementById('config-som').checked,
-            vibracao: document.getElementById('config-vibracao').checked,
-            wakeLock: document.getElementById('config-wake-lock').checked,
-            multi_escola: document.getElementById('config-multi-escola').checked // MULTI ESCOLA
-        };
+    async salvarConfig() {
+        const cfg = await this._getAppConfig();
 
-        storage.saveConfig(config);
+        cfg.som = document.getElementById('config-som').checked;
+        cfg.vibracao = document.getElementById('config-vibracao').checked;
+        cfg.wakeLock = document.getElementById('config-wake-lock').checked;
+        cfg.multi_escola = document.getElementById('config-multi-escola').checked;
+
+        await db.put('config', cfg);
+        this._configCache = cfg;
         utils.mostrarToast('Configurações salvas', 'success');
     },
 
 
     // Aplicar configurações de Interface (Multi Escola)
-    aplicarConfiguracoesInterface() {
-        const { multi_escola } = storage.getConfig();
+    async aplicarConfiguracoesInterface() {
+        const { multi_escola } = await this._getAppConfig();
 
         console.log('🔄 UI: Atualizando interface Multi-Escola:', multi_escola);
 
@@ -359,7 +408,8 @@ const app = {
             return;
         }
 
-        storage.clear();
+        indexedDB.deleteDatabase("chamada_facil_db");
+        this._configCache = null;
         utils.mostrarToast('Todos os dados foram apagados', 'success');
 
         setTimeout(() => {
@@ -440,11 +490,21 @@ const app = {
 };
 
 // Inicializar app quando DOM estiver pronto
-document.addEventListener('DOMContentLoaded', () => {
-    // Delay para animação de loading
-    setTimeout(() => {
-        app.init();
+document.addEventListener('DOMContentLoaded', async () => {
+    // Delay para animação de loading (mantido comportamento visual)
+    setTimeout(async () => {
+        try {
+            await app.init();
+        } catch (e) {
+            console.error("[bootstrap] erro fatal", e);
+            alert("Erro crítico ao iniciar o app: " + e.message);
+        }
     }, 1000);
+});
+
+// Captura global de erros de Promise
+window.addEventListener("unhandledrejection", (event) => {
+    console.error("[unhandled promise]", event.reason);
 });
 
 // Service Worker para PWA
