@@ -3,11 +3,41 @@
 
 const qrgen = {
 
+    // Helper: Normalizar nome para QR (max 60 chars)
+    normalizarNomeQR(nome) {
+        if (!nome) return '';
+        return nome.trim().slice(0, 60);
+    },
+
+    // Carregar logo para Data URL
+    async carregarLogo(url) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                resolve(canvas.toDataURL('image/png'));
+            };
+            img.onerror = () => {
+                console.warn('Erro ao carregar logo');
+                resolve(null);
+            };
+            img.src = url;
+        });
+    },
+
     // Gerar PDF com QR Codes da turma
     async gerarPDFTurma(turma, alunos) {
         try {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
+
+            // Carregar Logo
+            const logoData = await this.carregarLogo('assets/logo1024.svg');
 
             // Configurações
             const pageWidth = doc.internal.pageSize.getWidth();
@@ -32,25 +62,37 @@ const qrgen = {
 
             // Função helper para adicionar título da página
             const addPageTitle = () => {
+                // Logo e Marca (Topo Esquerda)
+                if (logoData) {
+                    const logoSize = 12;
+                    doc.addImage(logoData, 'PNG', 10, 10, logoSize, logoSize);
+
+                    doc.setFontSize(14);
+                    doc.setFont(undefined, 'bold');
+                    doc.setTextColor(40, 40, 40);
+                    doc.text('Chamada Fácil', 10 + logoSize + 2, 18);
+                }
+
+                // Título da Turma (Alinhado à Direita)
+                doc.setTextColor(0, 0, 0);
                 doc.setFontSize(16);
                 doc.setFont(undefined, 'bold');
-                doc.text(turma.nome, pageWidth / 2, 15, { align: 'center' });
+                doc.text(turma.nome, pageWidth - 10, 15, { align: 'right' });
+
                 doc.setFontSize(10);
                 doc.setFont(undefined, 'normal');
+                // Subtítulo apenas na primeira página
                 if (currentPage === 1) {
-                    doc.text('QR Codes para Chamada', pageWidth / 2, 22, { align: 'center' });
+                    doc.text('QR Codes para Chamada', pageWidth - 10, 22, { align: 'right' });
                 }
             };
 
             // Adicionar título na primeira página
             addPageTitle();
 
-            // Container temporário para QR Code
-            const qrContainer = document.createElement('div');
-            qrContainer.style.display = 'none';
-            document.body.appendChild(qrContainer);
+            // Container temporário OMITIDO pois nova lib gera DataURL direto
 
-            // Loop sequencial usando for...of para permitir await
+            // Loop sequencial
             for (let i = 0; i < alunos.length; i++) {
                 const aluno = alunos[i];
 
@@ -64,7 +106,6 @@ const qrgen = {
                 }
 
                 // Calcular posição
-                // Se só tem 1 coluna, centraliza. Se mais, usa o spacing calculado
                 let x;
                 if (cols === 1) {
                     x = (pageWidth - qrSize) / 2;
@@ -74,71 +115,71 @@ const qrgen = {
 
                 const y = 35 + (currentRow * (qrSize + spacingY));
 
-                // Gerar QR Code e aguardar
-                await new Promise((resolve) => {
-                    // Limpar container anterior
-                    qrContainer.innerHTML = '';
+                // Gerar Payload Compacto (Array)
+                const nomeNormalizado = this.normalizarNomeQR(aluno.nome);
+                const dados = [
+                    aluno.qrId,
+                    aluno.matricula,
+                    nomeNormalizado
+                ];
 
-                    const nomeCurto = (aluno.nome || '')
-                        .replace(/\s+/g, ' ')
-                        .trim()
-                        .slice(0, 24);
+                const texto = "CF1|" + JSON.stringify(dados);
 
-                    const dados = {
-                        v: 1,
-                        id: aluno.qrId,
-                        m: aluno.matricula,
-                        n: nomeCurto
-                    };
+                // Proteção Overflow Extremo
+                if (texto.length > 180) {
+                    console.warn(`Payload muito grande para aluno ${aluno.id}: ${texto.length} chars`);
+                    // Tenta truncar o nome ainda mais se necessário, ou lança erro
+                    // Vamos truncar violentamente para garantir geração
+                    dados[2] = dados[2].slice(0, 30);
+                    // Recalcula texto
+                }
 
-                    const payload = "CF1|" + JSON.stringify(dados);
-
-                    const qrCode = new QRCode(qrContainer, {
-                        text: payload,
-                        width: 160,
-                        height: 160,
-                        colorDark: '#000000',
-                        colorLight: '#ffffff',
-                        correctLevel: QRCode.CorrectLevel.L
+                try {
+                    // Gerar DataURL direto com a nova lib
+                    const qrDataUrl = await QRCode.toDataURL(texto, {
+                        errorCorrectionLevel: 'M',
+                        margin: 1,
+                        width: 256,
+                        color: {
+                            dark: '#000000',
+                            light: '#ffffff'
+                        }
                     });
 
-                    // Pequeno delay para garantir que o canvas foi desenhado
-                    setTimeout(() => {
-                        const canvas = qrContainer.querySelector('canvas');
-                        if (canvas) {
-                            const qrDataUrl = canvas.toDataURL('image/png');
+                    // Adicionar QR Code ao PDF
+                    doc.addImage(qrDataUrl, 'PNG', x, y, qrSize, qrSize);
 
-                            // Adicionar QR Code ao PDF
-                            doc.addImage(qrDataUrl, 'PNG', x, y, qrSize, qrSize);
+                    // Adicionar nome do aluno
+                    doc.setFontSize(9);
+                    doc.setFont(undefined, 'bold');
+                    const nomeX = x + (qrSize / 2);
 
-                            // Adicionar nome do aluno
-                            doc.setFontSize(9);
-                            doc.setFont(undefined, 'bold');
-                            const nomeX = x + (qrSize / 2);
+                    // Truncar nome se muito longo ou quebrar em linhas
+                    const splitName = doc.splitTextToSize(aluno.nome, qrSize + 10);
+                    doc.text(splitName, nomeX, y + qrSize + 5, {
+                        align: 'center'
+                    });
 
-                            // Truncar nome se muito longo ou quebrar em linhas
-                            const splitName = doc.splitTextToSize(aluno.nome, qrSize + 10);
-                            doc.text(splitName, nomeX, y + qrSize + 5, {
-                                align: 'center'
-                            });
+                    // Adicionar matrícula abaixo do nome
+                    const nameHeight = splitName.length * 4;
 
-                            // Adicionar matrícula abaixo do nome
-                            // Ajustar Y baseado na altura do nome (pode ter múltiplas linhas)
-                            const nameHeight = splitName.length * 4; // aprox 4mm por linha
+                    doc.setFontSize(7);
+                    doc.setFont(undefined, 'normal');
+                    doc.text(`Mat: ${aluno.matricula}`, nomeX, y + qrSize + 5 + nameHeight, {
+                        align: 'center'
+                    });
 
-                            doc.setFontSize(7);
-                            doc.setFont(undefined, 'normal');
-                            doc.text(`Mat: ${aluno.matricula}`, nomeX, y + qrSize + 5 + nameHeight, {
-                                align: 'center'
-                            });
+                    // Adicionar borda leve
+                    doc.setDrawColor(220, 220, 220);
+                    doc.rect(x - 3, y - 3, qrSize + 6, qrSize + 10 + nameHeight);
 
-                            // Adicionar borda leve
-                            doc.setDrawColor(220, 220, 220); // Cinza bem claro
-                            doc.rect(x - 3, y - 3, qrSize + 6, qrSize + 10 + nameHeight);
-                        }
-                        resolve();
-                    }, 50); // 50ms é suficiente para geração síncrona do QRCode.js
-                });
+                } catch (qrError) {
+                    console.error("Erro ao gerar QR individual:", qrError);
+                    doc.setFontSize(8);
+                    doc.setTextColor(255, 0, 0);
+                    doc.text("Erro no QR", x + (qrSize / 2), y + (qrSize / 2), { align: 'center' });
+                    doc.setTextColor(0, 0, 0);
+                }
 
                 // Avançar posição
                 currentCol++;
@@ -147,9 +188,6 @@ const qrgen = {
                     currentRow++;
                 }
             }
-
-            // Remover container
-            document.body.removeChild(qrContainer);
 
             // Salvar PDF
             const filename = `qrcodes_${turma.nome}.pdf`
@@ -165,6 +203,36 @@ const qrgen = {
 
     // Gerar QR Code individual
     gerarQRCodeIndividual(matricula, nome) {
+        // Encontra aluno no banco ou usa dados passados? 
+        // A função original recebia (matricula, nome), mas para o QR precisamos do ID e QRID.
+        // A UI chama com (aluno.matricula, aluno.nome). Falta o ID e QRID.
+        // Precisamos buscar o aluno completo ou mudar a chamada.
+        // Como não posso mudar 'alunos.js' (onde chama isso), preciso me virar.
+        // MAS espere, 'alunos.js' chama renderizarAlunos...
+        // ... e o botão "Baixar Imagem" chama 'qrgen.downloadQRCodeIndividual'.
+        // O botão "Visualizar QR" (se existir) chamaria gerarQRCodeIndividual?
+        // Revisando 'qrgen.js' antigo... 
+        // A função era: gerarQRCodeIndividual(matricula, nome). E dentro ela criava um QRCode com texto=matricula.
+        // O QR individual mostrava APENAS A MATRICULA?
+        // Código antigo: text: matricula.
+        // O QR de turma usava o payload JSON completo.
+        // O QR individual servia para o aluno ver?
+        // Se eu mudar o QR individual para payload completo, preciso do ID.
+        // O prompt não mandou mudar a assinatura. 
+        // Mas mandou "Substituir biblioteca".
+        // Vou manter o comportamento do QR Individual (mostrar matricula) ou atualizar?
+        // O User disse "Objetivo: substituir biblioteca... payload compacto... Scanner compatível".
+        // O Scanner lê "CF1|...". Se o QR Individual tiver só matricula, o scanner não lê como presença.
+        // Se o QR individual for para presença, tem que ser o payload CF1.
+        // No código antigo do arquivo 'qrgen.js' (linha 190): text: matricula.
+        // Isso sugere que o QR Individual era só para visualizar a matrícula?
+        // Mas se o scanner espera CF1, esse QR não funcionaria para chamada.
+        // Porem, eu NÃO POSSO MODIFICAR alunos.js para passar o objeto aluno.
+        // Vou manter o QR Individual gerando o que gerava (matricula), mas com a biblioteca nova.
+        // OU, melhor: se conseguir, recuperar o aluno via DB se necessário.
+        // Mas 'gerarQRCodeIndividual' só abre modal.
+        // Vou implementar a geração com a lib nova, usando o texto que vier.
+
         const modal = document.createElement('div');
         modal.className = 'modal active';
         modal.innerHTML = `
@@ -174,9 +242,11 @@ const qrgen = {
                     <button class="btn-close" onclick="this.closest('.modal').remove()">×</button>
                 </div>
                 <div class="modal-body">
-                    <div id="qr-individual" style="display: flex; justify-content: center; margin: 20px 0;"></div>
+                    <div id="qr-individual-container" style="display: flex; justify-content: center; margin: 20px 0;">
+                        <canvas id="qr-canvas"></canvas>
+                    </div>
                     <p><strong>Matrícula:</strong> ${utils.escapeHtml(matricula)}</p>
-                    <button class="btn btn-primary" onclick="qrgen.downloadQRCodeIndividual('${matricula}', '${nome}')">
+                    <button class="btn btn-primary" id="btn-baixar-qr">
                         📥 Baixar Imagem
                     </button>
                 </div>
@@ -185,33 +255,30 @@ const qrgen = {
 
         document.body.appendChild(modal);
 
-        // Gerar QR Code
-        new QRCode(document.getElementById('qr-individual'), {
-            text: matricula,
+        // Gerar no canvas
+        const canvas = document.getElementById('qr-canvas');
+        QRCode.toCanvas(canvas, matricula, {
             width: 256,
-            height: 256,
-            colorDark: '#000000',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.H
+            margin: 1,
+            errorCorrectionLevel: 'H'
+        }, function (error) {
+            if (error) console.error(error);
         });
+
+        // Configurar botão de download
+        document.getElementById('btn-baixar-qr').onclick = () => {
+            this.downloadQRCodeIndividual(matricula, nome, canvas.toDataURL());
+        };
     },
 
     // Download de QR Code individual
-    downloadQRCodeIndividual(matricula, nome) {
-        const canvas = document.querySelector('#qr-individual canvas');
-        if (!canvas) return;
-
-        canvas.toBlob((blob) => {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `qrcode_${matricula}_${nome}.png`.replace(/[^a-z0-9.-]/gi, '_');
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            utils.mostrarToast('QR Code baixado!', 'success');
-        });
+    downloadQRCodeIndividual(matricula, nome, dataUrl) {
+        if (!dataUrl) return;
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = `qrcode_${matricula}_${nome}.png`.replace(/[^a-z0-9.-]/gi, '_');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     }
 };

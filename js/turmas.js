@@ -194,14 +194,20 @@ const turmas = {
 
         try {
             await db.add('turmas', novaTurma);
+            app.fecharModal('modal-nova-turma');
+
+            // Atualizar lista (se falhar, apenas loga erro mas considera sucesso na criação)
+            try {
+                await this.listar();
+            } catch (listError) {
+                console.error("Erro ao atualizar lista:", listError);
+            }
 
             utils.mostrarToast('Turma criada com sucesso!', 'success');
             utils.vibrar([50, 50, 50]);
-            app.fecharModal('modal-nova-turma');
-            await this.listar();
         } catch (e) {
             console.error(e);
-            utils.mostrarToast('Erro ao criar turma', 'error');
+            utils.mostrarToast('Erro ao criar turma: ' + (e.message || ''), 'error');
         }
     },
 

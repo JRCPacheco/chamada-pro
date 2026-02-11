@@ -425,7 +425,7 @@ const app = {
             <div class="modal-content">
                 <div class="modal-header">
                     <h3>Ajuda - Como Usar</h3>
-                    <button class="btn-close" onclick="this.remove()">×</button>
+                    <button class="btn-close" onclick="this.closest('.modal').remove()">×</button>
                 </div>
                 <div class="modal-body">
                     <h4>📚 Criar Turma</h4>

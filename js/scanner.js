@@ -1,5 +1,6 @@
 // ===== SCANNER MODULE =====
 // Gerenciamento do scanner de QR Code
+// Migrado para IndexedDB
 
 const scanner = {
 
@@ -9,80 +10,116 @@ const scanner = {
     torchEnabled: false,
     wakeLock: null,
     chamadaAtual: null,
-    presencasTemp: [],
     ultimaLeitura: 0,
 
-    // Parse QR Code no formato novo (CF1|JSON)
+    // Cache de alunos da turma atual para performance
+    alunosCache: {},
+
+    // Parse QR Code no formato novo (CF1|ARRAY) ou antigo (CF1|OBJECT)
     parseQrAluno(texto) {
-        if (!texto.startsWith("CF1|")) return null;
+        if (!texto || !texto.startsWith("CF1|")) return null;
         try {
             const json = texto.slice(4);
-            return JSON.parse(json);
-        } catch {
+            const data = JSON.parse(json);
+
+            // NOVO FORMATO: Array [id, matricula, nome]
+            if (Array.isArray(data)) {
+                return {
+                    id: data[0],
+                    matricula: data[1],
+                    nome: data[2]
+                };
+            }
+
+            // FORMATO ANTIGO: Objeto {id, m, n}
+            // Mapeando para formato padrão do app
+            return {
+                id: data.id,
+                matricula: data.m || data.matricula, // suporte a variantes se houver
+                nome: data.n || data.nome
+            };
+        } catch (e) {
+            console.error("Erro parse QR:", e);
             return null;
         }
     },
 
-    // Buscar aluno por qrId em todas as turmas
-    buscarAlunoPorQrId(qrId) {
-        const turmas = storage.getTurmas();
-        for (const t of turmas) {
-            if (!t.alunos) continue;
-            // Suportar tanto objeto quanto array
-            const alunosArray = Array.isArray(t.alunos)
-                ? t.alunos
-                : Object.values(t.alunos);
-
-            for (const a of alunosArray) {
-                if (a.qrId === qrId) {
-                    return { aluno: a, turma: t };
-                }
-            }
-        }
-        return null;
-    },
-
     // Iniciar nova chamada
-    iniciarChamada() {
+    async iniciarChamada() {
         if (!turmas.turmaAtual) {
             utils.mostrarToast('Nenhuma turma selecionada', 'error');
             return;
         }
 
-        const turma = storage.getTurmaById(turmas.turmaAtual.id);
-        const totalAlunos = turma.alunos ? Object.keys(turma.alunos).length : 0;
+        try {
+            const turmaId = turmas.turmaAtual.id;
+            const turma = await db.get('turmas', turmaId);
 
-        if (totalAlunos === 0) {
-            utils.mostrarToast('Adicione alunos antes de iniciar a chamada', 'warning');
-            return;
+            // Buscar alunos da turma para cache e contagem
+            const alunos = await db.getByIndex('alunos', 'turmaId', turmaId);
+
+            if (alunos.length === 0) {
+                utils.mostrarToast('Adicione alunos antes de iniciar a chamada', 'warning');
+                return;
+            }
+
+            // Popula cache de alunos por ID e matricula (legacy fallback)
+            this.alunosCache = {};
+            alunos.forEach(a => {
+                this.alunosCache[a.id] = a;
+                if (a.matricula) this.alunosCache['MAT_' + a.matricula] = a; // Index secundário
+            });
+
+            // Definir Data ISO e ID Determinístico
+            const dataISO = new Date().toISOString().slice(0, 10);
+            const chamadaId = `chamada_${turmaId}_${dataISO}`;
+
+            // Tentar recuperar chamada existente
+            let chamada = await db.get('chamadas', chamadaId);
+
+            if (!chamada) {
+                // Criar nova
+                chamada = {
+                    id: chamadaId,
+                    turmaId: turmaId,
+                    turmaNome: turma.nome, // Desnormalizado para facilidade de uso
+                    data: dataISO,
+                    criadoEm: new Date().toISOString(),
+                    registros: {} // { alunoId: { status: 'P', ts: number } }
+                };
+                // Salvar imediatamente para garantir existência
+                await db.put('chamadas', chamada);
+            }
+
+            this.chamadaAtual = chamada;
+
+            // Atualizar UI
+            document.getElementById('scanner-turma-nome').textContent = turma.nome;
+            document.getElementById('scanner-data-hora').textContent = utils.formatarData(dataISO);
+
+            // Contar presenças iniciais
+            const totalPresentes = Object.values(this.chamadaAtual.registros || {}).filter(r => r.status === 'P').length;
+            document.getElementById('contador-presencas').textContent = totalPresentes;
+
+            document.getElementById('lista-presencas-live').innerHTML = '';
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('feedback').className = 'feedback';
+
+            // Se já tiver presenças, mostrar últimas 5 (opcional, mas bom UX)
+            this.atualizarListaPresencas();
+
+            // Mostrar tela de scanner
+            app.mostrarTela('tela-scanner');
+
+            // Inicializar scanner
+            setTimeout(() => {
+                this.iniciarScanner();
+            }, 300);
+
+        } catch (error) {
+            console.error("Erro ao iniciar chamada:", error);
+            utils.mostrarToast("Erro ao iniciar chamada", "error");
         }
-
-        // Inicializar chamada
-        this.chamadaAtual = {
-            turmaId: turma.id,
-            turmaNome: turma.nome,
-            data: new Date().toISOString(),
-            dataFormatada: utils.formatarDataHora(new Date()),
-            presencas: []
-        };
-
-        this.presencasTemp = [];
-
-        // Atualizar UI
-        document.getElementById('scanner-turma-nome').textContent = turma.nome;
-        document.getElementById('scanner-data-hora').textContent = this.chamadaAtual.dataFormatada;
-        document.getElementById('contador-presencas').textContent = '0';
-        document.getElementById('lista-presencas-live').innerHTML = '';
-        document.getElementById('feedback').textContent = '';
-        document.getElementById('feedback').className = 'feedback';
-
-        // Mostrar tela de scanner
-        app.mostrarTela('tela-scanner');
-
-        // Inicializar scanner
-        setTimeout(() => {
-            this.iniciarScanner();
-        }, 300);
     },
 
     // Inicializar scanner HTML5
@@ -94,7 +131,7 @@ const scanner = {
         if (this.scanning) return;
 
         try {
-            const config = storage.getConfig();
+            const config = await app._getAppConfig();
             const constraints = this.torchEnabled
                 ? { facingMode: this.currentFacingMode, advanced: [{ torch: true }] }
                 : { facingMode: this.currentFacingMode };
@@ -144,70 +181,88 @@ const scanner = {
     },
 
     // Callback de sucesso no scan
-    onScanSuccess(decodedText) {
-        // Debounce - evitar leituras duplicadas muito rápidas
+    async onScanSuccess(decodedText) {
+        // Debounce
         const agora = Date.now();
         if (agora - this.ultimaLeitura < 1500) return;
         this.ultimaLeitura = agora;
 
         let aluno = null;
-        let matricula = null;
+        let qrIdLido = null;
 
         // 1. Tentar formato novo (CF1|JSON)
         const dadosQr = this.parseQrAluno(decodedText);
-        if (dadosQr && dadosQr.id) {
-            // QR novo: buscar por qrId
-            const resultado = this.buscarAlunoPorQrId(dadosQr.id);
-            if (resultado) {
-                // Validar se pertence à turma atual
-                if (resultado.turma.id !== this.chamadaAtual.turmaId) {
-                    this.mostrarFeedback('Aluno de outra turma!', 'warning');
-                    utils.tocarSom('error');
-                    return;
+
+        try {
+            if (dadosQr && dadosQr.id) {
+                // QR novo: buscar no banco pelo index qrId
+                qrIdLido = dadosQr.id;
+                const alunosEncontrados = await db.getByIndex('alunos', 'qrId', qrIdLido);
+                if (alunosEncontrados && alunosEncontrados.length > 0) {
+                    aluno = alunosEncontrados[0];
                 }
-                aluno = resultado.aluno;
-                matricula = aluno.matricula;
+            } else {
+                // 2. Fallback: formato antigo (matricula direta?)
+                // O app antigo salvava matrícula no QR.
+                // Tenta achar aluno na turma atual pela matrícula.
+                // (Isso é arriscado se matricula repetir em turmas diferentes, mas o scanner valida turmaId abaixo)
+                // Na verdade o fallback do código antigo buscava `turma.alunos[matricula]`.
+                // Aqui podemos buscar no cache da turma.
+                const matricula = decodedText;
+                aluno = this.alunosCache['MAT_' + matricula];
             }
-        } else {
-            // 2. Fallback: formato antigo (matricula direta)
-            matricula = decodedText;
-            const turma = storage.getTurmaById(this.chamadaAtual.turmaId);
-            aluno = turma.alunos ? turma.alunos[matricula] : null;
+
+            // VALIDAR ALUNO
+            if (!aluno) {
+                this.mostrarFeedback('Aluno não encontrado no banco', 'warning');
+                utils.tocarSom('error');
+                return;
+            }
+
+            // VALIDAR TURMA (CRÍTICO)
+            if (aluno.turmaId !== this.chamadaAtual.turmaId) {
+                this.mostrarFeedback('Aluno de outra turma!', 'warning');
+                utils.tocarSom('error');
+                return;
+            }
+
+            // Verificar duplicidade DESTE SCAN (evitar spam de 'já registrado')
+            // Se já está marcado como P recentemente (nos ultimos 5 segundos?), avisa.
+            // Mas o requisito diz "se alunoId já existe em chamada.registros → atualizar".
+            // Então vamos atualizar o timestamp e dar feedback de sucesso (ou 'já lido').
+            // UX: Se já leu, avisa que já foi lido para usuário não ficar tentando.
+
+            const registroExistente = this.chamadaAtual.registros[aluno.id];
+
+            if (registroExistente && registroExistente.status === 'P') {
+                // Opcional: Permitir atualizar timestamp?
+                // Vamos só avisar.
+                this.mostrarFeedback('Já registrado!', 'warning');
+                utils.tocarSom('error'); // ou um som neutro
+                return;
+            }
+
+            // REGISTRAR PRESENÇA (PUT)
+            this.chamadaAtual.registros[aluno.id] = {
+                status: 'P',
+                ts: Date.now()
+            };
+
+            // PERSISTIR IMEDIATAMENTE
+            await db.put('chamadas', this.chamadaAtual);
+
+            // FEEDBACK
+            this.mostrarFeedback(`✓ ${aluno.nome}`, 'success');
+            utils.tocarSom('success');
+            utils.vibrar([50, 50, 100]);
+
+            // Atualizar UI
+            this.atualizarListaPresencas();
+
+        } catch (e) {
+            console.error("Erro no scan:", e);
+            this.mostrarFeedback('Erro ao processar', 'error');
         }
-
-        // Verificar se aluno foi encontrado
-        if (!aluno) {
-            this.mostrarFeedback(`Aluno não encontrado`, 'warning');
-            utils.tocarSom('error');
-            return;
-        }
-
-        // Verificar se já foi registrado
-        if (this.presencasTemp.some(p => p.matricula === matricula)) {
-            this.mostrarFeedback('Aluno já registrado!', 'warning');
-            utils.tocarSom('error');
-            return;
-        }
-
-        // Registrar presença
-        const presenca = {
-            matricula: matricula,
-            nome: aluno.nome,
-            hora: new Date().toISOString(),
-            horaFormatada: utils.formatarHora(new Date()),
-            status: 'P'
-        };
-
-        this.presencasTemp.push(presenca);
-        this.chamadaAtual.presencas = this.presencasTemp;
-
-        // Feedback visual e sonoro
-        this.mostrarFeedback(`✓ ${aluno.nome}`, 'success');
-        utils.tocarSom('success');
-        utils.vibrar([50, 50, 100]);
-
-        // Atualizar lista
-        this.atualizarListaPresencas();
     },
 
     // Mostrar feedback visual
@@ -237,10 +292,26 @@ const scanner = {
         const container = document.getElementById('lista-presencas-live');
         const contador = document.getElementById('contador-presencas');
 
-        contador.textContent = this.presencasTemp.length;
+        // Converter registros em array
+        const registros = Object.entries(this.chamadaAtual.registros || {})
+            .map(([id, reg]) => {
+                // Enriquecer com dados do aluno (do cache)
+                const aluno = this.alunosCache[id];
+                return {
+                    id: id,
+                    nome: aluno ? aluno.nome : 'Desconhecido',
+                    ts: reg.ts,
+                    horaFormatada: utils.formatarHora(new Date(reg.ts)),
+                    status: reg.status
+                };
+            })
+            .filter(r => r.status === 'P')
+            .sort((a, b) => b.ts - a.ts); // Ordem Cronológica Inversa (Mais recentes topo)
+
+        contador.textContent = registros.length;
 
         // Mostrar últimas 5 presenças
-        const ultimas = this.presencasTemp.slice(-5).reverse();
+        const ultimas = registros.slice(0, 5);
 
         container.innerHTML = ultimas.map(p => {
             const iniciais = utils.getIniciais(p.nome);
@@ -350,6 +421,7 @@ const scanner = {
 
             // Parse QR
             const dados = this.parseQrAluno(texto);
+            const rawText = texto;
 
             // Parar scanner imediatamente
             readerTemp.stop()
@@ -359,15 +431,28 @@ const scanner = {
                     if (dados) {
                         utils.mostrarToast('QR Code lido com sucesso!', 'success');
                         callback(dados);
-                    } else {
+                    } else if (rawText) {
+                        // Fallback para texto plano (matrícula antiga)
+                        // Mas o `scanner.js` espera objeto. Vamos retornar objeto simulado?
+                        // "CF1|JSON" é o padrão novo. Se for antigo, retornamos null ou tentamos?
+                        // O chamador em `alunos.js` vai tratar.
+                        // Se não parseou e não é CF1, assumimos que é matricula direta?
+                        // Melhor retornar um objeto { id: null, raw: rawText } se for o caso.
+                        // Mas `lerQrParaCadastro` é chamado por alunos.js para PREENCHER O QR.
+                        // Se eu li um texto qualquer, posso usar como QR ID? 
+                        // O sistema gera QR. O cadastro lê para ASSOCIAR.
+                        // Se for um QR gerado pelo sistema, é CF1.
+
                         utils.mostrarToast('QR Code inválido ou formato antigo', 'warning');
+                        callback(null);
+                    } else {
                         callback(null);
                     }
                 })
                 .catch(err => {
                     if (overlay) overlay.style.display = 'none';
                     console.error('Erro ao parar scanner:', err);
-                    callback(dados);
+                    callback(null); // Callback null em erro
                 });
         };
 
@@ -404,7 +489,12 @@ const scanner = {
 
     // Finalizar chamada
     async finalizarChamada() {
-        if (this.presencasTemp.length === 0) {
+        // Como estamos salvando em tempo real, "finalizar" é apenas sair e mostrar resumo.
+        // Verificamos se tem presenças.
+
+        const presencasCount = Object.values(this.chamadaAtual.registros || {}).filter(r => r.status === 'P').length;
+
+        if (presencasCount === 0) {
             if (!utils.confirmar('Nenhuma presença foi registrada. Deseja finalizar mesmo assim?')) {
                 return;
             }
@@ -413,17 +503,12 @@ const scanner = {
         // Parar scanner
         await this.pararScanner();
 
-        // Salvar chamada
-        const chamadaId = storage.addChamada(this.chamadaAtual);
+        utils.mostrarToast('Chamada finalizada!', 'success');
 
-        if (chamadaId) {
-            utils.mostrarToast('Chamada finalizada!', 'success');
-
-            // Mostrar resumo
-            chamadas.mostrarResumo(this.chamadaAtual);
-        } else {
-            utils.mostrarToast('Erro ao salvar chamada', 'error');
-        }
+        // Mostrar resumo (precisa dos dados populados)
+        // O `verDetalhes` busca do banco. Como já salvamos com `put` no scan, está lá.
+        // Usamos chamada.verDetalhes passando o ID.
+        chamadas.verDetalhes(this.chamadaAtual.id);
     }
 };
 

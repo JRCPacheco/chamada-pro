@@ -3,7 +3,7 @@
 // Sem dependências externas
 
 const DB_NAME = "chamada_facil_db";
-const DB_VERSION = 1;
+const DB_VERSION = 3;
 
 const db = {
     // Conexão singleton
@@ -39,7 +39,21 @@ const db = {
 
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
+                const tx = event.target.transaction; // Necessário para store existente
                 console.log("[db] upgrade needed v" + DB_VERSION);
+
+                // Helper para garantir indexes
+                const ensureIndex = (storeName, indexName, keyPath, options) => {
+                    try {
+                        const store = tx.objectStore(storeName);
+                        if (!store.indexNames.contains(indexName)) {
+                            console.log(`[db] criando index ${storeName}.${indexName}`);
+                            store.createIndex(indexName, keyPath, options);
+                        }
+                    } catch (e) {
+                        console.error(`[db] erro ensureIndex ${storeName}.${indexName}`, e);
+                    }
+                };
 
                 // Config Store
                 if (!db.objectStoreNames.contains('config')) {
@@ -55,6 +69,8 @@ const db = {
                 if (!db.objectStoreNames.contains('turmas')) {
                     const store = db.createObjectStore('turmas', { keyPath: 'id' });
                     store.createIndex('escolaId', 'escolaId', { unique: false });
+                } else {
+                    ensureIndex('turmas', 'escolaId', 'escolaId', { unique: false });
                 }
 
                 // Alunos Store
@@ -63,6 +79,10 @@ const db = {
                     store.createIndex('turmaId', 'turmaId', { unique: false });
                     store.createIndex('matricula', 'matricula', { unique: false });
                     store.createIndex('qrId', 'qrId', { unique: true });
+                } else {
+                    ensureIndex('alunos', 'turmaId', 'turmaId', { unique: false });
+                    ensureIndex('alunos', 'matricula', 'matricula', { unique: false });
+                    ensureIndex('alunos', 'qrId', 'qrId', { unique: true });
                 }
 
                 // Chamadas Store
@@ -70,12 +90,17 @@ const db = {
                     const store = db.createObjectStore('chamadas', { keyPath: 'id' });
                     store.createIndex('turmaId', 'turmaId', { unique: false });
                     store.createIndex('data', 'data', { unique: false });
+                } else {
+                    ensureIndex('chamadas', 'turmaId', 'turmaId', { unique: false });
+                    ensureIndex('chamadas', 'data', 'data', { unique: false });
                 }
 
                 // Eventos Notas Store
                 if (!db.objectStoreNames.contains('eventos_nota')) {
                     const store = db.createObjectStore('eventos_nota', { keyPath: 'id' });
                     store.createIndex('alunoId', 'alunoId', { unique: false });
+                } else {
+                    ensureIndex('eventos_nota', 'alunoId', 'alunoId', { unique: false });
                 }
             };
         });

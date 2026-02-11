@@ -73,7 +73,10 @@ const utils = {
 
     // Vibrar dispositivo
     vibrar(padrao = [100]) {
-        const config = storage.getConfig();
+        // Acessar cache de config do app (se carregado)
+        // Se app não estiver pronto, assume defaults (true)
+        const config = (typeof app !== 'undefined' && app._configCache) ? app._configCache : { vibracao: true };
+
         if (config.vibracao && navigator.vibrate) {
             navigator.vibrate(padrao);
         }
@@ -81,7 +84,8 @@ const utils = {
 
     // Tocar som de confirmação
     tocarSom(tipo = 'success') {
-        const config = storage.getConfig();
+        const config = (typeof app !== 'undefined' && app._configCache) ? app._configCache : { som: true };
+
         if (!config.som) return;
 
         // Criar som usando Web Audio API
