@@ -238,7 +238,7 @@
                 </div>
             </div>
 
-            <button class="btn-fab" onclick="scanner.iniciarChamada()">
+            <button class="btn-fab" onclick="scanner.iniciarChamada(turmas.turmaAtual?.id)">
                 📷
             </button>
         </div>
@@ -587,9 +587,9 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- Scripts -->
-    <script src="js/utils.js?v=2"></script>
-    <script src="js/db.js?v=2"></script>
-
+    <script src="js/utils.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/config-defaults.js"></script>
     <script src="js/escolas.js?v=2"></script>
     <script src="js/turmas.js?v=2"></script>
     <script src="js/alunos.js?v=2"></script>

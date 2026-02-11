@@ -52,7 +52,7 @@ const turmas = {
         }
     },
 
-    // Renderizar lista de turmas
+    // Renderizar lista de turmas (SEM N+1 QUERIES)
     async renderizarTurmas(turmasArray) {
         const container = document.getElementById('lista-turmas');
         const config = await app._getAppConfig();
@@ -70,22 +70,30 @@ const turmas = {
             escolasAll.forEach(e => escolasMap[e.id] = e.nome);
         }
 
-        // NOTA DE DESEMPENHO: 
-        // Estamos contando alunos e chamadas dentro do loop.
-        // O ideal seria ter contadores desnormalizados na turma, mas vamos fazer counts via Index.
-        // Promise.all para paralelizar leitura.
+        // PERFORMANCE FIX: Carregar TUDO uma vez, mapear em memória
+        // Evita N+1 queries (78 transações para 39 turmas → 2 transações totais)
+        const todosAlunos = await db.getAll('alunos');
+        const todasChamadas = await db.getAll('chamadas');
 
-        const renderPromises = turmasArray.map(async turma => {
-            // Contar alunos
-            // IMPORTANTE: Alunos agora estao em store separado, mas ainda estamos na transição.
-            // Se o code antigo salvava em turma.alunos, na migração os dados não existem.
-            // Assumindo start zerado.
-            const alunosDaTurma = await db.getByIndex('alunos', 'turmaId', turma.id);
-            const totalAlunos = alunosDaTurma.length;
+        // Construir mapas de contagem por turmaId
+        const mapAlunosPorTurma = {};
+        todosAlunos.forEach(aluno => {
+            if (aluno.turmaId) {
+                mapAlunosPorTurma[aluno.turmaId] = (mapAlunosPorTurma[aluno.turmaId] || 0) + 1;
+            }
+        });
 
-            // Contar chamadas
-            const chamadasDaTurma = await db.getByIndex('chamadas', 'turmaId', turma.id);
-            const totalChamadas = chamadasDaTurma.length;
+        const mapChamadasPorTurma = {};
+        todasChamadas.forEach(chamada => {
+            if (chamada.turmaId) {
+                mapChamadasPorTurma[chamada.turmaId] = (mapChamadasPorTurma[chamada.turmaId] || 0) + 1;
+            }
+        });
+
+        // Renderizar usando mapas (sync, sem await)
+        const cardsHtml = turmasArray.map(turma => {
+            const totalAlunos = mapAlunosPorTurma[turma.id] || 0;
+            const totalChamadas = mapChamadasPorTurma[turma.id] || 0;
 
             // Badge de escola
             let escolaBadge = '';
@@ -107,10 +115,9 @@ const turmas = {
                     </div>
                 </div>
             `;
-        });
+        }).join('');
 
-        const cardsHtml = await Promise.all(renderPromises);
-        container.innerHTML = cardsHtml.join('');
+        container.innerHTML = cardsHtml;
 
         if (container && !this.listaTurmasListenerBound) {
             container.addEventListener('click', (e) => {

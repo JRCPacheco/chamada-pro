@@ -15,6 +15,9 @@ const scanner = {
     // Cache de alunos da turma atual para performance
     alunosCache: {},
 
+    // Lock de concorrência para processamento de scan
+    scanLock: false,
+
     // Parse QR Code no formato novo (CF1|ARRAY) ou antigo (CF1|OBJECT)
     parseQrAluno(texto) {
         if (!texto || !texto.startsWith("CF1|")) return null;
@@ -44,16 +47,20 @@ const scanner = {
         }
     },
 
-    // Iniciar nova chamada
-    async iniciarChamada() {
-        if (!turmas.turmaAtual) {
+    // Iniciar nova chamada (DECOUPLED: recebe turmaId como parâmetro)
+    async iniciarChamada(turmaId) {
+        if (!turmaId) {
             utils.mostrarToast('Nenhuma turma selecionada', 'error');
             return;
         }
 
         try {
-            const turmaId = turmas.turmaAtual.id;
             const turma = await db.get('turmas', turmaId);
+
+            if (!turma) {
+                utils.mostrarToast('Turma não encontrada', 'error');
+                return;
+            }
 
             // Buscar alunos da turma para cache e contagem
             const alunos = await db.getByIndex('alunos', 'turmaId', turmaId);
@@ -187,13 +194,21 @@ const scanner = {
         if (agora - this.ultimaLeitura < 1500) return;
         this.ultimaLeitura = agora;
 
-        let aluno = null;
-        let qrIdLido = null;
+        // LOCK de concorrência: evitar processamento simultâneo
+        if (this.scanLock) {
+            console.warn('[scanner] scan locked, aguardando processamento anterior');
+            return;
+        }
 
-        // 1. Tentar formato novo (CF1|JSON)
-        const dadosQr = this.parseQrAluno(decodedText);
+        this.scanLock = true;
 
         try {
+            let aluno = null;
+            let qrIdLido = null;
+
+            // 1. Tentar formato novo (CF1|JSON)
+            const dadosQr = this.parseQrAluno(decodedText);
+
             if (dadosQr && dadosQr.id) {
                 // QR novo: buscar no banco pelo index qrId
                 qrIdLido = dadosQr.id;
@@ -262,6 +277,9 @@ const scanner = {
         } catch (e) {
             console.error("Erro no scan:", e);
             this.mostrarFeedback('Erro ao processar', 'error');
+        } finally {
+            // GARANTIR unlock mesmo se houver erro
+            this.scanLock = false;
         }
     },
 

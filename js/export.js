@@ -4,20 +4,22 @@
 
 const exportModule = {
 
-    // Exportar backup completo
+    // Exportar backup completo (V1 com versionamento)
     async exportarBackup() {
         try {
             utils.mostrarToast('Gerando backup...', 'info');
 
             const backup = {
-                version: 2,
-                generatedAt: new Date().toISOString(),
-                config: await db.getAll('config'),
-                escolas: await db.getAll('escolas'),
-                turmas: await db.getAll('turmas'),
-                alunos: await db.getAll('alunos'),
-                chamadas: await db.getAll('chamadas'),
-                eventos_nota: await db.getAll('eventos_nota')
+                schemaVersion: 1,
+                exportedAt: new Date().toISOString(),
+                data: {
+                    config: await db.getAll('config'),
+                    escolas: await db.getAll('escolas'),
+                    turmas: await db.getAll('turmas'),
+                    alunos: await db.getAll('alunos'),
+                    chamadas: await db.getAll('chamadas'),
+                    eventos_nota: await db.getAll('eventos_nota')
+                }
             };
 
             const json = JSON.stringify(backup, null, 2);
@@ -32,7 +34,35 @@ const exportModule = {
         }
     },
 
-    // Importar backup
+    // Migrar backup para formato atual se necessário
+    migrateBackupIfNeeded(backup) {
+        // Formato legacy (v0) - sem schemaVersion
+        if (!backup.schemaVersion) {
+            console.log('[export] migrando backup v0 para v1');
+            return {
+                schemaVersion: 1,
+                exportedAt: backup.generatedAt || new Date().toISOString(),
+                data: {
+                    config: backup.config || [],
+                    escolas: backup.escolas || [],
+                    turmas: backup.turmas || [],
+                    alunos: backup.alunos || [],
+                    chamadas: backup.chamadas || [],
+                    eventos_nota: backup.eventos_nota || []
+                }
+            };
+        }
+
+        // Versão futura - incompatibilidade
+        if (backup.schemaVersion > 1) {
+            throw new Error(`Backup versão ${backup.schemaVersion} incompatível. Atualize o app.`);
+        }
+
+        // Versão atual
+        return backup;
+    },
+
+    // Importar backup (Atomic Transaction)
     importarBackup() {
         const input = document.createElement('input');
         input.type = 'file';
@@ -45,10 +75,13 @@ const exportModule = {
             const reader = new FileReader();
             reader.onload = async (event) => {
                 try {
-                    const backup = JSON.parse(event.target.result);
+                    const rawBackup = JSON.parse(event.target.result);
+
+                    // Migrar se necessário
+                    const backup = this.migrateBackupIfNeeded(rawBackup);
 
                     // Validar backup básico
-                    if (!backup.turmas || !backup.alunos) {
+                    if (!backup.data || !backup.data.turmas || !backup.data.alunos) {
                         throw new Error('Arquivo de backup inválido (estruturas ausentes)');
                     }
 
@@ -60,30 +93,23 @@ const exportModule = {
 
                     utils.mostrarToast('Importando dados...', 'info');
 
-                    // Importação Sequencial para garantir integridade
-
-                    // Stores a limpar e preencher
+                    // TRANSAÇÃO ATÔMICA: All-or-nothing
                     const stores = ['config', 'escolas', 'turmas', 'alunos', 'chamadas', 'eventos_nota'];
 
-                    for (const storeName of stores) {
-                        if (backup[storeName] && Array.isArray(backup[storeName])) {
-                            // Limpar store atual?
-                            // O db.js não tem 'clear' wrapper, mas tem 'delete'.
-                            // Para limpar tudo, teríamos que pegar todos IDs e deletar, ou recriar DB.
-                            // Wrapper `db` não tem `clear`. Vamos iterar e deletar tudo?
-                            // Ou simplesmente fazer `put` (upsert) dos novos e manter os velhos (merge)?
-                            // Prompt pediu "Modo snapshot: limpar stores, inserir com db.put".
-                            // Vou implementar 'clearStore' helper inline ou lógica de delete all.
+                    await db.transaction(stores, 'readwrite', (tx) => {
+                        stores.forEach(storeName => {
+                            const store = tx.objectStore(storeName);
+                            const items = backup.data[storeName] || [];
 
-                            const currentItems = await db.getAll(storeName);
-                            const deletePromises = currentItems.map(item => db.delete(storeName, item.id || item.key));
-                            await Promise.all(deletePromises);
+                            // Limpar store
+                            store.clear();
 
-                            // Inserir novos
-                            const insertPromises = backup[storeName].map(item => db.put(storeName, item));
-                            await Promise.all(insertPromises);
-                        }
-                    }
+                            // Inserir todos os itens
+                            items.forEach(item => {
+                                store.put(item);
+                            });
+                        });
+                    });
 
                     utils.mostrarToast('Backup importado com sucesso!', 'success');
 
@@ -94,7 +120,10 @@ const exportModule = {
 
                 } catch (error) {
                     console.error('Erro ao processar backup:', error);
-                    utils.mostrarToast('Arquivo de backup inválido ou erro na importação', 'error');
+                    utils.mostrarToast(
+                        error.message || 'Arquivo de backup inválido ou erro na importação',
+                        'error'
+                    );
                 }
             };
 

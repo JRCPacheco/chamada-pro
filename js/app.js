@@ -15,14 +15,8 @@ const app = {
         let cfg = await db.get('config', 'app');
 
         if (!cfg) {
-            cfg = {
-                key: 'app',
-                onboarding_done: false,
-                som: true,
-                vibracao: true,
-                wakeLock: false,
-                multi_escola: false
-            };
+            // Usar defaults centralizados
+            cfg = { ...CONFIG_DEFAULTS.app };
             await db.put('config', cfg);
             this._configCache = cfg;
             console.log("[config] default criado");

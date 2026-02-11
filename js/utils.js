@@ -3,10 +3,28 @@
 
 const utils = {
 
-    // Gerar ID único
-    gerarId() {
-        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+
+    // Gerar UUID seguro (RFC4122 v4)
+    uuid() {
+        // Preferir crypto.randomUUID nativo (mais seguro)
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+
+        // Fallback: UUID v4 manual (RFC4122 compliant)
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
     },
+
+    // DEPRECATED: Usar uuid() para novos IDs
+    // Mantido apenas para compatibilidade com código legacy
+    gerarId() {
+        return this.uuid();
+    },
+
 
     // Formatar data
     formatarData(data) {

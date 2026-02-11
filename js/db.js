@@ -52,6 +52,7 @@ const db = {
                         }
                     } catch (e) {
                         console.error(`[db] erro ensureIndex ${storeName}.${indexName}`, e);
+                        throw e; // Production safety: não mascarar erros de DB
                     }
                 };
 
@@ -106,9 +107,9 @@ const db = {
         });
     },
 
-    // Gerar ID único
+    // Gerar ID único (UUID v4)
     _generateId() {
-        return "id_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        return utils.uuid();
     },
 
     // Transaction Helper
