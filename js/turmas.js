@@ -317,6 +317,24 @@ const turmas = {
         }
     },
 
+    // Excluir turma (botão da UI)
+    async excluirTurma(turmaId) {
+        if (!turmaId) {
+            utils.mostrarToast('Nenhuma turma selecionada', 'error');
+            return;
+        }
+
+        if (!this.turmaAtual || this.turmaAtual.id !== turmaId) {
+            this.turmaAtual = await db.get('turmas', turmaId);
+            if (!this.turmaAtual) {
+                utils.mostrarToast('Turma não encontrada', 'error');
+                return;
+            }
+        }
+
+        await this.confirmarExcluirTurma();
+    },
+
     // Confirmar exclusão de turma
     async confirmarExcluirTurma() {
         if (!this.turmaAtual) {

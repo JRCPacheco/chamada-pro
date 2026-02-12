@@ -540,9 +540,12 @@ body {
 }
 
 .btn-success {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white;
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    background: #2e7d32;
+    color: #fff;
+}
+
+.btn-success:hover {
+    filter: brightness(1.1);
 }
 
 .btn-warning {
@@ -660,7 +663,9 @@ body {
 
 .turma-actions {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
     margin-top: 16px;
 }
 
@@ -911,6 +916,81 @@ body {
 .historico-meta {
     font-size: 13px;
     color: var(--text-muted);
+}
+
+.relatorio-mensal-container {
+    padding: 0 20px 16px;
+}
+
+.relatorio-mensal-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.relatorio-mensal-controls input[type="month"] {
+    min-height: 36px;
+    padding: 8px 10px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius-sm);
+}
+
+.relatorio-mensal-tabela-wrap {
+    overflow: auto;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius-sm);
+}
+
+.table-relatorio-mensal {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.table-relatorio-mensal th,
+.table-relatorio-mensal td {
+    border: 1px solid var(--gray-200);
+    padding: 6px 8px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.table-relatorio-mensal th:first-child,
+.table-relatorio-mensal td:first-child {
+    text-align: left;
+    position: sticky;
+    left: 0;
+    background: #fff;
+    z-index: 1;
+}
+
+.table-relatorio-mensal thead th {
+    background: var(--gray-100);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.table-relatorio-mensal thead th:first-child {
+    z-index: 3;
+}
+
+.cell-status-P {
+    background: #dff5e3;
+    color: #1e4620;
+    font-weight: 600;
+    text-align: center;
+}
+
+.cell-status-F {
+    background: #fde2e1;
+    color: #611a15;
+    font-weight: 600;
+    text-align: center;
 }
 
 /* ===== SCANNER ===== */

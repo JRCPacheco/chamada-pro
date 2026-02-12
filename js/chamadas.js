@@ -5,6 +5,8 @@
 const chamadas = {
 
     chamadaResumo: null,
+    relatorioMensalAtual: null,
+    relatorioMensalInicializado: false,
     alunosCache: {}, // Cache temporário de alunos para visualização
 
     // Listar histórico de chamadas
@@ -12,6 +14,7 @@ const chamadas = {
         if (!turmas.turmaAtual) return;
 
         try {
+            this.inicializarRelatorioMensalUI();
             const container = document.getElementById('lista-historico');
             const emptyState = document.getElementById('empty-historico');
 
@@ -30,6 +33,11 @@ const chamadas = {
             } else {
                 emptyState.style.display = 'none';
                 this.renderizarHistorico(chamadasArray, totalAlunos);
+            }
+
+            const relatorioContainer = document.getElementById('relatorio-mensal-container');
+            if (relatorioContainer && relatorioContainer.style.display !== 'none') {
+                await this.atualizarRelatorioMensal();
             }
         } catch (error) {
             console.error("Erro ao listar histórico:", error);
@@ -106,7 +114,6 @@ const chamadas = {
 
         let presentes = 0;
         let faltas = 0;
-        let justificadas = 0;
 
         // Normalizar registros para array processável
         let registrosProcessados = [];
@@ -135,7 +142,6 @@ const chamadas = {
             }
 
             if (status === 'P') presentes++;
-            else if (status === 'J') justificadas++;
             else {
                 status = 'F'; // Força 'F' para contagem
                 faltas++;
@@ -206,14 +212,12 @@ const chamadas = {
                     if (reg) {
                         const s = reg.status || 'P';
                         if (s === 'P') { status = 'Presente'; hora = reg.ts ? utils.formatarHora(new Date(reg.ts)) : '-'; }
-                        else if (s === 'J') status = 'Falta Justificada';
                     }
                 } else if (Array.isArray(chamada.presencas)) {
                     const presenca = chamada.presencas.find(p => p.matricula === aluno.matricula);
                     if (presenca) {
                         const s = presenca.status || 'P';
                         if (s === 'P') { status = 'Presente'; hora = presenca.horaFormatada || '-'; }
-                        else if (s === 'J') status = 'Falta Justificada';
                     }
                 }
 
@@ -256,11 +260,9 @@ const chamadas = {
             const totalAlunos = todosAlunos.length;
             let presentes = 0;
             let faltas = 0;
-            let justificadas = 0;
 
             const listaPresentes = [];
             const listaAusentes = [];
-            const listaJustificadas = [];
 
             // Helper
             const getNome = (a) => a.nome;
@@ -279,9 +281,6 @@ const chamadas = {
                 if (status === 'P') {
                     presentes++;
                     listaPresentes.push(getNome(aluno));
-                } else if (status === 'J') {
-                    justificadas++;
-                    listaJustificadas.push(getNome(aluno));
                 } else {
                     faltas++;
                     listaAusentes.push(getNome(aluno));
@@ -294,7 +293,6 @@ const chamadas = {
             texto += `📅 ${utils.formatarData(chamada.data)}\n\n`;
             texto += `✅ Presentes: ${presentes} de ${totalAlunos} (${percentual}%)\n`;
             if (faltas > 0) texto += `❌ Faltas: ${faltas}\n`;
-            if (justificadas > 0) texto += `📄 Faltas Justificadas: ${justificadas}\n`;
             texto += '\n';
 
             const sortNome = (a, b) => a.localeCompare(b);
@@ -307,11 +305,6 @@ const chamadas = {
             if (listaAusentes.length > 0) {
                 texto += '\n--- AUSENTES ---\n';
                 listaAusentes.sort(sortNome).forEach(nome => texto += `✗ ${nome}\n`);
-            }
-
-            if (listaJustificadas.length > 0) {
-                texto += '\n--- FALTAS JUSTIFICADAS ---\n';
-                listaJustificadas.sort(sortNome).forEach(nome => texto += `📄 ${nome}\n`);
             }
 
             const compartilhado = await utils.compartilhar({
@@ -360,14 +353,12 @@ const chamadas = {
                         if (reg) {
                             const s = reg.status || 'P';
                             if (s === 'P') { status = 'Presente'; horaPresenca = reg.ts ? utils.formatarHora(new Date(reg.ts)) : '-'; }
-                            else if (s === 'J') status = 'Falta Justificada';
                         }
                     } else if (Array.isArray(chamada.presencas)) {
                         const presenca = chamada.presencas.find(p => p.matricula === aluno.matricula);
                         if (presenca) {
                             const s = presenca.status || 'P';
                             if (s === 'P') { status = 'Presente'; horaPresenca = presenca.horaFormatada || '-'; }
-                            else if (s === 'J') status = 'Falta Justificada';
                         }
                     }
 
@@ -401,6 +392,363 @@ const chamadas = {
             console.error(error);
             utils.mostrarToast("Erro ao exportar histórico", "error");
         }
+    },
+
+    inicializarRelatorioMensalUI() {
+        if (this.relatorioMensalInicializado) return;
+
+        const inputMes = document.getElementById('relatorio-mensal-mes');
+        if (!inputMes) return;
+
+        const agora = new Date();
+        const mesAtual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`;
+        inputMes.value = inputMes.value || mesAtual;
+
+        inputMes.addEventListener('change', async () => {
+            await this.atualizarRelatorioMensal();
+        });
+
+        this.relatorioMensalInicializado = true;
+    },
+
+    async toggleRelatorioMensal() {
+        const container = document.getElementById('relatorio-mensal-container');
+        if (!container) return;
+
+        const abrir = container.style.display === 'none' || !container.style.display;
+        container.style.display = abrir ? 'block' : 'none';
+
+        if (abrir) {
+            await this.atualizarRelatorioMensal();
+        }
+    },
+
+    async atualizarRelatorioMensal() {
+        if (!turmas.turmaAtual) return;
+
+        const inputMes = document.getElementById('relatorio-mensal-mes');
+        if (!inputMes) return;
+
+        const [anoStr, mesStr] = (inputMes.value || '').split('-');
+        const ano = Number(anoStr);
+        const mes = Number(mesStr);
+
+        if (!ano || !mes) return;
+
+        try {
+            const relatorio = await this.gerarRelatorioMensal(turmas.turmaAtual.id, ano, mes);
+            this.relatorioMensalAtual = relatorio;
+            this.renderizarRelatorioMensal(relatorio);
+        } catch (error) {
+            console.error('Erro ao atualizar relatorio mensal:', error);
+            utils.mostrarToast('Erro ao gerar relatorio mensal', 'error');
+        }
+    },
+
+    async gerarRelatorioMensal(turmaId, ano, mes) {
+        const alunos = await db.getByIndex('alunos', 'turmaId', turmaId);
+        const chamadasTurma = await db.getByIndex('chamadas', 'turmaId', turmaId);
+
+        const mesPad = String(mes).padStart(2, '0');
+        const prefixo = `${ano}-${mesPad}`;
+        const chamadasMes = chamadasTurma.filter(c => (c.data || '').startsWith(prefixo));
+
+        const diasNoMes = new Date(ano, mes, 0).getDate();
+        const diasDoMes = Array.from({ length: diasNoMes }, (_, i) => String(i + 1).padStart(2, '0'));
+        const alunosOrdenados = [...alunos].sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+        const matrizRelatorio = {};
+
+        const normalizarStatus = (status) => {
+            if (status === 'P' || !status) return 'P';
+            return 'F';
+        };
+
+        const ajustarTotais = (linha, status, delta) => {
+            if (status === 'P') linha.totalP += delta;
+            if (status === 'F') linha.totalF += delta;
+        };
+
+        alunosOrdenados.forEach(aluno => {
+            const dias = {};
+            diasDoMes.forEach(d => { dias[d] = ''; });
+            matrizRelatorio[aluno.id] = {
+                alunoId: aluno.id,
+                nome: aluno.nome || '',
+                matricula: aluno.matricula || '',
+                dias,
+                totalP: 0,
+                totalF: 0
+            };
+        });
+
+        chamadasMes.forEach(chamada => {
+            const dia = (chamada.data || '').slice(8, 10);
+            if (!dia || !diasDoMes.includes(dia)) return;
+
+            // Em cada dia com chamada, ausência é o padrão para todos.
+            // Depois, os registros explícitos (P/F) sobrescrevem essa base.
+            alunosOrdenados.forEach(aluno => {
+                const linhaBase = matrizRelatorio[aluno.id];
+                if (!linhaBase) return;
+                if (!linhaBase.dias[dia]) {
+                    linhaBase.dias[dia] = 'F';
+                    linhaBase.totalF += 1;
+                }
+            });
+
+            const registros = chamada.registros && typeof chamada.registros === 'object'
+                ? chamada.registros
+                : {};
+
+            Object.entries(registros).forEach(([alunoId, reg]) => {
+                const linha = matrizRelatorio[alunoId];
+                if (!linha) return;
+
+                const novoStatus = normalizarStatus(reg?.status);
+                if (!novoStatus) return;
+
+                const statusAnterior = linha.dias[dia] || '';
+                if (statusAnterior === novoStatus) return;
+
+                ajustarTotais(linha, statusAnterior, -1);
+                linha.dias[dia] = novoStatus;
+                ajustarTotais(linha, novoStatus, 1);
+            });
+        });
+
+        return {
+            turmaId,
+            turmaNome: turmas.turmaAtual?.nome || '',
+            ano,
+            mes,
+            mesPad,
+            alunosOrdenados,
+            diasDoMes,
+            matrizRelatorio
+        };
+    },
+
+    renderizarRelatorioMensal(relatorio) {
+        const wrap = document.getElementById('relatorio-mensal-tabela-wrap');
+        if (!wrap) return;
+
+        const { alunosOrdenados, diasDoMes, matrizRelatorio } = relatorio;
+        if (!alunosOrdenados || alunosOrdenados.length === 0) {
+            wrap.innerHTML = '<p class="text-muted" style="padding: 12px;">Nenhum aluno cadastrado na turma.</p>';
+            return;
+        }
+
+        const headerDias = diasDoMes.map(d => `<th>${d}</th>`).join('');
+        const linhas = alunosOrdenados.map(aluno => {
+            const linha = matrizRelatorio[aluno.id];
+            const celulasDias = diasDoMes.map(d => {
+                const status = linha.dias[d] || '';
+                const classe = status ? `cell-status-${status}` : '';
+                return `<td class="${classe}">${status}</td>`;
+            }).join('');
+
+            return `
+                <tr>
+                    <td>${utils.escapeHtml(linha.nome || '')}</td>
+                    <td class="col-matricula">${utils.escapeHtml(linha.matricula || '')}</td>
+                    ${celulasDias}
+                    <td>${linha.totalP}</td>
+                    <td>${linha.totalF}</td>
+                </tr>
+            `;
+        }).join('');
+
+        wrap.innerHTML = `
+            <table class="table-relatorio-mensal">
+                <thead>
+                    <tr>
+                        <th>Aluno</th>
+                        <th>Matrícula</th>
+                        ${headerDias}
+                        <th>P</th>
+                        <th>F</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${linhas}
+                </tbody>
+            </table>
+        `;
+    },
+
+    exportarRelatorioMensalCSV(relatorio = this.relatorioMensalAtual) {
+        if (!relatorio) {
+            utils.mostrarToast('Gere o relatorio mensal primeiro', 'warning');
+            return;
+        }
+
+        const { alunosOrdenados, diasDoMes, matrizRelatorio, ano, mesPad, turmaNome } = relatorio;
+        const esc = (v) => {
+            const s = String(v ?? '');
+            return /[;"\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+        };
+
+        const header = ['Aluno', 'Matricula', ...diasDoMes, 'Total P', 'Total F'];
+        const linhas = [header.map(esc).join(';')];
+
+        alunosOrdenados.forEach(aluno => {
+            const linha = matrizRelatorio[aluno.id];
+            const row = [
+                linha.nome || '',
+                linha.matricula || '',
+                ...diasDoMes.map(d => linha.dias[d] || ''),
+                linha.totalP,
+                linha.totalF
+            ];
+            linhas.push(row.map(esc).join(';'));
+        });
+
+        const csv = linhas.join('\r\n');
+        const turmaSlug = (turmaNome || 'turma').replace(/[^a-z0-9._-]/gi, '_');
+        const filename = `relatorio_mensal_${turmaSlug}_${ano}_${mesPad}.csv`;
+        utils.downloadFile(filename, csv, 'text/csv;charset=utf-8;');
+        utils.mostrarToast('Relatorio mensal CSV exportado', 'success');
+    },
+
+    async exportarRelatorioMensalPDF(relatorio = this.relatorioMensalAtual) {
+        if (!relatorio) {
+            utils.mostrarToast('Gere o relatorio mensal primeiro', 'warning');
+            return;
+        }
+
+        try {
+            const canvas = this.gerarCanvasRelatorioMensal(relatorio);
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+            const pageW = doc.internal.pageSize.getWidth();
+            const pageH = doc.internal.pageSize.getHeight();
+            const drawW = pageW - 20;
+            const title = `Relatorio Mensal - ${relatorio.turmaNome} - ${relatorio.mesPad}/${relatorio.ano}`;
+
+            doc.setFontSize(12);
+            doc.text(title, 10, 8);
+
+            const ratio = drawW / canvas.width;
+            const usableH = pageH - 16;
+            const maxSlicePx = Math.max(1, Math.floor(usableH / ratio));
+
+            let offsetY = 0;
+            let page = 0;
+            while (offsetY < canvas.height) {
+                const sliceH = Math.min(maxSlicePx, canvas.height - offsetY);
+                const sliceCanvas = document.createElement('canvas');
+                sliceCanvas.width = canvas.width;
+                sliceCanvas.height = sliceH;
+                const sctx = sliceCanvas.getContext('2d');
+                sctx.drawImage(canvas, 0, offsetY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+
+                if (page > 0) {
+                    doc.addPage('a4', 'landscape');
+                    doc.setFontSize(12);
+                    doc.text(`${title} (cont.)`, 10, 8);
+                }
+
+                const drawH = sliceH * ratio;
+                doc.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', 10, 12, drawW, drawH);
+
+                offsetY += sliceH;
+                page++;
+            }
+
+            const turmaSlug = (relatorio.turmaNome || 'turma').replace(/[^a-z0-9._-]/gi, '_');
+            const filename = `relatorio_mensal_${turmaSlug}_${relatorio.ano}_${relatorio.mesPad}.pdf`;
+            doc.save(filename);
+            utils.mostrarToast('Relatorio mensal PDF exportado', 'success');
+        } catch (error) {
+            console.error('Erro ao exportar PDF mensal:', error);
+            utils.mostrarToast('Erro ao exportar PDF mensal', 'error');
+        }
+    },
+
+    gerarCanvasRelatorioMensal(relatorio) {
+        const { alunosOrdenados, diasDoMes, matrizRelatorio } = relatorio;
+
+        const rowH = 26;
+        const headerH = 30;
+        const colAluno = 220;
+        const colMatricula = 120;
+        const colDia = 26;
+        const colTotal = 64;
+
+        const colsDiasW = diasDoMes.length * colDia;
+        const width = colAluno + colMatricula + colsDiasW + (colTotal * 2);
+        const height = headerH + (alunosOrdenados.length * rowH) + 2;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+
+        const drawCell = (x, y, w, h, text, bg = null) => {
+            if (bg) {
+                ctx.fillStyle = bg;
+                ctx.fillRect(x, y, w, h);
+            }
+            ctx.strokeStyle = '#d0d7de';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, w, h);
+            ctx.fillStyle = '#111827';
+            ctx.font = '12px Inter, Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(String(text ?? ''), x + w / 2, y + h / 2);
+        };
+
+        let x = 0;
+        drawCell(x, 0, colAluno, headerH, 'Aluno', '#f3f4f6');
+        x += colAluno;
+        drawCell(x, 0, colMatricula, headerH, 'Matrícula', '#f3f4f6');
+        x += colMatricula;
+        diasDoMes.forEach(d => {
+            drawCell(x, 0, colDia, headerH, d, '#f3f4f6');
+            x += colDia;
+        });
+        drawCell(x, 0, colTotal, headerH, 'P', '#f3f4f6');
+        x += colTotal;
+        drawCell(x, 0, colTotal, headerH, 'F', '#f3f4f6');
+
+        alunosOrdenados.forEach((aluno, i) => {
+            const y = headerH + (i * rowH);
+            const linha = matrizRelatorio[aluno.id];
+
+            ctx.fillStyle = '#111827';
+            ctx.font = '12px Inter, Arial, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.strokeStyle = '#d0d7de';
+            ctx.strokeRect(0, y, colAluno, rowH);
+            ctx.fillText(String(linha.nome || ''), 8, y + rowH / 2);
+
+            ctx.textAlign = 'left';
+            ctx.strokeStyle = '#d0d7de';
+            ctx.strokeRect(colAluno, y, colMatricula, rowH);
+            ctx.fillText(String(linha.matricula || ''), colAluno + 8, y + rowH / 2);
+
+            let xDia = colAluno + colMatricula;
+            diasDoMes.forEach(d => {
+                const status = linha.dias[d] || '';
+                let bg = null;
+                if (status === 'P') bg = '#dff5e3';
+                if (status === 'F') bg = '#fde2e1';
+                drawCell(xDia, y, colDia, rowH, status, bg);
+                xDia += colDia;
+            });
+
+            drawCell(xDia, y, colTotal, rowH, linha.totalP);
+            xDia += colTotal;
+            drawCell(xDia, y, colTotal, rowH, linha.totalF);
+        });
+
+        return canvas;
     },
 
     // Deletar chamada

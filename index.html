@@ -167,11 +167,11 @@
                     <span>📅 <strong id="turma-total-chamadas-realizadas">0</strong> chamadas</span>
                 </div>
                 <div class="turma-actions">
-                    <button class="btn-icon btn-sm" onclick="turmas.editarTurma(turmas.turmaAtual?.id)" title="Editar">
-                        ✏️
+                    <button class="btn btn-success" onclick="turmas.editarTurma(turmas.turmaAtual?.id)">
+                        Editar Turma
                     </button>
-                    <button class="btn btn-danger btn-sm" onclick="turmas.confirmarExcluirTurma()">
-                        🗑️ Excluir Turma
+                    <button class="btn btn-danger" onclick="turmas.excluirTurma(turmas.turmaAtual?.id)">
+                        Excluir Turma
                     </button>
                 </div>
             </div>
@@ -225,9 +225,27 @@
             <div id="tab-historico" class="tab-content">
                 <div class="section-header">
                     <h3>Histórico de Chamadas</h3>
-                    <button class="btn btn-secondary btn-sm" onclick="chamadas.exportarHistorico()">
-                        📊 Exportar Tudo
-                    </button>
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary btn-sm" onclick="chamadas.exportarHistorico()">
+                            Exportar Tudo
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="chamadas.toggleRelatorioMensal()">
+                            Relatório Mensal
+                        </button>
+                    </div>
+                </div>
+
+                <div id="relatorio-mensal-container" class="relatorio-mensal-container" style="display: none;">
+                    <div class="relatorio-mensal-controls">
+                        <input type="month" id="relatorio-mensal-mes" />
+                        <button class="btn btn-secondary btn-sm" onclick="chamadas.exportarRelatorioMensalCSV()">
+                            Exportar CSV
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="chamadas.exportarRelatorioMensalPDF()">
+                            Exportar PDF
+                        </button>
+                    </div>
+                    <div id="relatorio-mensal-tabela-wrap" class="relatorio-mensal-tabela-wrap"></div>
                 </div>
 
                 <div id="lista-historico" class="historico-list">
@@ -453,11 +471,6 @@
                     <label>Email (opcional)</label>
                     <input type="email" id="input-aluno-email" placeholder="aluno@email.com" />
                 </div>
-                <div class="form-group" id="aluno-pontos-group" style="display: none;">
-                    <label for="input-aluno-pontos">⭐ Pontos extras</label>
-                    <input type="number" id="input-aluno-pontos" value="0" min="0" max="100">
-                </div>
-
                 <div class="form-group">
                     <label for="input-aluno-obs">📝 Observações</label>
                     <textarea id="input-aluno-obs" rows="2" placeholder="Anotações sobre o aluno"></textarea>

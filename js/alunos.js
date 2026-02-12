@@ -126,7 +126,6 @@ const alunos = {
         document.getElementById('input-aluno-matricula').value = '';
         document.getElementById('input-aluno-email').value = '';
         document.getElementById('input-aluno-obs').value = '';
-        document.getElementById('aluno-pontos-group').style.display = 'none';
         document.getElementById('aluno-pontos-section').style.display = 'none';
         document.getElementById('aluno-pontos-total').textContent = 'Total de pontos: 0';
         document.getElementById('lista-eventos-pontos').innerHTML = '<p class="text-muted">Nenhum ponto registrado</p>';
@@ -214,7 +213,6 @@ const alunos = {
             let aluno;
 
             if (this.alunoEmEdicao && original) {
-                const pontos = parseInt(document.getElementById('input-aluno-pontos')?.value || '0', 10);
                 // UPDATE: Merge com original
                 aluno = {
                     ...original, // Preserva criadoEm, id, qrId e outros campos não editáveis
@@ -226,8 +224,7 @@ const alunos = {
                     // Se user remover foto? "resetarPreviewFoto" seta null.
                     // Então this.fotoTemp é o estado atual desejado.
                     foto: this.fotoTemp,
-                    observacoes: obs,
-                    pontosExtra: pontos
+                    observacoes: obs
                     // criadoEm: preservado do original
                 };
             } else {
@@ -447,9 +444,7 @@ const alunos = {
             document.getElementById('input-aluno-matricula').value = aluno.matricula;
             document.getElementById('input-aluno-email').value = aluno.email || '';
             document.getElementById('input-aluno-obs').value = aluno.observacoes || '';
-            document.getElementById('aluno-pontos-group').style.display = 'block';
             document.getElementById('aluno-pontos-section').style.display = 'block';
-            document.getElementById('input-aluno-pontos').value = aluno.pontosExtra || 0;
             await this.carregarEventosPontos(aluno.id);
 
             // Carregar foto
@@ -693,18 +688,21 @@ const alunos = {
             // Vou tentar deletar eventos_nota também se for isso.
             // Mas o código pedido é explícito sobre 'chamadas'.
 
-            let chamadasParaDeletar = [];
+            let eventos = [];
             try {
-                chamadasParaDeletar = await db.getByIndex('chamadas', 'alunoId', id);
+                eventos = await db.getByIndex('eventos_nota', 'alunoId', id);
             } catch (e) {
-                console.warn("Index 'alunoId' não encontrado em 'chamadas'. Pulando cascade de chamadas.", e);
+                console.error('Erro ao buscar eventos_nota para cascade delete:', e);
             }
+
+            const deletesEventos = eventos.map(ev => db.delete('eventos_nota', ev.id));
 
             // Deletar tudo em paralelo
             await Promise.all([
-                ...chamadasParaDeletar.map(c => db.delete('chamadas', c.id)),
+                ...deletesEventos,
                 db.delete('alunos', id)
             ]);
+
 
             utils.mostrarToast('Aluno excluído', 'success');
             await this.listar();
