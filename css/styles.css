@@ -787,6 +787,86 @@ body {
     background: var(--gray-300);
 }
 
+.aluno-pontos-section {
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--gray-200);
+}
+
+.aluno-pontos-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.aluno-pontos-header h4 {
+    font-size: 16px;
+    color: var(--dark);
+}
+
+.aluno-pontos-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.aluno-pontos-total {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-600);
+}
+
+.lista-eventos-pontos {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.evento-ponto-item {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius-sm);
+    background: var(--white);
+    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.evento-ponto-principal {
+    min-width: 0;
+}
+
+.evento-ponto-titulo {
+    font-size: 14px;
+    color: var(--dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.evento-ponto-valor {
+    font-weight: 700;
+    color: var(--success);
+    margin-right: 8px;
+}
+
+.evento-ponto-meta {
+    font-size: 12px;
+    color: var(--gray-500);
+    margin-top: 2px;
+}
+
+.evento-ponto-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
 /* ===== HISTÓRICO LIST ===== */
 .historico-list {
     padding: 0 20px 100px;

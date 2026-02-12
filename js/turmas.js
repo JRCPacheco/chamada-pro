@@ -268,6 +268,32 @@ const turmas = {
     },
 
     // Editar turma
+    async editarTurma(id) {
+        const turma = await db.get('turmas', id);
+        if (!turma) {
+            utils.mostrarToast('Turma não encontrada', 'error');
+            return;
+        }
+
+        const novoNome = prompt('Nome da turma:', turma.nome || '');
+        if (!novoNome) return;
+
+        const novaDescricao = prompt('Descrição:', turma.descricao || '');
+
+        turma.nome = novoNome.trim();
+        turma.descricao = (novaDescricao || '').trim();
+
+        await db.put('turmas', turma);
+
+        utils.mostrarToast('Turma atualizada', 'success');
+        await this.listar();
+
+        if (this.turmaAtual && this.turmaAtual.id === id) {
+            await this.abrirDetalhes(id);
+        }
+    },
+
+    // Editar turma
     async editar(turmaId) {
         try {
             const turma = await db.get('turmas', turmaId);

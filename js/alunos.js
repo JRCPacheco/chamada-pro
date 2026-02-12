@@ -7,6 +7,7 @@ const alunos = {
     alunoEmEdicao: null, // ID do aluno sendo editado
     fotoTemp: null,
     qrImportado: null,
+    eventoPontoEmEdicao: null,
 
     // Listar alunos da turma atual
     async listar() {
@@ -125,7 +126,10 @@ const alunos = {
         document.getElementById('input-aluno-matricula').value = '';
         document.getElementById('input-aluno-email').value = '';
         document.getElementById('input-aluno-obs').value = '';
-        document.getElementById('input-aluno-pontos').value = 0;
+        document.getElementById('aluno-pontos-group').style.display = 'none';
+        document.getElementById('aluno-pontos-section').style.display = 'none';
+        document.getElementById('aluno-pontos-total').textContent = 'Total de pontos: 0';
+        document.getElementById('lista-eventos-pontos').innerHTML = '<p class="text-muted">Nenhum ponto registrado</p>';
 
         this.resetarPreviewFoto();
 
@@ -147,7 +151,6 @@ const alunos = {
         const matricula = document.getElementById('input-aluno-matricula').value.trim();
         const email = document.getElementById('input-aluno-email').value.trim();
         const obs = document.getElementById('input-aluno-obs')?.value || '';
-        const pontos = parseInt(document.getElementById('input-aluno-pontos')?.value || '0', 10);
 
         // Validações
         if (!nome) {
@@ -211,6 +214,7 @@ const alunos = {
             let aluno;
 
             if (this.alunoEmEdicao && original) {
+                const pontos = parseInt(document.getElementById('input-aluno-pontos')?.value || '0', 10);
                 // UPDATE: Merge com original
                 aluno = {
                     ...original, // Preserva criadoEm, id, qrId e outros campos não editáveis
@@ -236,7 +240,7 @@ const alunos = {
                     email: email,
                     foto: this.fotoTemp,
                     observacoes: obs,
-                    pontosExtra: pontos,
+                    pontosExtra: 0,
                     qrId: qrId,
                     criadoEm: new Date().toISOString()
                 };
@@ -443,7 +447,10 @@ const alunos = {
             document.getElementById('input-aluno-matricula').value = aluno.matricula;
             document.getElementById('input-aluno-email').value = aluno.email || '';
             document.getElementById('input-aluno-obs').value = aluno.observacoes || '';
+            document.getElementById('aluno-pontos-group').style.display = 'block';
+            document.getElementById('aluno-pontos-section').style.display = 'block';
             document.getElementById('input-aluno-pontos').value = aluno.pontosExtra || 0;
+            await this.carregarEventosPontos(aluno.id);
 
             // Carregar foto
             if (aluno.foto) {
@@ -461,6 +468,164 @@ const alunos = {
         } catch (e) {
             console.error("Erro ao carregar aluno para edição", e);
             utils.mostrarToast('Erro ao carregar aluno', 'error');
+        }
+    },
+
+    // Listar eventos de pontos do aluno em edição
+    async carregarEventosPontos(alunoId) {
+        if (!alunoId) return;
+
+        const totalEl = document.getElementById('aluno-pontos-total');
+        const listaEl = document.getElementById('lista-eventos-pontos');
+
+        try {
+            const eventos = await db.getByIndex('eventos_nota', 'alunoId', alunoId);
+            eventos.sort((a, b) => (b.dataISO || '').localeCompare(a.dataISO || ''));
+
+            const total = eventos.reduce((sum, e) => sum + (Number(e.valor) || 0), 0);
+            totalEl.textContent = `Total de pontos: ${total}`;
+
+            if (eventos.length === 0) {
+                listaEl.innerHTML = '<p class="text-muted">Nenhum ponto registrado</p>';
+                return;
+            }
+
+            listaEl.innerHTML = eventos.map(evento => {
+                const valor = Number(evento.valor) || 0;
+                const descricao = utils.escapeHtml(evento.descricao || 'Sem descrição');
+                const dataFmt = evento.dataISO ? evento.dataISO.split('-').reverse().join('/') : '-';
+                const valorFmt = Number.isInteger(valor) ? String(valor) : valor.toFixed(1).replace('.', ',');
+
+                return `
+                    <div class="evento-ponto-item">
+                        <div class="evento-ponto-principal">
+                            <div class="evento-ponto-titulo">
+                                <span class="evento-ponto-valor">+${valorFmt}</span>${descricao}
+                            </div>
+                            <div class="evento-ponto-meta">${dataFmt}</div>
+                        </div>
+                        <div class="evento-ponto-actions">
+                            <button class="btn-icon-sm" onclick="alunos.editarEventoPonto('${evento.id}')" title="Editar">🖉</button>
+                            <button class="btn-icon-sm" onclick="alunos.excluirEventoPonto('${evento.id}')" title="Excluir">🗑</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch (e) {
+            console.error('Erro ao listar eventos de pontos:', e);
+            totalEl.textContent = 'Total de pontos: 0';
+            listaEl.innerHTML = '<p class="text-muted">Erro ao carregar pontos</p>';
+            utils.mostrarToast('Erro ao carregar pontos do aluno', 'error');
+        }
+    },
+
+    // Abrir modal de evento de ponto (create)
+    abrirModalEventoPonto() {
+        if (!this.alunoEmEdicao || !turmas.turmaAtual) {
+            utils.mostrarToast('Abra um aluno para lançar pontos', 'warning');
+            return;
+        }
+
+        this.eventoPontoEmEdicao = null;
+        document.getElementById('modal-evento-ponto-titulo').textContent = 'Adicionar Ponto';
+        document.getElementById('input-evento-ponto-valor').value = '';
+        document.getElementById('input-evento-ponto-descricao').value = '';
+
+        app.abrirModal('modal-evento-ponto');
+        setTimeout(() => document.getElementById('input-evento-ponto-valor').focus(), 100);
+    },
+
+    // Abrir modal de evento de ponto (edit)
+    async editarEventoPonto(id) {
+        try {
+            const evento = await db.get('eventos_nota', id);
+            if (!evento || evento.alunoId !== this.alunoEmEdicao) {
+                utils.mostrarToast('Evento não encontrado', 'error');
+                return;
+            }
+
+            this.eventoPontoEmEdicao = id;
+            document.getElementById('modal-evento-ponto-titulo').textContent = 'Editar Ponto';
+            document.getElementById('input-evento-ponto-valor').value = evento.valor ?? '';
+            document.getElementById('input-evento-ponto-descricao').value = evento.descricao || '';
+
+            app.abrirModal('modal-evento-ponto');
+            setTimeout(() => document.getElementById('input-evento-ponto-valor').focus(), 100);
+        } catch (e) {
+            console.error('Erro ao carregar evento para edição:', e);
+            utils.mostrarToast('Erro ao carregar ponto', 'error');
+        }
+    },
+
+    // Salvar create/update de evento de ponto
+    async salvarEventoPonto() {
+        if (!this.alunoEmEdicao || !turmas.turmaAtual) {
+            utils.mostrarToast('Aluno não selecionado', 'warning');
+            return;
+        }
+
+        const valorInput = document.getElementById('input-evento-ponto-valor').value;
+        const descricaoInput = document.getElementById('input-evento-ponto-descricao').value;
+        const valor = Number(valorInput);
+        const descricao = (descricaoInput || '').trim();
+
+        if (!(valor > 0)) {
+            utils.mostrarToast('Informe um valor maior que zero', 'warning');
+            document.getElementById('input-evento-ponto-valor').focus();
+            return;
+        }
+
+        if (!descricao) {
+            utils.mostrarToast('Informe uma descrição', 'warning');
+            document.getElementById('input-evento-ponto-descricao').focus();
+            return;
+        }
+
+        try {
+            if (this.eventoPontoEmEdicao) {
+                const evento = await db.get('eventos_nota', this.eventoPontoEmEdicao);
+                if (!evento || evento.alunoId !== this.alunoEmEdicao) {
+                    utils.mostrarToast('Evento não encontrado', 'error');
+                    return;
+                }
+
+                evento.valor = Number(valor);
+                evento.descricao = descricao;
+                await db.put('eventos_nota', evento);
+                utils.mostrarToast('Ponto atualizado', 'success');
+            } else {
+                const evento = {
+                    id: utils.uuid() || utils.gerarId(),
+                    alunoId: this.alunoEmEdicao,
+                    turmaId: turmas.turmaAtual.id,
+                    dataISO: new Date().toISOString().slice(0, 10),
+                    valor: Number(valor),
+                    descricao: descricao
+                };
+                await db.put('eventos_nota', evento);
+                utils.mostrarToast('Ponto adicionado', 'success');
+            }
+
+            this.eventoPontoEmEdicao = null;
+            app.fecharModal('modal-evento-ponto');
+            await this.carregarEventosPontos(this.alunoEmEdicao);
+        } catch (e) {
+            console.error('Erro ao salvar evento de ponto:', e);
+            utils.mostrarToast('Erro ao salvar ponto', 'error');
+        }
+    },
+
+    // Excluir evento de ponto
+    async excluirEventoPonto(id) {
+        if (!utils.confirmar('Confirmar exclusão deste ponto?')) return;
+
+        try {
+            await db.delete('eventos_nota', id);
+            utils.mostrarToast('Ponto excluído', 'success');
+            await this.carregarEventosPontos(this.alunoEmEdicao);
+        } catch (e) {
+            console.error('Erro ao excluir evento de ponto:', e);
+            utils.mostrarToast('Erro ao excluir ponto', 'error');
         }
     },
 
@@ -666,8 +831,15 @@ const alunos = {
             const alunosArray = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
 
             if (alunosArray.length === 0) {
-                utils.mostrarToast('Nenhum aluno cadastrado', 'warning');
+                utils.mostrarToast('Nenhum aluno cadastrado na turma', 'warning');
                 return;
+            }
+
+            if (alunosArray.length < 5) {
+                const ok = utils.confirmar(
+                    'A turma ainda tem poucos alunos cadastrados. Deseja gerar os QR Codes mesmo assim?'
+                );
+                if (!ok) return;
             }
 
             utils.mostrarToast('Gerando PDF...', 'info');
