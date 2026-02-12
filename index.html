@@ -443,13 +443,13 @@
             <div class="modal-body">
                 <div class="form-group center-content" style="text-align: center; margin-bottom: 20px;">
                     <div id="aluno-foto-preview" class="avatar-placeholder"
-                        onclick="document.getElementById('input-aluno-foto').click()">
+                        onclick="alunos.escolherFonteFoto()">
                         <span id="foto-placeholder-icon" style="font-size: 24px;">📷</span>
                         <span id="foto-placeholder-text"
                             style="font-size: 12px; display: block; margin-top: 4px; color: var(--primary);">Adicionar
                             Foto</span>
                     </div>
-                    <input type="file" id="input-aluno-foto" accept="image/*" capture="environment"
+                    <input type="file" id="input-aluno-foto" accept="image/*"
                         style="display: none;" onchange="alunos.processarFoto(this.files[0])">
                 </div>
                 <div class="form-group" style="text-align: center; margin-bottom: 20px;">
@@ -495,6 +495,31 @@
                 <button class="btn btn-secondary"
                     onclick="alunos.resetarPreviewFoto(); app.fecharModal('modal-novo-aluno')">Cancelar</button>
                 <button class="btn btn-primary" id="btn-salvar-aluno" onclick="alunos.salvarNovoAluno()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Fonte da Foto -->
+    <div id="modal-fonte-foto" class="modal"
+        onclick="if (event.target === this) app.fecharModal('modal-fonte-foto')">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Adicionar Foto</h3>
+                <button class="btn-close" onclick="app.fecharModal('modal-fonte-foto')">×</button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted" style="margin-bottom: 12px;">Como deseja adicionar a foto do aluno?</p>
+                <div class="action-buttons" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-primary" onclick="alunos.escolherFotoPelaCamera()">
+                        📷 Tirar Foto
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="alunos.escolherFotoDoDispositivo()">
+                        🖼️ Escolher do Dispositivo
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.fecharModal('modal-fonte-foto')">Cancelar</button>
             </div>
         </div>
     </div>

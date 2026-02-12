@@ -138,6 +138,41 @@ const alunos = {
         }, 100);
     },
 
+    // Abrir escolha de origem da foto (camera/galeria) sem botao extra no formulario
+    escolherFonteFoto() {
+        app.abrirModal('modal-fonte-foto');
+    },
+
+    escolherFotoDoDispositivo() {
+        app.fecharModal('modal-fonte-foto');
+
+        const input = document.getElementById('input-aluno-foto');
+        if (!input) return;
+
+        input.removeAttribute('capture');
+        input.click();
+    },
+
+    escolherFotoPelaCamera() {
+        app.fecharModal('modal-fonte-foto');
+
+        // Input temporario para forcar captura via camera sem afetar fluxo de galeria
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.setAttribute('capture', 'environment');
+        input.style.display = 'none';
+
+        input.onchange = (event) => {
+            const file = event.target.files?.[0];
+            if (file) this.processarFoto(file);
+            input.remove();
+        };
+
+        document.body.appendChild(input);
+        input.click();
+    },
+
     // Salvar novo aluno
     async salvarNovoAluno() {
         // Validar se há uma turma selecionada
