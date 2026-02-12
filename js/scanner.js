@@ -17,6 +17,7 @@ const scanner = {
 
     // Lock de concorrência para processamento de scan
     scanLock: false,
+    feedbackTimeoutId: null,
 
     // Parse QR Code no formato novo (CF1|ARRAY) ou antigo (CF1|OBJECT)
     parseQrAluno(texto) {
@@ -229,14 +230,20 @@ const scanner = {
 
             // VALIDAR ALUNO
             if (!aluno) {
-                this.mostrarFeedback('Aluno não encontrado no banco', 'warning');
+                this.mostrarFeedback('Aluno não encontrado no banco', 'error', {
+                    nome: 'Desconhecido',
+                    estadoAvatar: 'error'
+                });
                 utils.tocarSom('error');
                 return;
             }
 
             // VALIDAR TURMA (CRÍTICO)
             if (aluno.turmaId !== this.chamadaAtual.turmaId) {
-                this.mostrarFeedback('Aluno de outra turma!', 'warning');
+                this.mostrarFeedback('Aluno de outra turma!', 'error', {
+                    aluno,
+                    estadoAvatar: 'error'
+                });
                 utils.tocarSom('error');
                 return;
             }
@@ -252,7 +259,11 @@ const scanner = {
             if (registroExistente && registroExistente.status === 'P') {
                 // Opcional: Permitir atualizar timestamp?
                 // Vamos só avisar.
-                this.mostrarFeedback('Já registrado!', 'warning');
+                this.mostrarFeedback(`Já registrado: ${aluno.nome}`, 'warning', {
+                    aluno,
+                    duracao: 5000,
+                    estadoAvatar: 'success'
+                });
                 utils.tocarSom('error'); // ou um som neutro
                 return;
             }
@@ -267,7 +278,11 @@ const scanner = {
             await db.put('chamadas', this.chamadaAtual);
 
             // FEEDBACK
-            this.mostrarFeedback(`✓ ${aluno.nome}`, 'success');
+            this.mostrarFeedback(`✓ ${aluno.nome}`, 'success', {
+                aluno,
+                duracao: 5000,
+                estadoAvatar: 'success'
+            });
             utils.tocarSom('success');
             utils.vibrar([50, 50, 100]);
 
@@ -284,9 +299,23 @@ const scanner = {
     },
 
     // Mostrar feedback visual
-    mostrarFeedback(mensagem, tipo) {
+    mostrarFeedback(mensagem, tipo, options = {}) {
         const feedback = document.getElementById('feedback');
-        feedback.textContent = mensagem;
+        const aluno = options.aluno || null;
+        const nomeBase = aluno?.nome || options.nome || 'Desconhecido';
+        const estadoAvatar = options.estadoAvatar || (tipo === 'error' ? 'error' : tipo === 'warning' ? 'warning' : 'success');
+        const duracao = Number.isFinite(options.duracao) ? options.duracao : 3000;
+
+        const avatarHtml = aluno?.foto
+            ? `<div class="feedback-avatar ${estadoAvatar}"><img src="${aluno.foto}" alt="Foto de ${utils.escapeHtml(nomeBase)}"></div>`
+            : `<div class="feedback-avatar ${estadoAvatar}" style="background: ${aluno?.nome ? utils.getCorFromString(aluno.nome) : '#9ca3af'}">${utils.escapeHtml(utils.getIniciais(nomeBase))}</div>`;
+
+        feedback.innerHTML = `
+            <div class="feedback-content">
+                ${avatarHtml}
+                <div class="feedback-text">${utils.escapeHtml(mensagem)}</div>
+            </div>
+        `;
         feedback.className = `feedback ${tipo}`;
 
         // Feedback visual na tela inteira (Pulse)
@@ -297,12 +326,17 @@ const scanner = {
             scannerEl.classList.add(tipo === 'success' ? 'pulse-success' : 'pulse-error');
         }
 
-        // Limpar após 3 segundos
-        setTimeout(() => {
+        if (this.feedbackTimeoutId) {
+            clearTimeout(this.feedbackTimeoutId);
+            this.feedbackTimeoutId = null;
+        }
+
+        this.feedbackTimeoutId = setTimeout(() => {
             feedback.textContent = '';
             feedback.className = 'feedback';
             if (scannerEl) scannerEl.classList.remove('pulse-success', 'pulse-error');
-        }, 3000);
+            this.feedbackTimeoutId = null;
+        }, duracao);
     },
 
     // Atualizar lista de presenças em tempo real
@@ -318,6 +352,7 @@ const scanner = {
                 return {
                     id: id,
                     nome: aluno ? aluno.nome : 'Desconhecido',
+                    foto: aluno ? aluno.foto : null,
                     ts: reg.ts,
                     horaFormatada: utils.formatarHora(new Date(reg.ts)),
                     status: reg.status
@@ -334,12 +369,13 @@ const scanner = {
         container.innerHTML = ultimas.map(p => {
             const iniciais = utils.getIniciais(p.nome);
             const cor = utils.getCorFromString(p.nome);
+            const avatarHtml = p.foto
+                ? `<div class="presenca-item-icon presenca-item-icon-photo"><img src="${p.foto}" alt="Foto de ${utils.escapeHtml(p.nome)}" class="presenca-item-photo"></div>`
+                : `<div class="presenca-item-icon" style="background: ${cor}">${iniciais}</div>`;
 
             return `
                 <div class="presenca-item">
-                    <div class="presenca-item-icon" style="background: ${cor}">
-                        ${iniciais}
-                    </div>
+                    ${avatarHtml}
                     <div class="presenca-item-info">
                         <h5>${utils.escapeHtml(p.nome)}</h5>
                         <small>${p.horaFormatada}</small>
