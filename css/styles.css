@@ -944,6 +944,22 @@ body {
     border-radius: var(--border-radius-sm);
 }
 
+.relatorio-horario-section {
+    min-width: max-content;
+}
+
+.relatorio-horario-section + .relatorio-horario-section {
+    margin-top: 16px;
+    border-top: 1px dashed var(--gray-300);
+    padding-top: 16px;
+}
+
+.relatorio-horario-section h4 {
+    padding: 10px 12px 0;
+    color: var(--gray-700);
+    font-size: 14px;
+}
+
 .table-relatorio-mensal {
     width: max-content;
     min-width: 100%;

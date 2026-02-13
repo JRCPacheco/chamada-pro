@@ -1,5 +1,5 @@
-// ===== CHAMADAS MODULE =====
-// Gerenciamento de chamadas e histórico
+﻿// ===== CHAMADAS MODULE =====
+// Gerenciamento de chamadas e histÃ³rico
 // Migrado para IndexedDB
 
 const chamadas = {
@@ -7,9 +7,9 @@ const chamadas = {
     chamadaResumo: null,
     relatorioMensalAtual: null,
     relatorioMensalInicializado: false,
-    alunosCache: {}, // Cache temporário de alunos para visualização
+    alunosCache: {}, // Cache temporÃ¡rio de alunos para visualizaÃ§Ã£o
 
-    // Listar histórico de chamadas
+    // Listar histÃ³rico de chamadas
     async listarHistorico() {
         if (!turmas.turmaAtual) return;
 
@@ -20,7 +20,7 @@ const chamadas = {
 
             // Buscar dados
             let chamadasArray = await db.getByIndex('chamadas', 'turmaId', turmas.turmaAtual.id);
-            // Ordenar por início da sessão (decrescente), fallback para data legacy
+            // Ordenar por inÃ­cio da sessÃ£o (decrescente), fallback para data legacy
             const toMs = (chamada) => {
                 const ref = chamada.iniciadoEm || chamada.criadoEm || chamada.data;
                 const ms = new Date(ref).getTime();
@@ -28,7 +28,7 @@ const chamadas = {
             };
             chamadasArray.sort((a, b) => toMs(b) - toMs(a));
 
-            // Buscar total de alunos da turma para cálculo de %
+            // Buscar total de alunos da turma para cÃ¡lculo de %
             const alunosTurma = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
             const totalAlunos = alunosTurma.length;
 
@@ -45,18 +45,18 @@ const chamadas = {
                 await this.atualizarRelatorioMensal();
             }
         } catch (error) {
-            console.error("Erro ao listar histórico:", error);
-            utils.mostrarToast("Erro ao carregar histórico", "error");
+            console.error("Erro ao listar histÃ³rico:", error);
+            utils.mostrarToast("Erro ao carregar histÃ³rico", "error");
         }
     },
 
-    // Renderizar histórico
+    // Renderizar histÃ³rico
     renderizarHistorico(chamadasArray, totalAlunos) {
         const container = document.getElementById('lista-historico');
 
         container.innerHTML = chamadasArray.map(chamada => {
             // Contar presentes (P)
-            // Suporte híbrido: 'registros' (novo) vs 'presencas' (legacy array)
+            // Suporte hÃ­brido: 'registros' (novo) vs 'presencas' (legacy array)
             let presentes = 0;
 
             if (chamada.registros) {
@@ -66,7 +66,7 @@ const chamadas = {
             }
 
             const percentual = utils.calcularPercentual(presentes, totalAlunos);
-            const dataExibicao = chamada.data; // Já é YYYY-MM-DD ou ISO
+            const dataExibicao = chamada.data; // JÃ¡ Ã© YYYY-MM-DD ou ISO
             const horaRef = chamada.iniciadoEm || chamada.criadoEm || '';
             const horaExibicao = horaRef ? utils.formatarHora(new Date(horaRef)) : '--:--';
 
@@ -101,7 +101,7 @@ const chamadas = {
                 const alunosTurma = await db.getByIndex('alunos', 'turmaId', chamada.turmaId);
                 const turma = await db.get('turmas', chamada.turmaId);
 
-                // Mapear alunos para acesso rápido
+                // Mapear alunos para acesso rÃ¡pido
                 this.alunosCache = {};
                 alunosTurma.forEach(a => this.alunosCache[a.id] = a);
 
@@ -122,10 +122,10 @@ const chamadas = {
         let presentes = 0;
         let faltas = 0;
 
-        // Normalizar registros para array processável
+        // Normalizar registros para array processÃ¡vel
         let registrosProcessados = [];
 
-        // Função helper para obter nome
+        // FunÃ§Ã£o helper para obter nome
         const getNome = (aluno) => aluno.nome;
 
         todosAlunos.forEach(aluno => {
@@ -150,7 +150,7 @@ const chamadas = {
 
             if (status === 'P') presentes++;
             else {
-                status = 'F'; // Força 'F' para contagem
+                status = 'F'; // ForÃ§a 'F' para contagem
                 faltas++;
             }
 
@@ -163,7 +163,7 @@ const chamadas = {
 
         const percentual = utils.calcularPercentual(presentes, totalAlunos);
 
-        // Atualizar informações
+        // Atualizar informaÃ§Ãµes
         const horaRef = chamada.iniciadoEm || chamada.criadoEm || '';
         const horaExibicao = horaRef ? utils.formatarHora(new Date(horaRef)) : '--:--';
         document.getElementById('resumo-info').textContent =
@@ -180,20 +180,20 @@ const chamadas = {
             .sort((a, b) => a.nome.localeCompare(b.nome))
             .map(r => `
                 <div class="resumo-lista-item">
-                    ✓ ${utils.escapeHtml(r.nome)} <small>(${r.horaFormatada})</small>
+                    âœ“ ${utils.escapeHtml(r.nome)} <small>(${r.horaFormatada})</small>
                 </div>
             `).join('');
 
         listaPresentes.innerHTML = listaPresentesHtml || '<p class="text-muted">Nenhum aluno presente</p>';
 
-        // Lista de ausentes (faltas não justificadas)
+        // Lista de ausentes (faltas nÃ£o justificadas)
         const listaAusentes = document.getElementById('resumo-lista-ausentes');
         const listaAusentesHtml = registrosProcessados
             .filter(r => r.status === 'F')
             .sort((a, b) => a.nome.localeCompare(b.nome))
             .map(r => `
                 <div class="resumo-lista-item">
-                    ✗ ${utils.escapeHtml(r.nome)}
+                    âœ— ${utils.escapeHtml(r.nome)}
                 </div>
             `).join('');
 
@@ -239,10 +239,10 @@ const chamadas = {
             });
 
             const colunas = [
-                { field: 'matricula', label: 'Matrícula' },
+                { field: 'matricula', label: 'MatrÃ­cula' },
                 { field: 'nome', label: 'Nome' },
                 { field: 'status', label: 'Status' },
-                { field: 'hora', label: 'Horário' }
+                { field: 'hora', label: 'HorÃ¡rio' }
             ];
 
             const csv = utils.gerarCSV(dados, colunas);
@@ -298,22 +298,22 @@ const chamadas = {
 
             const percentual = utils.calcularPercentual(presentes, totalAlunos);
 
-            let texto = `📋 Chamada - ${turma.nome}\n`;
-            texto += `📅 ${utils.formatarData(chamada.data)}\n\n`;
-            texto += `✅ Presentes: ${presentes} de ${totalAlunos} (${percentual}%)\n`;
-            if (faltas > 0) texto += `❌ Faltas: ${faltas}\n`;
+            let texto = `ðŸ“‹ Chamada - ${turma.nome}\n`;
+            texto += `ðŸ“… ${utils.formatarData(chamada.data)}\n\n`;
+            texto += `âœ… Presentes: ${presentes} de ${totalAlunos} (${percentual}%)\n`;
+            if (faltas > 0) texto += `âŒ Faltas: ${faltas}\n`;
             texto += '\n';
 
             const sortNome = (a, b) => a.localeCompare(b);
 
             if (listaPresentes.length > 0) {
                 texto += '--- PRESENTES ---\n';
-                listaPresentes.sort(sortNome).forEach(nome => texto += `✓ ${nome}\n`);
+                listaPresentes.sort(sortNome).forEach(nome => texto += `âœ“ ${nome}\n`);
             }
 
             if (listaAusentes.length > 0) {
                 texto += '\n--- AUSENTES ---\n';
-                listaAusentes.sort(sortNome).forEach(nome => texto += `✗ ${nome}\n`);
+                listaAusentes.sort(sortNome).forEach(nome => texto += `âœ— ${nome}\n`);
             }
 
             const compartilhado = await utils.compartilhar({
@@ -330,7 +330,7 @@ const chamadas = {
         }
     },
 
-    // Exportar histórico completo
+    // Exportar histÃ³rico completo
     async exportarHistorico() {
         if (!turmas.turmaAtual) return;
 
@@ -385,10 +385,10 @@ const chamadas = {
             const colunas = [
                 { field: 'data', label: 'Data' },
                 { field: 'diaSemana', label: 'Dia' },
-                { field: 'matricula', label: 'Matrícula' },
+                { field: 'matricula', label: 'MatrÃ­cula' },
                 { field: 'nome', label: 'Nome' },
                 { field: 'status', label: 'Status' },
-                { field: 'horaPresenca', label: 'Hora Presença' }
+                { field: 'horaPresenca', label: 'Hora PresenÃ§a' }
             ];
 
             const csv = utils.gerarCSV(dados, colunas);
@@ -396,10 +396,10 @@ const chamadas = {
                 .replace(/[^a-z0-9.-]/gi, '_');
 
             utils.downloadFile(filename, csv, 'text/csv;charset=utf-8;');
-            utils.mostrarToast('Histórico exportado com sucesso!', 'success');
+            utils.mostrarToast('HistÃ³rico exportado com sucesso!', 'success');
         } catch (error) {
             console.error(error);
-            utils.mostrarToast("Erro ao exportar histórico", "error");
+            utils.mostrarToast("Erro ao exportar histÃ³rico", "error");
         }
     },
 
@@ -457,6 +457,8 @@ const chamadas = {
     async gerarRelatorioMensal(turmaId, ano, mes) {
         const alunos = await db.getByIndex('alunos', 'turmaId', turmaId);
         const chamadasTurma = await db.getByIndex('chamadas', 'turmaId', turmaId);
+        const turma = await db.get('turmas', turmaId);
+        const segundoHorarioAtivo = !!turma?.segundoHorarioAtivo;
 
         const mesPad = String(mes).padStart(2, '0');
         const prefixo = `${ano}-${mesPad}`;
@@ -465,30 +467,27 @@ const chamadas = {
         const diasNoMes = new Date(ano, mes, 0).getDate();
         const diasDoMes = Array.from({ length: diasNoMes }, (_, i) => String(i + 1).padStart(2, '0'));
         const alunosOrdenados = [...alunos].sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-        const matrizRelatorio = {};
-
         const normalizarStatus = (status) => (status === 'P' || !status) ? 'P' : 'F';
-        const chamadasPorDia = {};
 
-        alunosOrdenados.forEach(aluno => {
-            const dias = {};
-            diasDoMes.forEach(d => { dias[d] = ''; });
-            matrizRelatorio[aluno.id] = {
-                alunoId: aluno.id,
-                nome: aluno.nome || '',
-                matricula: aluno.matricula || '',
-                dias,
-                totalP: 0,
-                totalF: 0
-            };
-        });
+        const criarMatriz = () => {
+            const matriz = {};
+            alunosOrdenados.forEach(aluno => {
+                const dias = {};
+                diasDoMes.forEach(d => { dias[d] = ''; });
+                matriz[aluno.id] = {
+                    alunoId: aluno.id,
+                    nome: aluno.nome || '',
+                    matricula: aluno.matricula || '',
+                    dias,
+                    totalP: 0,
+                    totalF: 0
+                };
+            });
+            return matriz;
+        };
 
-        chamadasMes.forEach(chamada => {
-            const dia = (chamada.data || '').slice(8, 10);
-            if (!dia || !diasDoMes.includes(dia)) return;
-            if (!chamadasPorDia[dia]) chamadasPorDia[dia] = [];
-            chamadasPorDia[dia].push(chamada);
-        });
+        const matrizHorario1 = criarMatriz();
+        const matrizHorario2 = criarMatriz();
 
         const statusAlunoNaSessao = (chamada, aluno) => {
             if (chamada.registros && typeof chamada.registros === 'object') {
@@ -496,42 +495,55 @@ const chamadas = {
                 if (!reg) return 'F';
                 return normalizarStatus(reg.status);
             }
-
             if (Array.isArray(chamada.presencas)) {
                 const presenca = chamada.presencas.find(p => p.matricula === aluno.matricula);
                 if (!presenca) return 'F';
                 return normalizarStatus(presenca.status);
             }
-
             return 'F';
         };
 
-        diasDoMes.forEach(dia => {
-            const sessoesDia = chamadasPorDia[dia] || [];
-            if (sessoesDia.length === 0) return;
-
+        const aplicarSessaoNoDia = (matriz, chamada, dia) => {
             alunosOrdenados.forEach(aluno => {
-                const linha = matrizRelatorio[aluno.id];
+                const linha = matriz[aluno.id];
                 if (!linha) return;
 
-                let presentesDia = 0;
-                let faltasDia = 0;
-
-                sessoesDia.forEach(chamada => {
-                    const status = statusAlunoNaSessao(chamada, aluno);
-                    if (status === 'P') presentesDia += 1;
-                    else faltasDia += 1;
-                });
-
-                linha.totalP += presentesDia;
-                linha.totalF += faltasDia;
-
-                if (sessoesDia.length === 1) {
-                    linha.dias[dia] = presentesDia > 0 ? 'P' : 'F';
-                } else {
-                    linha.dias[dia] = `${presentesDia}/${sessoesDia.length}`;
+                linha.dias[dia] = 'F';
+                linha.totalF += 1;
+                if (statusAlunoNaSessao(chamada, aluno) === 'P') {
+                    linha.dias[dia] = 'P';
+                    linha.totalP += 1;
+                    linha.totalF -= 1;
                 }
             });
+        };
+
+        const chamadasPorDia = {};
+        chamadasMes.forEach(chamada => {
+            const dia = (chamada.data || '').slice(8, 10);
+            if (!dia || !diasDoMes.includes(dia)) return;
+            if (!chamadasPorDia[dia]) chamadasPorDia[dia] = [];
+            chamadasPorDia[dia].push(chamada);
+        });
+
+        diasDoMes.forEach(dia => {
+            const sessoesDia = (chamadasPorDia[dia] || []).sort((a, b) => {
+                const ta = new Date(a.iniciadoEm || a.criadoEm || a.data).getTime();
+                const tb = new Date(b.iniciadoEm || b.criadoEm || b.data).getTime();
+                return ta - tb;
+            });
+            if (sessoesDia.length === 0) return;
+
+            const slotsDia = {};
+            sessoesDia.forEach(chamada => {
+                let slot = (chamada.slot === 1 || chamada.slot === 2) ? chamada.slot : null;
+                if (!slot) slot = !slotsDia[1] ? 1 : !slotsDia[2] ? 2 : null;
+                if (!slot || slotsDia[slot]) return;
+                slotsDia[slot] = chamada;
+            });
+
+            if (slotsDia[1]) aplicarSessaoNoDia(matrizHorario1, slotsDia[1], dia);
+            if (segundoHorarioAtivo && slotsDia[2]) aplicarSessaoNoDia(matrizHorario2, slotsDia[2], dia);
         });
 
         return {
@@ -542,9 +554,9 @@ const chamadas = {
             mesPad,
             alunosOrdenados,
             diasDoMes,
-            chamadasPorDia,
-            totalSessoesMes: chamadasMes.length,
-            matrizRelatorio
+            segundoHorarioAtivo,
+            matrizHorario1,
+            matrizHorario2
         };
     },
 
@@ -552,48 +564,59 @@ const chamadas = {
         const wrap = document.getElementById('relatorio-mensal-tabela-wrap');
         if (!wrap) return;
 
-        const { alunosOrdenados, diasDoMes, matrizRelatorio } = relatorio;
+        const { alunosOrdenados, diasDoMes, matrizHorario1, matrizHorario2, segundoHorarioAtivo } = relatorio;
         if (!alunosOrdenados || alunosOrdenados.length === 0) {
             wrap.innerHTML = '<p class="text-muted" style="padding: 12px;">Nenhum aluno cadastrado na turma.</p>';
             return;
         }
 
-        const headerDias = diasDoMes.map(d => `<th>${d}</th>`).join('');
-        const linhas = alunosOrdenados.map(aluno => {
-            const linha = matrizRelatorio[aluno.id];
-            const celulasDias = diasDoMes.map(d => {
-                const status = linha.dias[d] || '';
-                const classe = (status === 'P' || status === 'F') ? `cell-status-${status}` : '';
-                return `<td class="${classe}">${status}</td>`;
+        const renderTabelaHorario = (titulo, matriz) => {
+            const headerDias = diasDoMes.map(d => `<th>${d}</th>`).join('');
+            const linhas = alunosOrdenados.map(aluno => {
+                const linha = matriz[aluno.id];
+                const celulasDias = diasDoMes.map(d => {
+                    const status = linha.dias[d] || '';
+                    const classe = (status === 'P' || status === 'F') ? `cell-status-${status}` : '';
+                    return `<td class="${classe}">${status}</td>`;
+                }).join('');
+
+                return `
+                    <tr>
+                        <td>${utils.escapeHtml(linha.nome || '')}</td>
+                        <td class="col-matricula">${utils.escapeHtml(linha.matricula || '')}</td>
+                        ${celulasDias}
+                        <td>${linha.totalP}</td>
+                        <td>${linha.totalF}</td>
+                    </tr>
+                `;
             }).join('');
 
             return `
-                <tr>
-                    <td>${utils.escapeHtml(linha.nome || '')}</td>
-                    <td class="col-matricula">${utils.escapeHtml(linha.matricula || '')}</td>
-                    ${celulasDias}
-                    <td>${linha.totalP}</td>
-                    <td>${linha.totalF}</td>
-                </tr>
+                <div class="relatorio-horario-section">
+                    <h4>${titulo}</h4>
+                    <table class="table-relatorio-mensal">
+                        <thead>
+                            <tr>
+                                <th>Aluno</th>
+                                <th>Matrícula</th>
+                                ${headerDias}
+                                <th>P</th>
+                                <th>F</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${linhas}
+                        </tbody>
+                    </table>
+                </div>
             `;
-        }).join('');
+        };
 
-        wrap.innerHTML = `
-            <table class="table-relatorio-mensal">
-                <thead>
-                    <tr>
-                        <th>Aluno</th>
-                        <th>Matrícula</th>
-                        ${headerDias}
-                        <th>P</th>
-                        <th>F</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${linhas}
-                </tbody>
-            </table>
-        `;
+        let html = renderTabelaHorario('1º Horário', matrizHorario1);
+        if (segundoHorarioAtivo) {
+            html += renderTabelaHorario('2º Horário', matrizHorario2);
+        }
+        wrap.innerHTML = html;
     },
 
     exportarRelatorioMensalCSV(relatorio = this.relatorioMensalAtual) {
@@ -602,26 +625,36 @@ const chamadas = {
             return;
         }
 
-        const { alunosOrdenados, diasDoMes, matrizRelatorio, ano, mesPad, turmaNome } = relatorio;
+        const { alunosOrdenados, diasDoMes, matrizHorario1, matrizHorario2, segundoHorarioAtivo, ano, mesPad, turmaNome } = relatorio;
         const esc = (v) => {
             const s = String(v ?? '');
             return /[;"\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
         };
 
-        const header = ['Aluno', 'Matricula', ...diasDoMes, 'Total P', 'Total F'];
-        const linhas = [header.map(esc).join(';')];
+        const montarBloco = (titulo, matriz) => {
+            const header = ['Aluno', 'Matricula', ...diasDoMes, 'Total P', 'Total F'];
+            const linhas = [titulo, header.map(esc).join(';')];
+            alunosOrdenados.forEach(aluno => {
+                const linha = matriz[aluno.id];
+                const row = [
+                    linha.nome || '',
+                    linha.matricula || '',
+                    ...diasDoMes.map(d => linha.dias[d] || ''),
+                    linha.totalP,
+                    linha.totalF
+                ];
+                linhas.push(row.map(esc).join(';'));
+            });
+            return linhas;
+        };
 
-        alunosOrdenados.forEach(aluno => {
-            const linha = matrizRelatorio[aluno.id];
-            const row = [
-                linha.nome || '',
-                linha.matricula || '',
-                ...diasDoMes.map(d => linha.dias[d] || ''),
-                linha.totalP,
-                linha.totalF
-            ];
-            linhas.push(row.map(esc).join(';'));
-        });
+        const linhas = [
+            ...montarBloco('1º Horário', matrizHorario1),
+            ''
+        ];
+        if (segundoHorarioAtivo) {
+            linhas.push(...montarBloco('2º Horário', matrizHorario2), '');
+        }
 
         const csv = linhas.join('\r\n');
         const turmaSlug = (turmaNome || 'turma').replace(/[^a-z0-9._-]/gi, '_');
@@ -637,44 +670,50 @@ const chamadas = {
         }
 
         try {
-            const canvas = this.gerarCanvasRelatorioMensal(relatorio);
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
             const pageW = doc.internal.pageSize.getWidth();
             const pageH = doc.internal.pageSize.getHeight();
             const drawW = pageW - 20;
-            const title = `Relatorio Mensal - ${relatorio.turmaNome} - ${relatorio.mesPad}/${relatorio.ano}`;
 
-            doc.setFontSize(12);
-            doc.text(title, 10, 8);
-
-            const ratio = drawW / canvas.width;
-            const usableH = pageH - 16;
-            const maxSlicePx = Math.max(1, Math.floor(usableH / ratio));
-
-            let offsetY = 0;
-            let page = 0;
-            while (offsetY < canvas.height) {
-                const sliceH = Math.min(maxSlicePx, canvas.height - offsetY);
-                const sliceCanvas = document.createElement('canvas');
-                sliceCanvas.width = canvas.width;
-                sliceCanvas.height = sliceH;
-                const sctx = sliceCanvas.getContext('2d');
-                sctx.drawImage(canvas, 0, offsetY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
-
-                if (page > 0) {
-                    doc.addPage('a4', 'landscape');
-                    doc.setFontSize(12);
-                    doc.text(`${title} (cont.)`, 10, 8);
-                }
-
-                const drawH = sliceH * ratio;
-                doc.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', 10, 12, drawW, drawH);
-
-                offsetY += sliceH;
-                page++;
+            const horarios = [{ slot: 1, titulo: '1º Horário' }];
+            if (relatorio.segundoHorarioAtivo) {
+                horarios.push({ slot: 2, titulo: '2º Horário' });
             }
+
+            let primeiraPagina = true;
+            horarios.forEach(({ slot, titulo }) => {
+                const canvas = this.gerarCanvasRelatorioMensal(relatorio, slot);
+                const title = `Relatorio Mensal - ${relatorio.turmaNome} - ${relatorio.mesPad}/${relatorio.ano} - ${titulo}`;
+                const ratio = drawW / canvas.width;
+                const usableH = pageH - 16;
+                const maxSlicePx = Math.max(1, Math.floor(usableH / ratio));
+
+                let offsetY = 0;
+                let page = 0;
+                while (offsetY < canvas.height) {
+                    if (!primeiraPagina) {
+                        doc.addPage('a4', 'landscape');
+                    }
+                    doc.setFontSize(12);
+                    doc.text(page > 0 ? `${title} (cont.)` : title, 10, 8);
+
+                    const sliceH = Math.min(maxSlicePx, canvas.height - offsetY);
+                    const sliceCanvas = document.createElement('canvas');
+                    sliceCanvas.width = canvas.width;
+                    sliceCanvas.height = sliceH;
+                    const sctx = sliceCanvas.getContext('2d');
+                    sctx.drawImage(canvas, 0, offsetY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+
+                    const drawH = sliceH * ratio;
+                    doc.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', 10, 12, drawW, drawH);
+
+                    offsetY += sliceH;
+                    page += 1;
+                    primeiraPagina = false;
+                }
+            });
 
             const turmaSlug = (relatorio.turmaNome || 'turma').replace(/[^a-z0-9._-]/gi, '_');
             const filename = `relatorio_mensal_${turmaSlug}_${relatorio.ano}_${relatorio.mesPad}.pdf`;
@@ -686,8 +725,9 @@ const chamadas = {
         }
     },
 
-    gerarCanvasRelatorioMensal(relatorio) {
-        const { alunosOrdenados, diasDoMes, matrizRelatorio } = relatorio;
+    gerarCanvasRelatorioMensal(relatorio, slot = 1) {
+        const { alunosOrdenados, diasDoMes } = relatorio;
+        const matrizRelatorio = slot === 2 ? relatorio.matrizHorario2 : relatorio.matrizHorario1;
 
         const rowH = 26;
         const headerH = 30;
@@ -779,7 +819,7 @@ const chamadas = {
 
         try {
             await db.delete('chamadas', chamadaId);
-            utils.mostrarToast('Chamada excluída', 'success');
+            utils.mostrarToast('Chamada excluÃ­da', 'success');
             this.listarHistorico();
         } catch (error) {
             console.error(error);
@@ -787,3 +827,5 @@ const chamadas = {
         }
     }
 };
+
+

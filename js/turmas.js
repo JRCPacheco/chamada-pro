@@ -1,4 +1,4 @@
-// ===== TURMAS MODULE =====
+﻿// ===== TURMAS MODULE =====
 // Gerenciamento de turmas
 // Migrado para IndexedDB
 
@@ -6,6 +6,17 @@ const turmas = {
 
     turmaAtual: null,
     listaTurmasListenerBound: false,
+    _perguntarSegundoHorario(valorAtual = false) {
+        const resposta = prompt('Segundo horÃ¡rio? (S/N):', valorAtual ? 'S' : 'N');
+        if (resposta === null) return null;
+
+        const valor = (resposta || '').trim().toLowerCase();
+        if (['s', 'sim', 'y', 'yes', '1'].includes(valor)) return true;
+        if (['n', 'nao', 'nÃ£o', 'no', '0', ''].includes(valor)) return false;
+
+        utils.mostrarToast('Resposta invÃ¡lida. Use S ou N.', 'warning');
+        return null;
+    },
 
     // Carregar e exibir lista de turmas
     async listar() {
@@ -20,7 +31,7 @@ const turmas = {
 
         let turmasArray = [];
 
-        // Estratégia de carregamento baseada em filtro
+        // EstratÃ©gia de carregamento baseada em filtro
         if (multi_escola && filterEscola && filterEscola.value) {
             turmasArray = await db.getByIndex('turmas', 'escolaId', filterEscola.value);
         } else {
@@ -41,7 +52,7 @@ const turmas = {
             await this.renderizarTurmas(turmasArray);
         }
 
-        // Atualizar estatísticas
+        // Atualizar estatÃ­sticas
         await this.atualizarStats();
 
         // Busca em tempo real (debounce)
@@ -70,8 +81,8 @@ const turmas = {
             escolasAll.forEach(e => escolasMap[e.id] = e.nome);
         }
 
-        // PERFORMANCE FIX: Carregar TUDO uma vez, mapear em memória
-        // Evita N+1 queries (78 transações para 39 turmas → 2 transações totais)
+        // PERFORMANCE FIX: Carregar TUDO uma vez, mapear em memÃ³ria
+        // Evita N+1 queries (78 transaÃ§Ãµes para 39 turmas â†’ 2 transaÃ§Ãµes totais)
         const todosAlunos = await db.getAll('alunos');
         const todasChamadas = await db.getAll('chamadas');
 
@@ -100,7 +111,7 @@ const turmas = {
             if (multi_escola && turma.escolaId) {
                 const nomeEscola = escolasMap[turma.escolaId];
                 if (nomeEscola) {
-                    escolaBadge = `<span class="escola-badge">🏫 ${utils.escapeHtml(nomeEscola)}</span>`;
+                    escolaBadge = `<span class="escola-badge">ðŸ« ${utils.escapeHtml(nomeEscola)}</span>`;
                 }
             }
 
@@ -108,10 +119,10 @@ const turmas = {
                 <div class="turma-card" data-turma-id="${turma.id}">
                     ${escolaBadge}
                     <h3>${utils.escapeHtml(turma.nome)}</h3>
-                    <p>${turma.descricao ? utils.escapeHtml(turma.descricao) : 'Sem descrição'}</p>
+                    <p>${turma.descricao ? utils.escapeHtml(turma.descricao) : 'Sem descriÃ§Ã£o'}</p>
                     <div class="turma-meta">
-                        <span>👥 ${totalAlunos} aluno${totalAlunos !== 1 ? 's' : ''}</span>
-                        <span>📅 ${totalChamadas} chamada${totalChamadas !== 1 ? 's' : ''}</span>
+                        <span>ðŸ‘¥ ${totalAlunos} aluno${totalAlunos !== 1 ? 's' : ''}</span>
+                        <span>ðŸ“… ${totalChamadas} chamada${totalChamadas !== 1 ? 's' : ''}</span>
                     </div>
                 </div>
             `;
@@ -131,10 +142,10 @@ const turmas = {
         }
     },
 
-    // Atualizar estatísticas gerais
+    // Atualizar estatÃ­sticas gerais
     async atualizarStats() {
         // Stats requer contagem global
-        // Isso pode ser pesado, mas para PWA local é ok
+        // Isso pode ser pesado, mas para PWA local Ã© ok
         const allTurmas = await db.getAll('turmas');
         const allAlunos = await db.getAll('alunos');
         const allChamadas = await db.getAll('chamadas');
@@ -152,6 +163,8 @@ const turmas = {
         // Limpar campos
         document.getElementById('input-turma-nome').value = '';
         document.getElementById('input-turma-descricao').value = '';
+        const segundoHorarioInput = document.getElementById('input-turma-segundo-horario');
+        if (segundoHorarioInput) segundoHorarioInput.checked = false;
 
         // MULTI ESCOLA: Popularizar dropdown de escolas
         const config = await app._getAppConfig();
@@ -189,21 +202,24 @@ const turmas = {
             return;
         }
 
+        const segundoHorarioAtivo = !!document.getElementById('input-turma-segundo-horario')?.checked;
+
         const novaTurma = {
             // id: 'turma_' + Date.now(),
             nome: nome,
             descricao: descricao,
             escolaId: escolaId, // Usando camelCase conforme schema novo? Validar se db.js usa escolaId ou escola_id no index
-            // O index no db.js é 'escolaId'. Mantendo consistencia
+            segundoHorarioAtivo: segundoHorarioAtivo,
+            // O index no db.js Ã© 'escolaId'. Mantendo consistencia
             criadaEm: new Date().toISOString()
-            // REMOVIDO: alunos: {} -> Alunos agora são store independente
+            // REMOVIDO: alunos: {} -> Alunos agora sÃ£o store independente
         };
 
         try {
             await db.add('turmas', novaTurma);
             app.fecharModal('modal-nova-turma');
 
-            // Atualizar lista (se falhar, apenas loga erro mas considera sucesso na criação)
+            // Atualizar lista (se falhar, apenas loga erro mas considera sucesso na criaÃ§Ã£o)
             try {
                 await this.listar();
             } catch (listError) {
@@ -224,14 +240,14 @@ const turmas = {
             this.turmaAtual = await db.get('turmas', turmaId);
 
             if (!this.turmaAtual) {
-                utils.mostrarToast('Turma não encontrada', 'error');
+                utils.mostrarToast('Turma nÃ£o encontrada', 'error');
                 return;
             }
 
-            // Atualizar informações da turma UI
+            // Atualizar informaÃ§Ãµes da turma UI
             document.getElementById('turma-nome-detalhe').textContent = this.turmaAtual.nome;
             document.getElementById('turma-descricao-detalhe').textContent =
-                this.turmaAtual.descricao || 'Sem descrição';
+                this.turmaAtual.descricao || 'Sem descriÃ§Ã£o';
 
             // Counts async
             const alunosDaTurma = await db.getByIndex('alunos', 'turmaId', turmaId);
@@ -240,23 +256,23 @@ const turmas = {
             document.getElementById('turma-total-alunos').textContent = alunosDaTurma.length;
             document.getElementById('turma-total-chamadas-realizadas').textContent = chamadasDaTurma.length;
 
-            // Atualizar título do header
+            // Atualizar tÃ­tulo do header
             document.getElementById('header-title').textContent = this.turmaAtual.nome;
 
-            // Mostrar botão voltar
+            // Mostrar botÃ£o voltar
             document.getElementById('btn-back').style.display = 'block';
 
-            // Carregar alunos e histórico
-            // OBSERVACAO: alunos.js e chamadas.js ainda não foram migrados.
-            // Eles usam storage.getTurmaById. Isso vai quebrar se não tiver compatibilidade?
-            // "Alunos store separado (NÃO usar ainda aqui)" -> O user disse para não migrar alunos.js.
+            // Carregar alunos e histÃ³rico
+            // OBSERVACAO: alunos.js e chamadas.js ainda nÃ£o foram migrados.
+            // Eles usam storage.getTurmaById. Isso vai quebrar se nÃ£o tiver compatibilidade?
+            // "Alunos store separado (NÃƒO usar ainda aqui)" -> O user disse para nÃ£o migrar alunos.js.
             // Mas alunos.listar() vai tentar ler do storage antigo ou falhar.
-            // Assumimos que a UI vai carregar vazio por enquanto até a proxima rodada.
+            // Assumimos que a UI vai carregar vazio por enquanto atÃ© a proxima rodada.
 
             if (typeof alunos.listar === 'function') alunos.listar();
             if (typeof chamadas.listarHistorico === 'function') chamadas.listarHistorico();
 
-            // Salvar estado para persistência (Lapidação)
+            // Salvar estado para persistÃªncia (LapidaÃ§Ã£o)
             sessionStorage.setItem('chamada_pro_ultima_turma', turmaId);
 
             // Mudar para tela de detalhes
@@ -279,9 +295,12 @@ const turmas = {
         if (!novoNome) return;
 
         const novaDescricao = prompt('Descrição:', turma.descricao || '');
+        const segundoHorarioAtivo = this._perguntarSegundoHorario(!!turma.segundoHorarioAtivo);
+        if (segundoHorarioAtivo === null) return;
 
         turma.nome = novoNome.trim();
         turma.descricao = (novaDescricao || '').trim();
+        turma.segundoHorarioAtivo = segundoHorarioAtivo;
 
         await db.put('turmas', turma);
 
@@ -301,7 +320,11 @@ const turmas = {
 
             const novoNome = prompt('Novo nome da turma:', turma.nome);
             if (novoNome && novoNome.trim()) {
+                const segundoHorarioAtivo = this._perguntarSegundoHorario(!!turma.segundoHorarioAtivo);
+                if (segundoHorarioAtivo === null) return;
+
                 turma.nome = novoNome.trim();
+                turma.segundoHorarioAtivo = segundoHorarioAtivo;
                 await db.put('turmas', turma);
 
                 utils.mostrarToast('Turma atualizada!', 'success');
@@ -317,7 +340,7 @@ const turmas = {
         }
     },
 
-    // Excluir turma (botão da UI)
+    // Excluir turma (botÃ£o da UI)
     async excluirTurma(turmaId) {
         if (!turmaId) {
             utils.mostrarToast('Nenhuma turma selecionada', 'error');
@@ -327,7 +350,7 @@ const turmas = {
         if (!this.turmaAtual || this.turmaAtual.id !== turmaId) {
             this.turmaAtual = await db.get('turmas', turmaId);
             if (!this.turmaAtual) {
-                utils.mostrarToast('Turma não encontrada', 'error');
+                utils.mostrarToast('Turma nÃ£o encontrada', 'error');
                 return;
             }
         }
@@ -335,7 +358,7 @@ const turmas = {
         await this.confirmarExcluirTurma();
     },
 
-    // Confirmar exclusão de turma
+    // Confirmar exclusÃ£o de turma
     async confirmarExcluirTurma() {
         if (!this.turmaAtual) {
             utils.mostrarToast('Nenhuma turma selecionada', 'error');
@@ -346,13 +369,13 @@ const turmas = {
         const alunosDaTurma = await db.getByIndex('alunos', 'turmaId', this.turmaAtual.id);
         const chamadasDaTurma = await db.getByIndex('chamadas', 'turmaId', this.turmaAtual.id);
 
-        const mensagem = `⚠️ **EXCLUSÃO IRREVERSÍVEL** ⚠️\n\n` +
+        const mensagem = `âš ï¸ **EXCLUSÃƒO IRREVERSÃVEL** âš ï¸\n\n` +
             `Tem certeza que deseja excluir a turma "${this.turmaAtual.nome}"?\n\n` +
-            `📊 **Serão excluídos permanentemente:**\n` +
-            `• ${alunosDaTurma.length} aluno(s) cadastrado(s)\n` +
-            `• ${chamadasDaTurma.length} registro(s) de chamada\n` +
-            `• Todos os dados associados\n\n` +
-            `Esta ação NÃO pode ser desfeita!`;
+            `ðŸ“Š **SerÃ£o excluÃ­dos permanentemente:**\n` +
+            `â€¢ ${alunosDaTurma.length} aluno(s) cadastrado(s)\n` +
+            `â€¢ ${chamadasDaTurma.length} registro(s) de chamada\n` +
+            `â€¢ Todos os dados associados\n\n` +
+            `Esta aÃ§Ã£o NÃƒO pode ser desfeita!`;
 
         if (confirm(mensagem)) {
             await this.excluirTurmaCompleta(this.turmaAtual.id);
@@ -380,7 +403,7 @@ const turmas = {
 
             await Promise.all(deletePromises);
 
-            utils.mostrarToast('Turma e todos os dados associados foram excluídos', 'success');
+            utils.mostrarToast('Turma e todos os dados associados foram excluÃ­dos', 'success');
 
             // Limpar estado atual
             this.turmaAtual = null;
@@ -389,10 +412,10 @@ const turmas = {
             await this.listar();
             app.mostrarTela('tela-turmas');
 
-            // Limpar título do header
+            // Limpar tÃ­tulo do header
             document.getElementById('header-title').textContent = 'Turmas';
 
-            // Esconder botão voltar
+            // Esconder botÃ£o voltar
             document.getElementById('btn-back').style.display = 'none';
 
         } catch (error) {
@@ -403,7 +426,7 @@ const turmas = {
 
     // Deletar turma (mantido para compatibilidade, redireciona para cascade)
     async deletar(turmaId) {
-        // Redireciona para logica completa se tiver confirmação simples, mas ideal é usar confirmarExcluirTurma
+        // Redireciona para logica completa se tiver confirmaÃ§Ã£o simples, mas ideal Ã© usar confirmarExcluirTurma
         if (!utils.confirmar('Tem certeza que deseja excluir esta turma?')) return;
 
         await this.excluirTurmaCompleta(turmaId);
@@ -411,7 +434,10 @@ const turmas = {
 
     // MULTI ESCOLA: Filtrar turmas por escola
     async filtrarPorEscola(escolaId) {
-        console.log('🏫 Filtrando por escola:', escolaId);
+        console.log('ðŸ« Filtrando por escola:', escolaId);
         await this.listar();
     }
 };
+
+
+

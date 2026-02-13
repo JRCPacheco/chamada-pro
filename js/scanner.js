@@ -78,8 +78,41 @@ const scanner = {
                 if (a.matricula) this.alunosCache['MAT_' + a.matricula] = a; // Index secundário
             });
 
-            // Definir Data ISO e ID único por sessão (evita sobrescrever chamadas do mesmo dia)
+            // Definir Data ISO e validar limite diário por turma
             const dataISO = new Date().toISOString().slice(0, 10);
+            const chamadasTurma = await db.getByIndex('chamadas', 'turmaId', turmaId);
+            const chamadasHoje = chamadasTurma
+                .filter(c => c.data === dataISO)
+                .sort((a, b) => {
+                    const ta = new Date(a.iniciadoEm || a.criadoEm || a.data).getTime();
+                    const tb = new Date(b.iniciadoEm || b.criadoEm || b.data).getTime();
+                    return ta - tb;
+                });
+
+            const segundoHorarioAtivo = !!turma.segundoHorarioAtivo;
+            const limiteChamadasDia = segundoHorarioAtivo ? 2 : 1;
+            if (chamadasHoje.length >= limiteChamadasDia) {
+                utils.mostrarToast('Número de chamadas por dia esgotado para esta turma', 'warning');
+                return;
+            }
+
+            const slotsUsados = new Set();
+            chamadasHoje.forEach(chamada => {
+                if (chamada.slot === 1 || chamada.slot === 2) {
+                    slotsUsados.add(chamada.slot);
+                } else if (!slotsUsados.has(1)) {
+                    slotsUsados.add(1);
+                } else {
+                    slotsUsados.add(2);
+                }
+            });
+
+            const slot = !slotsUsados.has(1) ? 1 : 2;
+            if (slot > limiteChamadasDia) {
+                utils.mostrarToast('Número de chamadas por dia esgotado para esta turma', 'warning');
+                return;
+            }
+
             const startedAt = new Date().toISOString();
             const chamadaId = `chamada_${turmaId}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
@@ -89,6 +122,7 @@ const scanner = {
                 turmaId: turmaId,
                 turmaNome: turma.nome, // Desnormalizado para facilidade de uso
                 data: dataISO,
+                slot: slot,
                 iniciadoEm: startedAt,
                 criadoEm: startedAt,
                 registros: {} // { alunoId: { status: 'P', ts: number } }
@@ -100,7 +134,8 @@ const scanner = {
 
             // Atualizar UI
             document.getElementById('scanner-turma-nome').textContent = turma.nome;
-            document.getElementById('scanner-data-hora').textContent = utils.formatarData(dataISO);
+            const rotuloHorario = slot === 2 ? '2º horário' : '1º horário';
+            document.getElementById('scanner-data-hora').textContent = `${utils.formatarData(dataISO)} • ${rotuloHorario}`;
 
             // Contar presenças iniciais
             const totalPresentes = Object.values(this.chamadaAtual.registros || {}).filter(r => r.status === 'P').length;
