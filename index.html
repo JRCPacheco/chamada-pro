@@ -166,13 +166,26 @@
                     <span>👥 <strong id="turma-total-alunos">0</strong> alunos</span>
                     <span>📅 <strong id="turma-total-chamadas-realizadas">0</strong> chamadas</span>
                 </div>
-                <div class="turma-actions">
-                    <button class="btn btn-success" onclick="turmas.editarTurma(turmas.turmaAtual?.id)">
-                        Editar Turma
-                    </button>
-                    <button class="btn btn-danger" onclick="turmas.excluirTurma(turmas.turmaAtual?.id)">
-                        Excluir Turma
-                    </button>
+                <div class="turma-footer-row">
+                    <label class="toggle-field turma-segundo-horario-toggle" for="input-detalhe-segundo-horario">
+                        <span class="toggle-field-copy">
+                            <span class="toggle-field-title">Segundo horário</span>
+                            <small id="segundo-horario-status-detalhe" class="text-muted">Desligado (1 chamada/dia)</small>
+                        </span>
+                        <span class="toggle-switch">
+                            <input type="checkbox" id="input-detalhe-segundo-horario"
+                                onchange="turmas.alterarSegundoHorarioDetalhe(this)" />
+                            <span class="toggle-slider" aria-hidden="true"></span>
+                        </span>
+                    </label>
+                    <div class="turma-actions">
+                        <button class="btn btn-success" onclick="turmas.editarTurma(turmas.turmaAtual?.id)">
+                            Editar Turma
+                        </button>
+                        <button class="btn btn-danger" onclick="turmas.excluirTurma(turmas.turmaAtual?.id)">
+                            Excluir Turma
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -425,11 +438,16 @@
                         rows="3"></textarea>
                 </div>
                 <div class="form-group">
-                    <label style="display: flex; align-items: center; gap: 8px;">
-                        <input type="checkbox" id="input-turma-segundo-horario" />
-                        Segundo horário?
+                    <label class="toggle-field" for="input-turma-segundo-horario">
+                        <span class="toggle-field-copy">
+                            <span class="toggle-field-title">Segundo horário?</span>
+                            <small class="text-muted">Ative apenas se a turma costuma ter duas chamadas no mesmo dia.</small>
+                        </span>
+                        <span class="toggle-switch">
+                            <input type="checkbox" id="input-turma-segundo-horario" />
+                            <span class="toggle-slider" aria-hidden="true"></span>
+                        </span>
                     </label>
-                    <small class="text-muted">Ative apenas se a turma costuma ter duas chamadas no mesmo dia.</small>
                 </div>
             </div>
             <div class="modal-footer">

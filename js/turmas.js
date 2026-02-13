@@ -6,16 +6,16 @@ const turmas = {
 
     turmaAtual: null,
     listaTurmasListenerBound: false,
-    _perguntarSegundoHorario(valorAtual = false) {
-        const resposta = prompt('Segundo horário? (S/N):', valorAtual ? 'S' : 'N');
-        if (resposta === null) return null;
+    _atualizarControleSegundoHorarioDetalhe() {
+        const input = document.getElementById('input-detalhe-segundo-horario');
+        const status = document.getElementById('segundo-horario-status-detalhe');
+        if (!input || !status) return;
 
-        const valor = (resposta || '').trim().toLowerCase();
-        if (['s', 'sim', 'y', 'yes', '1'].includes(valor)) return true;
-        if (['n', 'nao', 'não', 'no', '0', ''].includes(valor)) return false;
-
-        utils.mostrarToast('Resposta inválida. Use S ou N.', 'warning');
-        return null;
+        const ativo = !!this.turmaAtual?.segundoHorarioAtivo;
+        input.checked = ativo;
+        status.textContent = ativo
+            ? 'Ligado (2 chamadas/dia)'
+            : 'Desligado (1 chamada/dia)';
     },
 
     // Carregar e exibir lista de turmas
@@ -248,6 +248,7 @@ const turmas = {
             document.getElementById('turma-nome-detalhe').textContent = this.turmaAtual.nome;
             document.getElementById('turma-descricao-detalhe').textContent =
                 this.turmaAtual.descricao || 'Sem descrição';
+            this._atualizarControleSegundoHorarioDetalhe();
 
             // Counts async
             const alunosDaTurma = await db.getByIndex('alunos', 'turmaId', turmaId);
@@ -283,6 +284,68 @@ const turmas = {
         }
     },
 
+    async alterarSegundoHorarioDetalhe(inputEl) {
+        const turmaId = this.turmaAtual?.id;
+        if (!inputEl || !turmaId) return;
+
+        const novoValor = !!inputEl.checked;
+        const atualizado = await this.definirSegundoHorario(turmaId, novoValor);
+        if (!atualizado) {
+            inputEl.checked = !novoValor;
+            this._atualizarControleSegundoHorarioDetalhe();
+        }
+    },
+
+    async definirSegundoHorario(turmaId, novoValor) {
+        if (!turmaId) {
+            utils.mostrarToast('Turma não encontrada', 'error');
+            return false;
+        }
+
+        const turma = await db.get('turmas', turmaId);
+        if (!turma) {
+            utils.mostrarToast('Turma não encontrada', 'error');
+            return false;
+        }
+
+        const valorAtual = !!turma.segundoHorarioAtivo;
+        if (valorAtual === !!novoValor) {
+            if (this.turmaAtual && this.turmaAtual.id === turmaId) {
+                this.turmaAtual.segundoHorarioAtivo = !!novoValor;
+                this._atualizarControleSegundoHorarioDetalhe();
+            }
+            return true;
+        }
+
+        if (!novoValor) {
+            const chamadasDaTurma = await db.getByIndex('chamadas', 'turmaId', turmaId);
+            const possuiRegistrosSegundoHorario = chamadasDaTurma.some(c => c.slot === 2);
+            let mensagem = 'Deseja desativar o 2º horário desta turma?';
+            if (possuiRegistrosSegundoHorario) {
+                mensagem += '\n\nEsta turma já tem registros no 2º horário. Eles não serão apagados, mas podem deixar de aparecer em alguns relatórios enquanto a opção estiver desativada.';
+            }
+            if (!confirm(mensagem)) return false;
+        }
+
+        turma.segundoHorarioAtivo = !!novoValor;
+        await db.put('turmas', turma);
+
+        if (this.turmaAtual && this.turmaAtual.id === turmaId) {
+            this.turmaAtual.segundoHorarioAtivo = !!novoValor;
+            this._atualizarControleSegundoHorarioDetalhe();
+        }
+
+        if (typeof chamadas.atualizarRelatorioMensal === 'function') {
+            await chamadas.atualizarRelatorioMensal();
+        }
+
+        utils.mostrarToast(
+            novoValor ? '2º horário ativado para a turma' : '2º horário desativado para a turma',
+            'success'
+        );
+        return true;
+    },
+
     // Editar turma
     async editarTurma(id) {
         const turma = await db.get('turmas', id);
@@ -295,12 +358,9 @@ const turmas = {
         if (!novoNome) return;
 
         const novaDescricao = prompt('Descrição:', turma.descricao || '');
-        const segundoHorarioAtivo = this._perguntarSegundoHorario(!!turma.segundoHorarioAtivo);
-        if (segundoHorarioAtivo === null) return;
 
         turma.nome = novoNome.trim();
         turma.descricao = (novaDescricao || '').trim();
-        turma.segundoHorarioAtivo = segundoHorarioAtivo;
 
         await db.put('turmas', turma);
 
@@ -320,11 +380,7 @@ const turmas = {
 
             const novoNome = prompt('Novo nome da turma:', turma.nome);
             if (novoNome && novoNome.trim()) {
-                const segundoHorarioAtivo = this._perguntarSegundoHorario(!!turma.segundoHorarioAtivo);
-                if (segundoHorarioAtivo === null) return;
-
                 turma.nome = novoNome.trim();
-                turma.segundoHorarioAtivo = segundoHorarioAtivo;
                 await db.put('turmas', turma);
 
                 utils.mostrarToast('Turma atualizada!', 'success');
