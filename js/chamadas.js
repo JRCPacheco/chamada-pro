@@ -180,7 +180,7 @@ const chamadas = {
             .sort((a, b) => a.nome.localeCompare(b.nome))
             .map(r => `
                 <div class="resumo-lista-item">
-                    âœ“ ${utils.escapeHtml(r.nome)} <small>(${r.horaFormatada})</small>
+                    ✓ ${utils.escapeHtml(r.nome)} <small>(${r.horaFormatada})</small>
                 </div>
             `).join('');
 
@@ -193,7 +193,7 @@ const chamadas = {
             .sort((a, b) => a.nome.localeCompare(b.nome))
             .map(r => `
                 <div class="resumo-lista-item">
-                    âœ— ${utils.escapeHtml(r.nome)}
+                    ✗ ${utils.escapeHtml(r.nome)}
                 </div>
             `).join('');
 
@@ -239,10 +239,10 @@ const chamadas = {
             });
 
             const colunas = [
-                { field: 'matricula', label: 'MatrÃ­cula' },
+                { field: 'matricula', label: 'Matrícula' },
                 { field: 'nome', label: 'Nome' },
                 { field: 'status', label: 'Status' },
-                { field: 'hora', label: 'HorÃ¡rio' }
+                { field: 'hora', label: 'Horário' }
             ];
 
             const csv = utils.gerarCSV(dados, colunas);
@@ -298,22 +298,22 @@ const chamadas = {
 
             const percentual = utils.calcularPercentual(presentes, totalAlunos);
 
-            let texto = `ðŸ“‹ Chamada - ${turma.nome}\n`;
-            texto += `ðŸ“… ${utils.formatarData(chamada.data)}\n\n`;
-            texto += `âœ… Presentes: ${presentes} de ${totalAlunos} (${percentual}%)\n`;
-            if (faltas > 0) texto += `âŒ Faltas: ${faltas}\n`;
+            let texto = `📋 Chamada - ${turma.nome}\n`;
+            texto += `📄 ${utils.formatarData(chamada.data)}\n\n`;
+            texto += `✅ Presentes: ${presentes} de ${totalAlunos} (${percentual}%)\n`;
+            if (faltas > 0) texto += `❌ Faltas: ${faltas}\n`;
             texto += '\n';
 
             const sortNome = (a, b) => a.localeCompare(b);
 
             if (listaPresentes.length > 0) {
                 texto += '--- PRESENTES ---\n';
-                listaPresentes.sort(sortNome).forEach(nome => texto += `âœ“ ${nome}\n`);
+                listaPresentes.sort(sortNome).forEach(nome => texto += `✓ ${nome}\n`);
             }
 
             if (listaAusentes.length > 0) {
                 texto += '\n--- AUSENTES ---\n';
-                listaAusentes.sort(sortNome).forEach(nome => texto += `âœ— ${nome}\n`);
+                listaAusentes.sort(sortNome).forEach(nome => texto += `✗ ${nome}\n`);
             }
 
             const compartilhado = await utils.compartilhar({
@@ -385,10 +385,10 @@ const chamadas = {
             const colunas = [
                 { field: 'data', label: 'Data' },
                 { field: 'diaSemana', label: 'Dia' },
-                { field: 'matricula', label: 'MatrÃ­cula' },
+                { field: 'matricula', label: 'Matrícula' },
                 { field: 'nome', label: 'Nome' },
                 { field: 'status', label: 'Status' },
-                { field: 'horaPresenca', label: 'Hora PresenÃ§a' }
+                { field: 'horaPresenca', label: 'Hora Presença' }
             ];
 
             const csv = utils.gerarCSV(dados, colunas);
@@ -396,10 +396,10 @@ const chamadas = {
                 .replace(/[^a-z0-9.-]/gi, '_');
 
             utils.downloadFile(filename, csv, 'text/csv;charset=utf-8;');
-            utils.mostrarToast('HistÃ³rico exportado com sucesso!', 'success');
+            utils.mostrarToast('Histórico exportado com sucesso!', 'success');
         } catch (error) {
             console.error(error);
-            utils.mostrarToast("Erro ao exportar histÃ³rico", "error");
+            utils.mostrarToast("Erro ao exportar histórico", "error");
         }
     },
 
@@ -819,7 +819,7 @@ const chamadas = {
 
         try {
             await db.delete('chamadas', chamadaId);
-            utils.mostrarToast('Chamada excluÃ­da', 'success');
+            utils.mostrarToast('Chamada excluída', 'success');
             this.listarHistorico();
         } catch (error) {
             console.error(error);

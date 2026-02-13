@@ -7,14 +7,14 @@ const turmas = {
     turmaAtual: null,
     listaTurmasListenerBound: false,
     _perguntarSegundoHorario(valorAtual = false) {
-        const resposta = prompt('Segundo horÃ¡rio? (S/N):', valorAtual ? 'S' : 'N');
+        const resposta = prompt('Segundo horário? (S/N):', valorAtual ? 'S' : 'N');
         if (resposta === null) return null;
 
         const valor = (resposta || '').trim().toLowerCase();
         if (['s', 'sim', 'y', 'yes', '1'].includes(valor)) return true;
-        if (['n', 'nao', 'nÃ£o', 'no', '0', ''].includes(valor)) return false;
+        if (['n', 'nao', 'não', 'no', '0', ''].includes(valor)) return false;
 
-        utils.mostrarToast('Resposta invÃ¡lida. Use S ou N.', 'warning');
+        utils.mostrarToast('Resposta inválida. Use S ou N.', 'warning');
         return null;
     },
 
@@ -111,7 +111,7 @@ const turmas = {
             if (multi_escola && turma.escolaId) {
                 const nomeEscola = escolasMap[turma.escolaId];
                 if (nomeEscola) {
-                    escolaBadge = `<span class="escola-badge">ðŸ« ${utils.escapeHtml(nomeEscola)}</span>`;
+                    escolaBadge = `<span class="escola-badge">🏫 ${utils.escapeHtml(nomeEscola)}</span>`;
                 }
             }
 
@@ -119,10 +119,10 @@ const turmas = {
                 <div class="turma-card" data-turma-id="${turma.id}">
                     ${escolaBadge}
                     <h3>${utils.escapeHtml(turma.nome)}</h3>
-                    <p>${turma.descricao ? utils.escapeHtml(turma.descricao) : 'Sem descriÃ§Ã£o'}</p>
+                    <p>${turma.descricao ? utils.escapeHtml(turma.descricao) : 'Sem descrição'}</p>
                     <div class="turma-meta">
-                        <span>ðŸ‘¥ ${totalAlunos} aluno${totalAlunos !== 1 ? 's' : ''}</span>
-                        <span>ðŸ“… ${totalChamadas} chamada${totalChamadas !== 1 ? 's' : ''}</span>
+                        <span>👥 ${totalAlunos} aluno${totalAlunos !== 1 ? 's' : ''}</span>
+                        <span>📄 ${totalChamadas} chamada${totalChamadas !== 1 ? 's' : ''}</span>
                     </div>
                 </div>
             `;
@@ -240,14 +240,14 @@ const turmas = {
             this.turmaAtual = await db.get('turmas', turmaId);
 
             if (!this.turmaAtual) {
-                utils.mostrarToast('Turma nÃ£o encontrada', 'error');
+                utils.mostrarToast('Turma não encontrada', 'error');
                 return;
             }
 
             // Atualizar informaÃ§Ãµes da turma UI
             document.getElementById('turma-nome-detalhe').textContent = this.turmaAtual.nome;
             document.getElementById('turma-descricao-detalhe').textContent =
-                this.turmaAtual.descricao || 'Sem descriÃ§Ã£o';
+                this.turmaAtual.descricao || 'Sem descrição';
 
             // Counts async
             const alunosDaTurma = await db.getByIndex('alunos', 'turmaId', turmaId);
@@ -350,7 +350,7 @@ const turmas = {
         if (!this.turmaAtual || this.turmaAtual.id !== turmaId) {
             this.turmaAtual = await db.get('turmas', turmaId);
             if (!this.turmaAtual) {
-                utils.mostrarToast('Turma nÃ£o encontrada', 'error');
+                utils.mostrarToast('Turma não encontrada', 'error');
                 return;
             }
         }
@@ -369,13 +369,13 @@ const turmas = {
         const alunosDaTurma = await db.getByIndex('alunos', 'turmaId', this.turmaAtual.id);
         const chamadasDaTurma = await db.getByIndex('chamadas', 'turmaId', this.turmaAtual.id);
 
-        const mensagem = `âš ï¸ **EXCLUSÃƒO IRREVERSÃVEL** âš ï¸\n\n` +
+        const mensagem = `⚠️ **EXCLUSÃO IRREVERSÍVEL** ⚠️\n\n` +
             `Tem certeza que deseja excluir a turma "${this.turmaAtual.nome}"?\n\n` +
-            `ðŸ“Š **SerÃ£o excluÃ­dos permanentemente:**\n` +
-            `â€¢ ${alunosDaTurma.length} aluno(s) cadastrado(s)\n` +
-            `â€¢ ${chamadasDaTurma.length} registro(s) de chamada\n` +
-            `â€¢ Todos os dados associados\n\n` +
-            `Esta aÃ§Ã£o NÃƒO pode ser desfeita!`;
+            `📊 **Serão excluídos permanentemente:**\n` +
+            `• ${alunosDaTurma.length} aluno(s) cadastrado(s)\n` +
+            `• ${chamadasDaTurma.length} registro(s) de chamada\n` +
+            `• Todos os dados associados\n\n` +
+            `Esta ação NÃO pode ser desfeita!`;
 
         if (confirm(mensagem)) {
             await this.excluirTurmaCompleta(this.turmaAtual.id);
@@ -403,7 +403,7 @@ const turmas = {
 
             await Promise.all(deletePromises);
 
-            utils.mostrarToast('Turma e todos os dados associados foram excluÃ­dos', 'success');
+            utils.mostrarToast('Turma e todos os dados associados foram excluídos', 'success');
 
             // Limpar estado atual
             this.turmaAtual = null;
@@ -434,7 +434,7 @@ const turmas = {
 
     // MULTI ESCOLA: Filtrar turmas por escola
     async filtrarPorEscola(escolaId) {
-        console.log('ðŸ« Filtrando por escola:', escolaId);
+        console.log('🏫 Filtrando por escola:', escolaId);
         await this.listar();
     }
 };
