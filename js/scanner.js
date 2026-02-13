@@ -78,26 +78,23 @@ const scanner = {
                 if (a.matricula) this.alunosCache['MAT_' + a.matricula] = a; // Index secundário
             });
 
-            // Definir Data ISO e ID Determinístico
+            // Definir Data ISO e ID único por sessão (evita sobrescrever chamadas do mesmo dia)
             const dataISO = new Date().toISOString().slice(0, 10);
-            const chamadaId = `chamada_${turmaId}_${dataISO}`;
+            const startedAt = new Date().toISOString();
+            const chamadaId = `chamada_${turmaId}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
-            // Tentar recuperar chamada existente
-            let chamada = await db.get('chamadas', chamadaId);
-
-            if (!chamada) {
-                // Criar nova
-                chamada = {
-                    id: chamadaId,
-                    turmaId: turmaId,
-                    turmaNome: turma.nome, // Desnormalizado para facilidade de uso
-                    data: dataISO,
-                    criadoEm: new Date().toISOString(),
-                    registros: {} // { alunoId: { status: 'P', ts: number } }
-                };
-                // Salvar imediatamente para garantir existência
-                await db.put('chamadas', chamada);
-            }
+            // Criar nova sessão de chamada
+            const chamada = {
+                id: chamadaId,
+                turmaId: turmaId,
+                turmaNome: turma.nome, // Desnormalizado para facilidade de uso
+                data: dataISO,
+                iniciadoEm: startedAt,
+                criadoEm: startedAt,
+                registros: {} // { alunoId: { status: 'P', ts: number } }
+            };
+            // Salvar imediatamente para garantir existência
+            await db.put('chamadas', chamada);
 
             this.chamadaAtual = chamada;
 

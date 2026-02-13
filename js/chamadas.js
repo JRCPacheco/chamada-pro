@@ -20,8 +20,13 @@ const chamadas = {
 
             // Buscar dados
             let chamadasArray = await db.getByIndex('chamadas', 'turmaId', turmas.turmaAtual.id);
-            // Ordenar por data (decrescente)
-            chamadasArray.sort((a, b) => new Date(b.data) - new Date(a.data));
+            // Ordenar por início da sessão (decrescente), fallback para data legacy
+            const toMs = (chamada) => {
+                const ref = chamada.iniciadoEm || chamada.criadoEm || chamada.data;
+                const ms = new Date(ref).getTime();
+                return Number.isFinite(ms) ? ms : 0;
+            };
+            chamadasArray.sort((a, b) => toMs(b) - toMs(a));
 
             // Buscar total de alunos da turma para cálculo de %
             const alunosTurma = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
@@ -62,11 +67,13 @@ const chamadas = {
 
             const percentual = utils.calcularPercentual(presentes, totalAlunos);
             const dataExibicao = chamada.data; // Já é YYYY-MM-DD ou ISO
+            const horaRef = chamada.iniciadoEm || chamada.criadoEm || '';
+            const horaExibicao = horaRef ? utils.formatarHora(new Date(horaRef)) : '--:--';
 
             return `
                 <div class="historico-card" data-chamada-id="${chamada.id}">
                     <div class="historico-header">
-                        <h4>${utils.formatarData(dataExibicao)}</h4>
+                        <h4>${utils.formatarData(dataExibicao)} <small>${horaExibicao}</small></h4>
                         <span class="historico-badge">${percentual}%</span>
                     </div>
                     <div class="historico-meta">
@@ -157,8 +164,10 @@ const chamadas = {
         const percentual = utils.calcularPercentual(presentes, totalAlunos);
 
         // Atualizar informações
+        const horaRef = chamada.iniciadoEm || chamada.criadoEm || '';
+        const horaExibicao = horaRef ? utils.formatarHora(new Date(horaRef)) : '--:--';
         document.getElementById('resumo-info').textContent =
-            `${turma.nome} - ${utils.formatarData(chamada.data)}`;
+            `${turma.nome} - ${utils.formatarData(chamada.data)} ${horaExibicao}`;
 
         document.getElementById('resumo-presentes').textContent = presentes;
         document.getElementById('resumo-ausentes').textContent = faltas;
@@ -458,15 +467,8 @@ const chamadas = {
         const alunosOrdenados = [...alunos].sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
         const matrizRelatorio = {};
 
-        const normalizarStatus = (status) => {
-            if (status === 'P' || !status) return 'P';
-            return 'F';
-        };
-
-        const ajustarTotais = (linha, status, delta) => {
-            if (status === 'P') linha.totalP += delta;
-            if (status === 'F') linha.totalF += delta;
-        };
+        const normalizarStatus = (status) => (status === 'P' || !status) ? 'P' : 'F';
+        const chamadasPorDia = {};
 
         alunosOrdenados.forEach(aluno => {
             const dias = {};
@@ -484,35 +486,51 @@ const chamadas = {
         chamadasMes.forEach(chamada => {
             const dia = (chamada.data || '').slice(8, 10);
             if (!dia || !diasDoMes.includes(dia)) return;
+            if (!chamadasPorDia[dia]) chamadasPorDia[dia] = [];
+            chamadasPorDia[dia].push(chamada);
+        });
 
-            // Em cada dia com chamada, ausência é o padrão para todos.
-            // Depois, os registros explícitos (P/F) sobrescrevem essa base.
+        const statusAlunoNaSessao = (chamada, aluno) => {
+            if (chamada.registros && typeof chamada.registros === 'object') {
+                const reg = chamada.registros[aluno.id];
+                if (!reg) return 'F';
+                return normalizarStatus(reg.status);
+            }
+
+            if (Array.isArray(chamada.presencas)) {
+                const presenca = chamada.presencas.find(p => p.matricula === aluno.matricula);
+                if (!presenca) return 'F';
+                return normalizarStatus(presenca.status);
+            }
+
+            return 'F';
+        };
+
+        diasDoMes.forEach(dia => {
+            const sessoesDia = chamadasPorDia[dia] || [];
+            if (sessoesDia.length === 0) return;
+
             alunosOrdenados.forEach(aluno => {
-                const linhaBase = matrizRelatorio[aluno.id];
-                if (!linhaBase) return;
-                if (!linhaBase.dias[dia]) {
-                    linhaBase.dias[dia] = 'F';
-                    linhaBase.totalF += 1;
-                }
-            });
-
-            const registros = chamada.registros && typeof chamada.registros === 'object'
-                ? chamada.registros
-                : {};
-
-            Object.entries(registros).forEach(([alunoId, reg]) => {
-                const linha = matrizRelatorio[alunoId];
+                const linha = matrizRelatorio[aluno.id];
                 if (!linha) return;
 
-                const novoStatus = normalizarStatus(reg?.status);
-                if (!novoStatus) return;
+                let presentesDia = 0;
+                let faltasDia = 0;
 
-                const statusAnterior = linha.dias[dia] || '';
-                if (statusAnterior === novoStatus) return;
+                sessoesDia.forEach(chamada => {
+                    const status = statusAlunoNaSessao(chamada, aluno);
+                    if (status === 'P') presentesDia += 1;
+                    else faltasDia += 1;
+                });
 
-                ajustarTotais(linha, statusAnterior, -1);
-                linha.dias[dia] = novoStatus;
-                ajustarTotais(linha, novoStatus, 1);
+                linha.totalP += presentesDia;
+                linha.totalF += faltasDia;
+
+                if (sessoesDia.length === 1) {
+                    linha.dias[dia] = presentesDia > 0 ? 'P' : 'F';
+                } else {
+                    linha.dias[dia] = `${presentesDia}/${sessoesDia.length}`;
+                }
             });
         });
 
@@ -524,6 +542,8 @@ const chamadas = {
             mesPad,
             alunosOrdenados,
             diasDoMes,
+            chamadasPorDia,
+            totalSessoesMes: chamadasMes.length,
             matrizRelatorio
         };
     },
@@ -543,7 +563,7 @@ const chamadas = {
             const linha = matrizRelatorio[aluno.id];
             const celulasDias = diasDoMes.map(d => {
                 const status = linha.dias[d] || '';
-                const classe = status ? `cell-status-${status}` : '';
+                const classe = (status === 'P' || status === 'F') ? `cell-status-${status}` : '';
                 return `<td class="${classe}">${status}</td>`;
             }).join('');
 
