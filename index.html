@@ -61,23 +61,28 @@
                 <div class="step">
                     <div class="step-icon">📚</div>
                     <h3>Crie suas turmas</h3>
-                    <p>Organize alunos por turmas e matérias</p>
                 </div>
                 <div class="step">
                     <div class="step-icon">📱</div>
                     <h3>Escaneie QR Codes</h3>
-                    <p>Registro rápido com a câmera</p>
                 </div>
                 <div class="step">
                     <div class="step-icon">📊</div>
                     <h3>Exporte relatórios</h3>
-                    <p>CSV, PDF e compartilhamento direto</p>
                 </div>
             </div>
 
-            <button class="btn btn-primary btn-large" onclick="app.iniciarApp()">
-                Começar Agora
-            </button>
+            <div class="onboarding-profile">
+                <label for="onboarding-professor-nome">Nome do professor(a) (opcional)</label>
+                <input type="text" id="onboarding-professor-nome" maxlength="80" placeholder="Ex: Ana Souza" />
+                <small class="text-muted">Será usado para identificação em relatórios e PDF.</small>
+            </div>
+
+            <div class="onboarding-actions">
+                <button class="btn btn-primary onboarding-cta" onclick="app.concluirOnboarding(true)">
+                    Começar Agora
+                </button>
+            </div>
         </div>
     </div>
 
@@ -392,6 +397,25 @@
             </div>
 
             <div class="config-section">
+                <h3>Perfil do Professor</h3>
+
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="config-professor-nome">Nome do professor(a)</label>
+                    <input type="text" id="config-professor-nome" maxlength="80" placeholder="Não informado" />
+                    <small class="text-muted">Usado para identificação em relatórios/PDF.</small>
+                </div>
+
+                <div class="config-profile-actions">
+                    <button class="btn btn-primary" onclick="app.salvarNomeProfessor()">
+                        Salvar Nome
+                    </button>
+                    <button class="btn btn-secondary" onclick="app.removerNomeProfessor()">
+                        Remover Nome
+                    </button>
+                </div>
+            </div>
+
+            <div class="config-section">
                 <h3>Dados</h3>
 
                 <button class="btn btn-secondary btn-block" onclick="app.exportarBackup()">
@@ -506,7 +530,7 @@
                         <h4>📌 Pontos do aluno</h4>
                         <div class="aluno-pontos-header-actions">
                             <button type="button" class="btn btn-secondary btn-sm" onclick="alunos.abrirModalEventoPonto()">
-                                + Adicionar Ponto
+                                Adicionar Ponto
                             </button>
                             <span id="aluno-pontos-total" class="aluno-pontos-total">Total de pontos: 0</span>
                         </div>

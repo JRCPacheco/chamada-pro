@@ -20,6 +20,18 @@ const app = {
             await db.put('config', cfg);
             this._configCache = cfg;
             console.log("[config] default criado");
+        } else {
+            // Migração leve para incluir novas chaves sem quebrar configs antigas
+            let changed = false;
+            Object.keys(CONFIG_DEFAULTS.app).forEach((k) => {
+                if (cfg[k] === undefined) {
+                    cfg[k] = CONFIG_DEFAULTS.app[k];
+                    changed = true;
+                }
+            });
+            if (changed) {
+                await db.put('config', cfg);
+            }
         }
 
         this._configCache = cfg;
@@ -84,12 +96,6 @@ const app = {
 
     // Iniciar app
     async iniciarApp() {
-        // Marcar onboarding como completo
-        const cfg = await this._getAppConfig();
-        cfg.onboarding_done = true;
-        await db.put('config', cfg);
-        this._configCache = cfg;
-
         // Esconder loading e onboarding
         document.getElementById('loading-screen').style.display = 'none';
         document.getElementById('onboarding-screen').style.display = 'none';
@@ -100,6 +106,24 @@ const app = {
         // Carregar turmas
         this.mostrarTela('tela-turmas');
         turmas.listar();
+    },
+
+    _normalizarNomeProfessor(nome) {
+        return String(nome || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+    },
+
+    async concluirOnboarding(salvarNome = true) {
+        const cfg = await this._getAppConfig();
+        cfg.onboarding_done = true;
+
+        if (salvarNome) {
+            const input = document.getElementById('onboarding-professor-nome');
+            cfg.professor_nome = this._normalizarNomeProfessor(input ? input.value : '');
+        }
+
+        await db.put('config', cfg);
+        this._configCache = cfg;
+        await this.iniciarApp();
     },
 
     // Mostrar tela específica
@@ -117,6 +141,11 @@ const app = {
 
             // Atualizar header
             this.atualizarHeader(telaId);
+
+            // Garante dados mais recentes ao abrir Configurações
+            if (telaId === 'tela-config') {
+                this.carregarConfig().catch((e) => console.error('Erro ao carregar configurações:', e));
+            }
 
             // Scroll para o topo
             window.scrollTo(0, 0);
@@ -270,6 +299,7 @@ const app = {
         const configWakeLock = document.getElementById('config-wake-lock');
         const configTema = document.getElementById('config-tema');
         const configMultiEscola = document.getElementById('config-multi-escola');
+        const configProfessorNome = document.getElementById('config-professor-nome');
 
         if (configSom) {
             configSom.onchange = () => this.salvarConfig();
@@ -286,6 +316,14 @@ const app = {
                 await this.aplicarConfiguracoesInterface();
             };
         }
+        if (configProfessorNome) {
+            configProfessorNome.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.salvarNomeProfessor();
+                }
+            });
+        }
 
         // Carregar configurações
         await this.carregarConfig();
@@ -301,11 +339,13 @@ const app = {
 
         const configTema = document.getElementById('config-tema');
         const configMultiEscola = document.getElementById('config-multi-escola'); // MULTI ESCOLA
+        const configProfessorNome = document.getElementById('config-professor-nome');
 
         if (configSom) configSom.checked = config.som;
         if (configVibracao) configVibracao.checked = config.vibracao;
         if (configWakeLock) configWakeLock.checked = config.wakeLock;
         if (configMultiEscola) configMultiEscola.checked = config.multi_escola; // MULTI ESCOLA
+        if (configProfessorNome) configProfessorNome.value = config.professor_nome || '';
     },
 
     // Salvar configurações
@@ -320,6 +360,35 @@ const app = {
         await db.put('config', cfg);
         this._configCache = cfg;
         utils.mostrarToast('Configurações salvas', 'success');
+    },
+
+    async salvarNomeProfessor() {
+        const input = document.getElementById('config-professor-nome');
+        if (!input) return;
+
+        const cfg = await this._getAppConfig();
+        cfg.professor_nome = this._normalizarNomeProfessor(input.value);
+        input.value = cfg.professor_nome;
+
+        await db.put('config', cfg);
+        this._configCache = cfg;
+        utils.mostrarToast('Nome do professor salvo', 'success');
+    },
+
+    async removerNomeProfessor() {
+        const cfg = await this._getAppConfig();
+        if (!cfg.professor_nome) {
+            utils.mostrarToast('Nenhum nome salvo', 'warning');
+            return;
+        }
+
+        cfg.professor_nome = '';
+        await db.put('config', cfg);
+        this._configCache = cfg;
+
+        const input = document.getElementById('config-professor-nome');
+        if (input) input.value = '';
+        utils.mostrarToast('Nome do professor removido', 'success');
     },
 
 

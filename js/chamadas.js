@@ -670,12 +670,38 @@ const chamadas = {
         }
 
         try {
+            const cfg = await app._getAppConfig();
+            const professorNome = String(cfg?.professor_nome || '').trim();
+
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
             const pageW = doc.internal.pageSize.getWidth();
             const pageH = doc.internal.pageSize.getHeight();
             const drawW = pageW - 20;
+            const headerTopY = 8;
+            const imageTopY = 12;
+            const assinaturaTopY = pageH - 18;
+            const assinaturaLineY = pageH - 10;
+            const assinaturaNomeY = pageH - 6;
+            const assinaturaLineX1 = pageW - 74;
+            const assinaturaLineX2 = pageW - 12;
+            const usableH = assinaturaTopY - imageTopY;
+
+            const desenharAssinatura = () => {
+                doc.setFontSize(10);
+                doc.setTextColor(55, 65, 81);
+                doc.text('Assinatura do Professor(a)', assinaturaLineX1, assinaturaTopY);
+
+                doc.setDrawColor(107, 114, 128);
+                doc.setLineWidth(0.35);
+                doc.line(assinaturaLineX1, assinaturaLineY, assinaturaLineX2, assinaturaLineY);
+
+                if (professorNome) {
+                    doc.setFontSize(9);
+                    doc.text(professorNome, assinaturaLineX1, assinaturaNomeY);
+                }
+            };
 
             const horarios = [{ slot: 1, titulo: '1º Horário' }];
             if (relatorio.segundoHorarioAtivo) {
@@ -687,7 +713,6 @@ const chamadas = {
                 const canvas = this.gerarCanvasRelatorioMensal(relatorio, slot);
                 const title = `Relatorio Mensal - ${relatorio.turmaNome} - ${relatorio.mesPad}/${relatorio.ano} - ${titulo}`;
                 const ratio = drawW / canvas.width;
-                const usableH = pageH - 16;
                 const maxSlicePx = Math.max(1, Math.floor(usableH / ratio));
 
                 let offsetY = 0;
@@ -697,7 +722,7 @@ const chamadas = {
                         doc.addPage('a4', 'landscape');
                     }
                     doc.setFontSize(12);
-                    doc.text(page > 0 ? `${title} (cont.)` : title, 10, 8);
+                    doc.text(page > 0 ? `${title} (cont.)` : title, 10, headerTopY);
 
                     const sliceH = Math.min(maxSlicePx, canvas.height - offsetY);
                     const sliceCanvas = document.createElement('canvas');
@@ -707,7 +732,8 @@ const chamadas = {
                     sctx.drawImage(canvas, 0, offsetY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
 
                     const drawH = sliceH * ratio;
-                    doc.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', 10, 12, drawW, drawH);
+                    doc.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', 10, imageTopY, drawW, drawH);
+                    desenharAssinatura();
 
                     offsetY += sliceH;
                     page += 1;

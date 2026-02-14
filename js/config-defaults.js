@@ -6,6 +6,7 @@ const CONFIG_DEFAULTS = {
     app: {
         key: 'app',
         onboarding_done: false,
+        professor_nome: '',
         som: true,
         vibracao: true,
         wakeLock: false,
