@@ -151,11 +151,15 @@ Na aba "Histórico" você pode:
 Os arquivos CSV exportados seguem este formato:
 
 ```csv
-Matrícula;Nome;Status;Horário
-2024001;"Maria da Silva";"Presente";"08:15"
-2024002;"João Santos";"Ausente";"-"
+Matrícula;Nome;Horário da Chamada;Início da Chamada;Status;Horário
+2024001;"Maria da Silva";"1º horário";"08:00";"Presente";"08:15"
+2024002;"João Santos";"1º horário";"08:00";"Ausente";"-"
 ```
 
+Notas:
+- Quando existir 2ª chamada no mesmo dia, o CSV identifica "1º horário" e "2º horário".
+- Horário de aluno ausente sempre será `-`.
+- Registros legados sem timestamp também aparecem com `-`.
 **Compatível com:**
 - Microsoft Excel
 - Google Sheets
@@ -235,3 +239,4 @@ Este projeto foi desenvolvido para uso educacional.
 ---
 
 **Desenvolvido com ❤️ para professores que fazem a diferença!**
+

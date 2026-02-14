@@ -8,6 +8,118 @@ const chamadas = {
     relatorioMensalAtual: null,
     relatorioMensalInicializado: false,
     alunosCache: {}, // Cache temporÃ¡rio de alunos para visualizaÃ§Ã£o
+    historicoSelecaoAtiva: false,
+    chamadasSelecionadas: new Set(),
+
+    atualizarControlesSelecaoHistorico(totalChamadas = 0) {
+        const btnSelecionar = document.getElementById('btn-historico-selecionar');
+        const btnSelecionarTodas = document.getElementById('btn-historico-selecionar-todas');
+        const btnExcluirSelecionadas = document.getElementById('btn-historico-excluir-selecionadas');
+        const btnCancelarSelecao = document.getElementById('btn-historico-cancelar-selecao');
+
+        if (!btnSelecionar || !btnSelecionarTodas || !btnExcluirSelecionadas || !btnCancelarSelecao) {
+            return;
+        }
+
+        if (!this.historicoSelecaoAtiva) {
+            btnSelecionar.style.display = '';
+            btnSelecionarTodas.style.display = 'none';
+            btnExcluirSelecionadas.style.display = 'none';
+            btnCancelarSelecao.style.display = 'none';
+            return;
+        }
+
+        btnSelecionar.style.display = 'none';
+        btnSelecionarTodas.style.display = '';
+        btnExcluirSelecionadas.style.display = '';
+        btnCancelarSelecao.style.display = '';
+
+        const selecionadasCount = this.chamadasSelecionadas.size;
+        const todasSelecionadas = totalChamadas > 0 && selecionadasCount === totalChamadas;
+
+        btnSelecionarTodas.textContent = todasSelecionadas ? 'Desmarcar Todas' : 'Selecionar Todas';
+        btnExcluirSelecionadas.textContent = selecionadasCount > 0
+            ? `Excluir Selecionadas (${selecionadasCount})`
+            : 'Excluir Selecionadas';
+        btnExcluirSelecionadas.disabled = selecionadasCount === 0;
+    },
+
+    alternarModoSelecaoHistorico() {
+        this.historicoSelecaoAtiva = !this.historicoSelecaoAtiva;
+        if (!this.historicoSelecaoAtiva) {
+            this.chamadasSelecionadas.clear();
+        }
+        this.listarHistorico();
+    },
+
+    cancelarModoSelecaoHistorico() {
+        this.historicoSelecaoAtiva = false;
+        this.chamadasSelecionadas.clear();
+        this.listarHistorico();
+    },
+
+    alternarSelecionarTodasHistorico() {
+        const checkboxes = Array.from(document.querySelectorAll('.historico-select-checkbox'));
+        if (!checkboxes.length) return;
+
+        const todasMarcadas = checkboxes.every(cb => cb.checked);
+        this.chamadasSelecionadas.clear();
+
+        checkboxes.forEach(cb => {
+            cb.checked = !todasMarcadas;
+            if (!todasMarcadas) {
+                this.chamadasSelecionadas.add(cb.dataset.chamadaId);
+            }
+        });
+
+        this.atualizarControlesSelecaoHistorico(checkboxes.length);
+    },
+
+    async excluirChamadasSelecionadas() {
+        const ids = Array.from(this.chamadasSelecionadas);
+        if (ids.length === 0) {
+            utils.mostrarToast('Selecione ao menos uma chamada', 'warning');
+            return;
+        }
+
+        const confirmacaoInicial = utils.confirmar(
+            `Você selecionou ${ids.length} chamada(s). Deseja continuar com a exclusão?`
+        );
+        if (!confirmacaoInicial) return;
+
+        const confirmacaoFinal = utils.confirmar(
+            `Confirma a exclusão PERMANENTE de ${ids.length} chamada(s)?`
+        );
+        if (!confirmacaoFinal) return;
+
+        try {
+            await Promise.all(ids.map(id => db.delete('chamadas', id)));
+            this.chamadasSelecionadas.clear();
+            this.historicoSelecaoAtiva = false;
+            utils.mostrarToast(`${ids.length} chamada(s) excluída(s)`, 'success');
+            await this.atualizarUIPosExclusao();
+        } catch (error) {
+            console.error(error);
+            utils.mostrarToast('Erro ao excluir chamadas selecionadas', 'error');
+        }
+    },
+
+    async atualizarUIPosExclusao() {
+        if (!turmas.turmaAtual?.id) {
+            await this.listarHistorico();
+            return;
+        }
+
+        const chamadasDaTurma = await db.getByIndex('chamadas', 'turmaId', turmas.turmaAtual.id);
+        const totalEl = document.getElementById('turma-total-chamadas-realizadas');
+        if (totalEl) totalEl.textContent = chamadasDaTurma.length;
+
+        if (typeof turmas.atualizarStats === 'function') {
+            await turmas.atualizarStats();
+        }
+
+        await this.listarHistorico();
+    },
 
     // Listar histÃ³rico de chamadas
     async listarHistorico() {
@@ -33,12 +145,16 @@ const chamadas = {
             const totalAlunos = alunosTurma.length;
 
             if (chamadasArray.length === 0) {
+                this.chamadasSelecionadas.clear();
+                this.historicoSelecaoAtiva = false;
                 container.innerHTML = '';
                 emptyState.style.display = 'block';
             } else {
                 emptyState.style.display = 'none';
                 this.renderizarHistorico(chamadasArray, totalAlunos);
             }
+
+            this.atualizarControlesSelecaoHistorico(chamadasArray.length);
 
             const relatorioContainer = document.getElementById('relatorio-mensal-container');
             if (relatorioContainer && relatorioContainer.style.display !== 'none') {
@@ -53,6 +169,7 @@ const chamadas = {
     // Renderizar histÃ³rico
     renderizarHistorico(chamadasArray, totalAlunos) {
         const container = document.getElementById('lista-historico');
+        const selecaoAtiva = this.historicoSelecaoAtiva;
 
         container.innerHTML = chamadasArray.map(chamada => {
             // Contar presentes (P)
@@ -69,9 +186,10 @@ const chamadas = {
             const dataExibicao = chamada.data; // JÃ¡ Ã© YYYY-MM-DD ou ISO
             const horaRef = chamada.iniciadoEm || chamada.criadoEm || '';
             const horaExibicao = horaRef ? utils.formatarHora(new Date(horaRef)) : '--:--';
+            const marcada = this.chamadasSelecionadas.has(chamada.id);
 
             return `
-                <div class="historico-card" data-chamada-id="${chamada.id}">
+                <div class="historico-card ${selecaoAtiva ? 'historico-card-select-mode' : ''}" data-chamada-id="${chamada.id}">
                     <div class="historico-header">
                         <h4>${utils.formatarData(dataExibicao)} <small>${horaExibicao}</small></h4>
                         <span class="historico-badge">${percentual}%</span>
@@ -79,16 +197,53 @@ const chamadas = {
                     <div class="historico-meta">
                         ${presentes} de ${totalAlunos} presentes
                     </div>
+                    <div class="historico-card-actions">
+                        ${selecaoAtiva ? `
+                        <label class="historico-select-label">
+                            <input type="checkbox" class="historico-select-checkbox"
+                                data-chamada-id="${chamada.id}" ${marcada ? 'checked' : ''}>
+                            Selecionar
+                        </label>
+                        ` : '<span></span>'}
+                        <button class="btn btn-danger btn-sm btn-historico-delete" data-chamada-id="${chamada.id}">
+                            Excluir
+                        </button>
+                    </div>
                 </div>
             `;
         }).join('');
 
         // Adicionar event listeners
         document.querySelectorAll('.historico-card').forEach(card => {
-            card.addEventListener('click', function () {
+            card.addEventListener('click', function (event) {
+                if (event.target.closest('.btn-historico-delete') || event.target.closest('.historico-select-label')) {
+                    return;
+                }
+                if (chamadas.historicoSelecaoAtiva) {
+                    return;
+                }
                 chamadas.verDetalhes(this.dataset.chamadaId);
             });
         });
+
+        document.querySelectorAll('.btn-historico-delete').forEach(btn => {
+            btn.addEventListener('click', async function (event) {
+                event.stopPropagation();
+                await chamadas.deletarChamada(this.dataset.chamadaId);
+            });
+        });
+
+        document.querySelectorAll('.historico-select-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('click', event => event.stopPropagation());
+            checkbox.addEventListener('change', function () {
+                const chamadaId = this.dataset.chamadaId;
+                if (this.checked) chamadas.chamadasSelecionadas.add(chamadaId);
+                else chamadas.chamadasSelecionadas.delete(chamadaId);
+                chamadas.atualizarControlesSelecaoHistorico(chamadasArray.length);
+            });
+        });
+
+        this.atualizarControlesSelecaoHistorico(chamadasArray.length);
     },
 
     // Ver detalhes de uma chamada
@@ -211,6 +366,11 @@ const chamadas = {
             const chamada = this.chamadaResumo;
             const turma = await db.get('turmas', chamada.turmaId);
             const todosAlunos = await db.getByIndex('alunos', 'turmaId', chamada.turmaId);
+            const slotNumero = (chamada.slot === 2) ? 2 : 1;
+            const slotLabel = slotNumero === 2 ? '2º horário' : '1º horário';
+            const horaInicioChamada = (chamada.iniciadoEm || chamada.criadoEm)
+                ? utils.formatarHora(new Date(chamada.iniciadoEm || chamada.criadoEm))
+                : '-';
 
             const dados = todosAlunos.map(aluno => {
                 let status = 'Falta';
@@ -233,6 +393,8 @@ const chamadas = {
                 return {
                     matricula: aluno.matricula,
                     nome: aluno.nome,
+                    horarioChamada: slotLabel,
+                    inicioChamada: horaInicioChamada,
                     status: status,
                     hora: hora
                 };
@@ -241,6 +403,8 @@ const chamadas = {
             const colunas = [
                 { field: 'matricula', label: 'Matrícula' },
                 { field: 'nome', label: 'Nome' },
+                { field: 'horarioChamada', label: 'Horário da Chamada' },
+                { field: 'inicioChamada', label: 'Início da Chamada' },
                 { field: 'status', label: 'Status' },
                 { field: 'hora', label: 'Horário' }
             ];
@@ -356,6 +520,11 @@ const chamadas = {
                 todosAlunos.forEach(aluno => {
                     let status = 'Falta';
                     let horaPresenca = '-';
+                    const slotNumero = (chamada.slot === 2) ? 2 : 1;
+                    const slotLabel = slotNumero === 2 ? '2º horário' : '1º horário';
+                    const horaInicioChamada = (chamada.iniciadoEm || chamada.criadoEm)
+                        ? utils.formatarHora(new Date(chamada.iniciadoEm || chamada.criadoEm))
+                        : '-';
 
                     if (chamada.registros) {
                         const reg = chamada.registros[aluno.id];
@@ -374,6 +543,8 @@ const chamadas = {
                     dados.push({
                         data: dataStr,
                         diaSemana: diaSemana,
+                        horarioChamada: slotLabel,
+                        inicioChamada: horaInicioChamada,
                         matricula: aluno.matricula,
                         nome: aluno.nome,
                         status: status,
@@ -385,6 +556,8 @@ const chamadas = {
             const colunas = [
                 { field: 'data', label: 'Data' },
                 { field: 'diaSemana', label: 'Dia' },
+                { field: 'horarioChamada', label: 'Horário da Chamada' },
+                { field: 'inicioChamada', label: 'Início da Chamada' },
                 { field: 'matricula', label: 'Matrícula' },
                 { field: 'nome', label: 'Nome' },
                 { field: 'status', label: 'Status' },
@@ -846,7 +1019,7 @@ const chamadas = {
         try {
             await db.delete('chamadas', chamadaId);
             utils.mostrarToast('Chamada excluída', 'success');
-            this.listarHistorico();
+            await this.atualizarUIPosExclusao();
         } catch (error) {
             console.error(error);
             utils.mostrarToast('Erro ao excluir chamada', 'error');

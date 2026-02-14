@@ -3,6 +3,25 @@
 // Migrado para IndexedDB
 
 const exportModule = {
+    _formatarStampArquivo(date = new Date()) {
+        const d = new Date(date);
+        const dd = String(d.getDate()).padStart(2, '0');
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const yyyy = d.getFullYear();
+        const hh = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        return `${dd}${mm}${yyyy}_${hh}${min}`;
+    },
+
+    _slug(str) {
+        return String(str || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9._-]/gi, '_')
+            .replace(/_+/g, '_')
+            .replace(/^_+|_+$/g, '')
+            .toLowerCase();
+    },
 
     // Exportar backup completo (V1 com versionamento)
     async exportarBackup() {
@@ -11,6 +30,8 @@ const exportModule = {
 
             const backup = {
                 schemaVersion: 1,
+                backupType: 'completo',
+                appVersion: '0.3.5-beta',
                 exportedAt: new Date().toISOString(),
                 data: {
                     config: await db.getAll('config'),
@@ -23,8 +44,7 @@ const exportModule = {
             };
 
             const json = JSON.stringify(backup, null, 2);
-            const filename = `chamada-pro-backup-${utils.formatarData(new Date())}.json`
-                .replace(/\//g, '-');
+            const filename = `bkp${this._formatarStampArquivo()}.json`;
 
             utils.downloadFile(filename, json, 'application/json');
             utils.mostrarToast('Backup exportado com sucesso!', 'success');
@@ -143,14 +163,20 @@ const exportModule = {
             const alunos = await db.getByIndex('alunos', 'turmaId', turmaId);
 
             const dados = {
-                turma: turma,
-                alunos: alunos,
-                chamadas: chamadas,
-                exportedAt: new Date().toISOString()
+                schemaVersion: 1,
+                backupType: 'turma',
+                appVersion: '0.3.5-beta',
+                exportedAt: new Date().toISOString(),
+                data: {
+                    turma: turma,
+                    alunos: alunos,
+                    chamadas: chamadas
+                }
             };
 
             const json = JSON.stringify(dados, null, 2);
-            const filename = `turma_${turma.nome}.json`.replace(/[^a-z0-9.-]/gi, '_');
+            const turmaSlug = this._slug(turma.nome || 'turma');
+            const filename = `bkp_turma_${turmaSlug}_${this._formatarStampArquivo()}.json`;
 
             utils.downloadFile(filename, json, 'application/json');
             utils.mostrarToast('Turma exportada!', 'success');
@@ -158,6 +184,139 @@ const exportModule = {
             console.error(e);
             utils.mostrarToast("Erro ao exportar turma", 'error');
         }
+    },
+
+    migrateTurmaBackupIfNeeded(raw) {
+        if (!raw || typeof raw !== 'object') {
+            throw new Error('Arquivo inválido');
+        }
+
+        // Legacy simples: { turma, alunos, chamadas, exportedAt }
+        if (!raw.schemaVersion && raw.turma) {
+            return {
+                schemaVersion: 1,
+                backupType: 'turma',
+                appVersion: 'legacy',
+                exportedAt: raw.exportedAt || new Date().toISOString(),
+                data: {
+                    turma: raw.turma,
+                    alunos: Array.isArray(raw.alunos) ? raw.alunos : [],
+                    chamadas: Array.isArray(raw.chamadas) ? raw.chamadas : []
+                }
+            };
+        }
+
+        if (raw.schemaVersion > 1) {
+            throw new Error(`Backup de turma versão ${raw.schemaVersion} incompatível. Atualize o app.`);
+        }
+
+        if (raw.backupType !== 'turma') {
+            throw new Error('Este arquivo não é um backup de turma');
+        }
+
+        if (!raw.data || !raw.data.turma || !Array.isArray(raw.data.alunos) || !Array.isArray(raw.data.chamadas)) {
+            throw new Error('Estrutura de backup de turma inválida');
+        }
+
+        return raw;
+    },
+
+    importarTurmaJSON() {
+        return new Promise((resolve) => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) {
+                    resolve(null);
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    try {
+                        const rawBackup = JSON.parse(event.target.result);
+                        const backup = this.migrateTurmaBackupIfNeeded(rawBackup);
+                        const turmaOriginal = backup.data.turma || {};
+                        const alunosOriginais = backup.data.alunos || [];
+                        const chamadasOriginais = backup.data.chamadas || [];
+
+                        const resumo = `Turma: ${turmaOriginal.nome || 'Sem nome'}\n` +
+                            `Alunos: ${alunosOriginais.length}\n` +
+                            `Chamadas: ${chamadasOriginais.length}\n\n` +
+                            `A turma será restaurada como NOVA turma. Deseja continuar?`;
+
+                        if (!utils.confirmar(resumo)) {
+                            resolve(null);
+                            return;
+                        }
+
+                        utils.mostrarToast('Recuperando turma...', 'info');
+
+                        // Restaurar como nova turma (seguro, sem sobrescrever turma atual)
+                        const novaTurma = {
+                            ...turmaOriginal,
+                            id: undefined,
+                            nome: turmaOriginal.nome || 'Turma recuperada',
+                            criadaEm: new Date().toISOString()
+                        };
+                        delete novaTurma.id;
+
+                        const novaTurmaId = await db.add('turmas', novaTurma);
+                        const mapaAlunoId = {};
+
+                        for (const alunoOriginal of alunosOriginais) {
+                            const antigoId = alunoOriginal.id;
+                            const novoAluno = {
+                                ...alunoOriginal,
+                                id: undefined,
+                                turmaId: novaTurmaId
+                            };
+                            delete novoAluno.id;
+                            const novoId = await db.add('alunos', novoAluno);
+                            if (antigoId) mapaAlunoId[antigoId] = novoId;
+                        }
+
+                        for (const chamadaOriginal of chamadasOriginais) {
+                            const novaChamada = {
+                                ...chamadaOriginal,
+                                id: undefined,
+                                turmaId: novaTurmaId,
+                                turmaNome: novaTurma.nome
+                            };
+                            delete novaChamada.id;
+
+                            if (novaChamada.registros && typeof novaChamada.registros === 'object') {
+                                const novosRegistros = {};
+                                Object.entries(novaChamada.registros).forEach(([alunoIdAntigo, reg]) => {
+                                    const alunoIdNovo = mapaAlunoId[alunoIdAntigo];
+                                    if (alunoIdNovo) novosRegistros[alunoIdNovo] = reg;
+                                });
+                                novaChamada.registros = novosRegistros;
+                            }
+
+                            await db.add('chamadas', novaChamada);
+                        }
+
+                        utils.mostrarToast('Turma recuperada com sucesso!', 'success');
+                        resolve(novaTurmaId);
+                    } catch (error) {
+                        console.error('Erro ao importar backup de turma:', error);
+                        utils.mostrarToast(
+                            error.message || 'Erro ao recuperar backup da turma',
+                            'error'
+                        );
+                        resolve(null);
+                    }
+                };
+
+                reader.readAsText(file);
+            };
+
+            input.click();
+        });
     },
 
     // Exportar lista de alunos como CSV

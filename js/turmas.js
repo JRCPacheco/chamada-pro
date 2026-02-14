@@ -346,6 +346,44 @@ const turmas = {
         return true;
     },
 
+    async exportarBackupTurmaAtual() {
+        const turmaId = this.turmaAtual?.id;
+        if (!turmaId) {
+            utils.mostrarToast('Nenhuma turma selecionada', 'warning');
+            return;
+        }
+
+        if (typeof exportModule === 'undefined' || typeof exportModule.exportarTurmaJSON !== 'function') {
+            utils.mostrarToast('Módulo de exportação indisponível', 'error');
+            return;
+        }
+
+        try {
+            await exportModule.exportarTurmaJSON(turmaId);
+        } catch (error) {
+            console.error('Erro ao exportar turma:', error);
+            utils.mostrarToast('Erro ao exportar backup da turma', 'error');
+        }
+    },
+
+    async recuperarBackupTurmaAtual() {
+        if (typeof exportModule === 'undefined' || typeof exportModule.importarTurmaJSON !== 'function') {
+            utils.mostrarToast('Módulo de recuperação indisponível', 'error');
+            return;
+        }
+
+        try {
+            const novaTurmaId = await exportModule.importarTurmaJSON();
+            if (!novaTurmaId) return;
+
+            await this.listar();
+            await this.abrirDetalhes(novaTurmaId);
+        } catch (error) {
+            console.error('Erro ao recuperar turma:', error);
+            utils.mostrarToast('Erro ao recuperar backup da turma', 'error');
+        }
+    },
+
     // Editar turma
     async editarTurma(id) {
         const turma = await db.get('turmas', id);

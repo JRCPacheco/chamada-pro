@@ -184,10 +184,16 @@
                         </span>
                     </label>
                     <div class="turma-actions">
-                        <button class="btn btn-success" onclick="turmas.editarTurma(turmas.turmaAtual?.id)">
+                        <button class="btn btn-secondary btn-sm turma-action-btn" onclick="turmas.exportarBackupTurmaAtual()">
+                            Backup da Turma
+                        </button>
+                        <button class="btn btn-secondary btn-sm turma-action-btn" onclick="turmas.recuperarBackupTurmaAtual()">
+                            Recuperar Turma
+                        </button>
+                        <button class="btn btn-secondary btn-sm turma-action-btn" onclick="turmas.editarTurma(turmas.turmaAtual?.id)">
                             Editar Turma
                         </button>
-                        <button class="btn btn-danger" onclick="turmas.excluirTurma(turmas.turmaAtual?.id)">
+                        <button class="btn btn-danger btn-sm turma-action-btn" onclick="turmas.excluirTurma(turmas.turmaAtual?.id)">
                             Excluir Turma
                         </button>
                     </div>
@@ -247,6 +253,22 @@
                         <button class="btn btn-secondary btn-sm" onclick="chamadas.exportarHistorico()">
                             Exportar Tudo
                         </button>
+                        <button class="btn btn-secondary btn-sm" id="btn-historico-selecionar"
+                            onclick="chamadas.alternarModoSelecaoHistorico()">
+                            Selecionar
+                        </button>
+                        <button class="btn btn-secondary btn-sm" id="btn-historico-selecionar-todas"
+                            onclick="chamadas.alternarSelecionarTodasHistorico()" style="display: none;">
+                            Selecionar Todas
+                        </button>
+                        <button class="btn btn-danger btn-sm" id="btn-historico-excluir-selecionadas"
+                            onclick="chamadas.excluirChamadasSelecionadas()" style="display: none;">
+                            Excluir Selecionadas
+                        </button>
+                        <button class="btn btn-secondary btn-sm" id="btn-historico-cancelar-selecao"
+                            onclick="chamadas.cancelarModoSelecaoHistorico()" style="display: none;">
+                            Cancelar
+                        </button>
                         <button class="btn btn-primary btn-sm" onclick="chamadas.toggleRelatorioMensal()">
                             Relatório Mensal
                         </button>
@@ -295,9 +317,10 @@
                 </div>
             </div>
 
-            <div id="reader" class="qr-reader"></div>
-
-            <div id="feedback" class="feedback"></div>
+            <div class="scanner-reader-wrap">
+                <div id="reader" class="qr-reader"></div>
+                <div id="feedback" class="feedback"></div>
+            </div>
 
             <div class="scanner-controls">
                 <button class="btn btn-secondary" id="btn-toggle-camera">

@@ -42,16 +42,19 @@ const qrgen = {
             // Configurações
             const pageWidth = doc.internal.pageSize.getWidth();
             const pageHeight = doc.internal.pageSize.getHeight();
-            const margin = 20;
-            const qrSize = 55;
-            const cols = 2;
-            const rows = 3;
+            const cols = 4;
+            const rows = 6;
+            const marginX = 12;
+            const firstRowY = 34;
+            const bottomMargin = 12;
+            const spacingX = 4;
+            const spacingY = 3;
             // Calcular espaçamento horizontal para centralizar
-            const contentWidth = (cols * qrSize);
-            const remainingSpaceX = pageWidth - (2 * margin) - contentWidth;
-            const spacingX = remainingSpaceX / (cols - 1);
-
-            const spacingY = 18;
+            const contentWidth = pageWidth - (2 * marginX);
+            const contentHeight = pageHeight - firstRowY - bottomMargin;
+            const cellWidth = (contentWidth - (spacingX * (cols - 1))) / cols;
+            const cellHeight = (contentHeight - (spacingY * (rows - 1))) / rows;
+            const qrSize = Math.max(22, Math.min(cellWidth - 8, cellHeight - 12));
 
             let currentPage = 1;
             let currentRow = 0;
@@ -75,15 +78,15 @@ const qrgen = {
 
                 // Título da Turma (Alinhado à Direita)
                 doc.setTextColor(0, 0, 0);
-                doc.setFontSize(16);
+                doc.setFontSize(14);
                 doc.setFont(undefined, 'bold');
                 doc.text(turma.nome, pageWidth - 10, 15, { align: 'right' });
 
-                doc.setFontSize(10);
+                doc.setFontSize(9);
                 doc.setFont(undefined, 'normal');
                 // Subtítulo apenas na primeira página
                 if (currentPage === 1) {
-                    doc.text('QR Codes para Chamada', pageWidth - 10, 22, { align: 'right' });
+                    doc.text('QR Codes para Chamada (layout 4x6)', pageWidth - 10, 22, { align: 'right' });
                 }
             };
 
@@ -106,14 +109,10 @@ const qrgen = {
                 }
 
                 // Calcular posição
-                let x;
-                if (cols === 1) {
-                    x = (pageWidth - qrSize) / 2;
-                } else {
-                    x = margin + (currentCol * (qrSize + spacingX));
-                }
-
-                const y = 35 + (currentRow * (qrSize + spacingY));
+                const cellX = marginX + (currentCol * (cellWidth + spacingX));
+                const cellY = firstRowY + (currentRow * (cellHeight + spacingY));
+                const x = cellX + ((cellWidth - qrSize) / 2);
+                const y = cellY + 1;
 
                 // Gerar Payload Compacto (Array)
                 const nomeNormalizado = this.normalizarNomeQR(aluno.nome);
@@ -150,34 +149,34 @@ const qrgen = {
                     doc.addImage(qrDataUrl, 'PNG', x, y, qrSize, qrSize);
 
                     // Adicionar nome do aluno
-                    doc.setFontSize(9);
+                    doc.setFontSize(7);
                     doc.setFont(undefined, 'bold');
-                    const nomeX = x + (qrSize / 2);
+                    const nomeX = cellX + (cellWidth / 2);
 
                     // Truncar nome se muito longo ou quebrar em linhas
-                    const splitName = doc.splitTextToSize(aluno.nome, qrSize + 10);
-                    doc.text(splitName, nomeX, y + qrSize + 5, {
+                    const splitName = doc.splitTextToSize(aluno.nome || '', cellWidth - 4).slice(0, 2);
+                    doc.text(splitName, nomeX, y + qrSize + 4, {
                         align: 'center'
                     });
 
                     // Adicionar matrícula abaixo do nome
-                    const nameHeight = splitName.length * 4;
+                    const nameHeight = splitName.length * 3.2;
 
-                    doc.setFontSize(7);
+                    doc.setFontSize(6.2);
                     doc.setFont(undefined, 'normal');
-                    doc.text(`Mat: ${aluno.matricula}`, nomeX, y + qrSize + 5 + nameHeight, {
+                    doc.text(`Mat: ${aluno.matricula}`, nomeX, y + qrSize + 4 + nameHeight, {
                         align: 'center'
                     });
 
                     // Adicionar borda leve
                     doc.setDrawColor(220, 220, 220);
-                    doc.rect(x - 3, y - 3, qrSize + 6, qrSize + 10 + nameHeight);
+                    doc.rect(cellX, cellY, cellWidth, cellHeight);
 
                 } catch (qrError) {
                     console.error("Erro ao gerar QR individual:", qrError);
                     doc.setFontSize(8);
                     doc.setTextColor(255, 0, 0);
-                    doc.text("Erro no QR", x + (qrSize / 2), y + (qrSize / 2), { align: 'center' });
+                    doc.text("Erro no QR", cellX + (cellWidth / 2), cellY + (cellHeight / 2), { align: 'center' });
                     doc.setTextColor(0, 0, 0);
                 }
 
@@ -193,7 +192,7 @@ const qrgen = {
             const filename = `qrcodes_${turma.nome}.pdf`
                 .replace(/[^a-z0-9.-]/gi, '_');
             doc.save(filename);
-            utils.mostrarToast('PDF gerado com sucesso!', 'success');
+            utils.mostrarToast('PDF (4x6) gerado com sucesso!', 'success');
 
         } catch (error) {
             console.error('Erro ao gerar PDF:', error);
@@ -282,3 +281,4 @@ const qrgen = {
         document.body.removeChild(a);
     }
 };
+
