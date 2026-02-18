@@ -2170,3 +2170,74 @@ body {
 .aluno-card:active {
     transform: scale(0.98);
 }
+
+/* ===== BTN-BACK (seta voltar) ===== */
+.btn-back {
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-back svg {
+    display: block;
+}
+
+.btn-back:hover {
+    background: var(--primary-light);
+    color: var(--white);
+    border-radius: 50%;
+}
+
+/* ===== OBSERVAÇÕES — toggle olho ===== */
+.obs-label-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.obs-label-row label {
+    margin-bottom: 0;
+    flex: 1;
+}
+
+.btn-obs-eye {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    color: var(--gray-500);
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+
+.btn-obs-eye:hover {
+    background: var(--gray-200);
+    color: var(--dark);
+}
+
+.btn-obs-eye.obs-eye-oculta {
+    color: var(--warning);
+    background: rgba(255, 167, 38, 0.12);
+}
+
+.obs-oculta-hint {
+    display: block;
+    font-size: 11px;
+    color: var(--warning);
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.obs-privada-badge {
+    font-size: 12px;
+    vertical-align: middle;
+    margin-left: 4px;
+    opacity: 0.75;
+}

@@ -91,8 +91,10 @@
 
         <!-- Header -->
         <header class="app-header">
-            <button class="btn-icon btn-back" id="btn-back" style="display: none;">
-                ←
+            <button class="btn-icon btn-back" id="btn-back" style="display: none;" aria-label="Voltar">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28">
+                    <polyline points="15 18 9 12 15 6"/>
+                </svg>
             </button>
             <div class="header-logo">
                 <img src="assets/logo1024.svg" alt="Chamada PRO" class="logo-img">
@@ -529,18 +531,10 @@
                     <label>Matrícula / ID *</label>
                     <input type="text" id="input-aluno-matricula" placeholder="Ex: 2024001" />
                 </div>
-                <div class="form-group">
-                    <label>Email (opcional)</label>
-                    <input type="email" id="input-aluno-email" placeholder="aluno@email.com" />
-                </div>
-                <div class="form-group">
-                    <label for="input-aluno-obs">📝 Observações</label>
-                    <textarea id="input-aluno-obs" rows="2" placeholder="Anotações sobre o aluno"></textarea>
-                </div>
 
                 <div id="aluno-pontos-section" class="aluno-pontos-section" style="display: none;">
                     <div class="aluno-pontos-header">
-                        <h4>📌 Pontos do aluno</h4>
+                        <h4>📌 Pontuação do aluno</h4>
                         <div class="aluno-pontos-header-actions">
                             <button type="button" class="btn btn-secondary btn-sm" onclick="alunos.abrirModalEventoPonto()">
                                 Adicionar Ponto
@@ -551,6 +545,28 @@
                     <div id="lista-eventos-pontos" class="lista-eventos-pontos">
                         <p class="text-muted">Nenhum ponto registrado</p>
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="obs-label-row">
+                        <label for="input-aluno-obs">📝 Observações</label>
+                        <button type="button" id="btn-obs-visibilidade" class="btn-obs-eye"
+                            onclick="alunos.toggleObsVisibilidade()"
+                            title="Ocultar/exibir esta observação do aluno">
+                            <svg id="obs-eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            <svg id="obs-eye-closed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20" style="display:none;">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <small id="obs-oculta-hint" class="obs-oculta-hint" style="display:none;">
+                        🔒 Observação marcada como privada — não aparece em relatórios para alunos
+                    </small>
+                    <textarea id="input-aluno-obs" rows="2" placeholder="Anotações sobre o aluno"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -780,7 +796,7 @@
                     </p>
                     <div class="relatorio-secao-acoes">
                         <button class="btn btn-secondary btn-sm" onclick="chamadas.exportarRelatorioMensalCSV()">
-                            📄 Exportar CSV
+                            📄 Exportar Plan
                         </button>
                         <button class="btn btn-secondary btn-sm" onclick="chamadas.exportarRelatorioMensalPDF()">
                             🖨️ Exportar PDF
@@ -792,9 +808,9 @@
                 <hr style="margin: 20px 0; border-color: var(--border);">
 
                 <div class="relatorio-secao">
-                    <h4 class="relatorio-secao-titulo">⭐ Pontos Extras dos Alunos</h4>
+                    <h4 class="relatorio-secao-titulo">⭐ Pontuação</h4>
                     <p class="text-muted" style="font-size: 13px; margin-bottom: 10px;">
-                        Totalização dos pontos extras por aluno no mês selecionado.
+                        Totalização da pontuação por aluno no mês selecionado.
                     </p>
                     <div class="relatorio-secao-acoes">
                         <button class="btn btn-secondary btn-sm" onclick="chamadas.gerarRelatorioPontosPDF()">

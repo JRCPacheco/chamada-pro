@@ -8,6 +8,7 @@ const alunos = {
     fotoTemp: null,
     qrImportado: null,
     eventoPontoEmEdicao: null,
+    obsOcultaAtual: false,
 
     // Listar alunos da turma atual
     async listar() {
@@ -37,7 +38,7 @@ const alunos = {
                     const alunosAtual = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
 
                     if (busca) {
-                        const filtrados = utils.filtrarPorBusca(alunosAtual, busca, ['nome', 'matricula', 'email']);
+                        const filtrados = utils.filtrarPorBusca(alunosAtual, busca, ['nome', 'matricula']);
                         this.renderizarAlunos(filtrados);
                     } else {
                         this.renderizarAlunos(alunosAtual);
@@ -68,13 +69,16 @@ const alunos = {
             const avatarHtml = aluno.foto
                 ? `<img src="${aluno.foto}" class="aluno-avatar" style="object-fit: cover;">`
                 : `<div class="aluno-avatar" style="background: linear-gradient(135deg, ${cor} 0%, ${utils.adjustColor(cor, -40)} 100%)">${iniciais}</div>`;
+            const obsPrivadaBadge = (aluno.obsOculta && aluno.observacoes)
+                ? `<span class="obs-privada-badge" title="Observação privada">🔒</span>`
+                : '';
 
             return `
                 <div class="aluno-card" data-id="${aluno.id}" style="cursor: pointer;" title="Toque para editar">
                     ${avatarHtml}
                     <div class="aluno-info">
-                        <h4>${utils.escapeHtml(aluno.nome)}</h4>
-                        <p>Matrícula: ${utils.escapeHtml(aluno.matricula)}${aluno.email ? ' • ' + utils.escapeHtml(aluno.email) : ''}</p>
+                        <h4>${utils.escapeHtml(aluno.nome)} ${obsPrivadaBadge}</h4>
+                        <p>Matrícula: ${utils.escapeHtml(aluno.matricula)}</p>
                     </div>
                     <div class="aluno-actions">
                         <button class="btn-icon-sm btn-deletar-aluno" data-id="${aluno.id}" title="Excluir">
@@ -124,11 +128,14 @@ const alunos = {
         // Limpar campos
         document.getElementById('input-aluno-nome').value = '';
         document.getElementById('input-aluno-matricula').value = '';
-        document.getElementById('input-aluno-email').value = '';
         document.getElementById('input-aluno-obs').value = '';
         document.getElementById('aluno-pontos-section').style.display = 'none';
         document.getElementById('aluno-pontos-total').textContent = 'Total de pontos: 0';
         document.getElementById('lista-eventos-pontos').innerHTML = '<p class="text-muted">Nenhum ponto registrado</p>';
+
+        // Resetar visibilidade de observações
+        this.obsOcultaAtual = false;
+        this._atualizarBotaoObsOlho();
 
         this.resetarPreviewFoto();
 
@@ -183,7 +190,6 @@ const alunos = {
 
         const nome = document.getElementById('input-aluno-nome').value.trim();
         const matricula = document.getElementById('input-aluno-matricula').value.trim();
-        const email = document.getElementById('input-aluno-email').value.trim();
         const obs = document.getElementById('input-aluno-obs')?.value || '';
 
         // Validações
@@ -196,12 +202,6 @@ const alunos = {
         if (!matricula) {
             utils.mostrarToast('Por favor, informe a matrícula', 'warning');
             document.getElementById('input-aluno-matricula').focus();
-            return;
-        }
-
-        if (email && !utils.validarEmail(email)) {
-            utils.mostrarToast('Email inválido', 'warning');
-            document.getElementById('input-aluno-email').focus();
             return;
         }
 
@@ -250,17 +250,12 @@ const alunos = {
             if (this.alunoEmEdicao && original) {
                 // UPDATE: Merge com original
                 aluno = {
-                    ...original, // Preserva criadoEm, id, qrId e outros campos não editáveis
+                    ...original, // Preserva criadoEm, id, qrId, email legado e outros campos
                     nome: nome,
                     matricula: matricula,
-                    email: email,
-                    // Foto: se this.fotoTemp for null (não alterou), mantemos original?
-                    // No código atual: "this.fotoTemp = aluno.foto" ao abrir edição.
-                    // Se user remover foto? "resetarPreviewFoto" seta null.
-                    // Então this.fotoTemp é o estado atual desejado.
                     foto: this.fotoTemp,
-                    observacoes: obs
-                    // criadoEm: preservado do original
+                    observacoes: obs,
+                    obsOculta: this.obsOcultaAtual
                 };
             } else {
                 // CREATE: Novo objeto
@@ -269,9 +264,9 @@ const alunos = {
                     turmaId: turmas.turmaAtual.id,
                     matricula: matricula,
                     nome: nome,
-                    email: email,
                     foto: this.fotoTemp,
                     observacoes: obs,
+                    obsOculta: this.obsOcultaAtual,
                     pontosExtra: 0,
                     qrId: qrId,
                     criadoEm: new Date().toISOString()
@@ -437,13 +432,41 @@ const alunos = {
         // Formato legado: {n, m, e, o}
         const nome = dados.nome || dados.n || '';
         const matricula = dados.matricula || dados.m || '';
-        const email = dados.email || dados.e || '';
         const obs = dados.obs || dados.o || '';
         if (nome) document.getElementById('input-aluno-nome').value = nome;
         if (matricula) document.getElementById('input-aluno-matricula').value = matricula;
-        if (email) document.getElementById('input-aluno-email').value = email;
         if (obs) document.getElementById('input-aluno-obs').value = obs;
         utils.mostrarToast('Dados importados do QR Code!', 'success');
+    },
+
+    // Toggle visibilidade da observação
+    toggleObsVisibilidade() {
+        this.obsOcultaAtual = !this.obsOcultaAtual;
+        this._atualizarBotaoObsOlho();
+    },
+
+    // Atualizar aparência do botão de olho conforme estado atual
+    _atualizarBotaoObsOlho() {
+        const eyeOpen = document.getElementById('obs-eye-open');
+        const eyeClosed = document.getElementById('obs-eye-closed');
+        const hint = document.getElementById('obs-oculta-hint');
+        const btn = document.getElementById('btn-obs-visibilidade');
+        const textarea = document.getElementById('input-aluno-obs');
+        if (!eyeOpen || !eyeClosed) return;
+
+        if (this.obsOcultaAtual) {
+            eyeOpen.style.display = 'none';
+            eyeClosed.style.display = '';
+            if (hint) hint.style.display = '';
+            if (btn) btn.classList.add('obs-eye-oculta');
+            if (textarea) textarea.style.display = 'none';
+        } else {
+            eyeOpen.style.display = '';
+            eyeClosed.style.display = 'none';
+            if (hint) hint.style.display = 'none';
+            if (btn) btn.classList.remove('obs-eye-oculta');
+            if (textarea) textarea.style.display = '';
+        }
     },
 
     // Ler QR existente para importar dados
@@ -483,10 +506,13 @@ const alunos = {
             // Preencher campos
             document.getElementById('input-aluno-nome').value = aluno.nome;
             document.getElementById('input-aluno-matricula').value = aluno.matricula;
-            document.getElementById('input-aluno-email').value = aluno.email || '';
             document.getElementById('input-aluno-obs').value = aluno.observacoes || '';
             document.getElementById('aluno-pontos-section').style.display = 'block';
             await this.carregarEventosPontos(aluno.id);
+
+            // Restaurar estado do olho (obs oculta)
+            this.obsOcultaAtual = aluno.obsOculta || false;
+            this._atualizarBotaoObsOlho();
 
             // Carregar foto
             if (aluno.foto) {
@@ -768,7 +794,7 @@ const alunos = {
 
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = '.csv,.txt';
+        input.accept = '.csv,.txt,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
         input.onchange = (e) => {
             const file = e.target.files[0];
@@ -835,24 +861,43 @@ const alunos = {
                 turmas.abrirDetalhes(turmas.turmaAtual.id);
             };
 
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const text = e.target.result;
+            // Verificar se é xlsx binário de verdade (assinatura ZIP: PK\x03\x04)
+            const sniffReader = new FileReader();
+            sniffReader.onload = function (sniffEvt) {
+                const bytes = new Uint8Array(sniffEvt.target.result);
+                const isXlsxBinary = bytes[0] === 0x50 && bytes[1] === 0x4B &&
+                                     bytes[2] === 0x03 && bytes[3] === 0x04;
 
-                const looksBroken = /Ã.||\uFFFD/.test(text);
-
-                if (looksBroken) {
-                    const readerLatin = new FileReader();
-                    readerLatin.onload = function (ev) {
-                        processCsvText(ev.target.result);
-                    };
-                    readerLatin.readAsText(file, 'ISO-8859-1');
-                } else {
-                    processCsvText(text);
+                if (isXlsxBinary) {
+                    utils.mostrarToast(
+                        'Arquivo xlsx detectado. Abra a planilha e exporte como CSV (separado por ponto e vírgula) antes de importar.',
+                        'warning'
+                    );
+                    return;
                 }
+
+                // Arquivo é texto (CSV com extensão trocada ou .txt) — ler normalmente
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const text = e.target.result;
+
+                    const looksBroken = /Ã.||\uFFFD/.test(text);
+
+                    if (looksBroken) {
+                        const readerLatin = new FileReader();
+                        readerLatin.onload = function (ev) {
+                            processCsvText(ev.target.result);
+                        };
+                        readerLatin.readAsText(file, 'ISO-8859-1');
+                    } else {
+                        processCsvText(text);
+                    }
+                };
+
+                reader.readAsText(file, 'UTF-8');
             };
 
-            reader.readAsText(file, 'UTF-8');
+            sniffReader.readAsArrayBuffer(file.slice(0, 4));
         };
 
         input.click();
