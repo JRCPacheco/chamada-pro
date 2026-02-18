@@ -36,8 +36,8 @@ const qrgen = {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
 
-            // Carregar Logo
-            const logoData = await this.carregarLogo('assets/logo1024.svg');
+            // Carregar Logo (escola ou fallback do site)
+            const logoData = await utils.carregarLogoParaPDF(turma);
 
             // Configurações
             const pageWidth = doc.internal.pageSize.getWidth();

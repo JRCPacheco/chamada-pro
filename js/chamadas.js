@@ -588,20 +588,231 @@ const chamadas = {
 
         inputMes.addEventListener('change', async () => {
             await this.atualizarRelatorioMensal();
+            await this.atualizarPreviewPontos();
         });
 
         this.relatorioMensalInicializado = true;
     },
 
-    async toggleRelatorioMensal() {
-        const container = document.getElementById('relatorio-mensal-container');
-        if (!container) return;
+    async abrirModalRelatorios() {
+        if (!turmas.turmaAtual) {
+            utils.mostrarToast('Nenhuma turma selecionada', 'warning');
+            return;
+        }
 
-        const abrir = container.style.display === 'none' || !container.style.display;
-        container.style.display = abrir ? 'block' : 'none';
+        this.relatorioMensalInicializado = false;
+        app.abrirModal('modal-relatorios');
+        this.inicializarRelatorioMensalUI();
+        await this.atualizarRelatorioMensal();
+        await this.atualizarPreviewPontos();
+    },
 
-        if (abrir) {
-            await this.atualizarRelatorioMensal();
+    async atualizarPreviewPontos() {
+        if (!turmas.turmaAtual) return;
+
+        const inputMes = document.getElementById('relatorio-mensal-mes');
+        const preview = document.getElementById('relatorio-pontos-preview');
+        if (!inputMes || !preview) return;
+
+        const [anoStr, mesStr] = (inputMes.value || '').split('-');
+        const ano = Number(anoStr);
+        const mes = Number(mesStr);
+        if (!ano || !mes) return;
+
+        try {
+            const alunos = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
+            const mesPad = String(mes).padStart(2, '0');
+            const prefixo = `${ano}-${mesPad}`;
+
+            let totalEventos = 0;
+            const resumo = [];
+
+            for (const aluno of alunos) {
+                const eventos = await db.getByIndex('eventos_nota', 'alunoId', aluno.id);
+                const eventosMes = eventos.filter(e => (e.dataISO || '').startsWith(prefixo));
+                const total = eventosMes.reduce((s, e) => s + (Number(e.valor) || 0), 0);
+                if (total > 0) {
+                    resumo.push({ nome: aluno.nome, total });
+                    totalEventos += total;
+                }
+            }
+
+            if (resumo.length === 0) {
+                preview.innerHTML = '<span>Nenhum ponto registrado para este mês.</span>';
+            } else {
+                resumo.sort((a, b) => b.total - a.total);
+                preview.innerHTML = `<strong>${resumo.length} aluno(s) com pontos | Total: ${totalEventos} pts</strong><br><small>${resumo.slice(0, 5).map(r => `${r.nome}: ${r.total}pts`).join(' • ')}${resumo.length > 5 ? ' ...' : ''}</small>`;
+            }
+        } catch (e) {
+            console.error('Erro ao atualizar preview de pontos:', e);
+        }
+    },
+
+    async gerarRelatorioPontosPDF() {
+        if (!turmas.turmaAtual) {
+            utils.mostrarToast('Nenhuma turma selecionada', 'warning');
+            return;
+        }
+
+        const inputMes = document.getElementById('relatorio-mensal-mes');
+        if (!inputMes || !inputMes.value) {
+            utils.mostrarToast('Selecione um mês', 'warning');
+            return;
+        }
+
+        const [anoStr, mesStr] = inputMes.value.split('-');
+        const ano = Number(anoStr);
+        const mes = Number(mesStr);
+        if (!ano || !mes) {
+            utils.mostrarToast('Mês inválido', 'warning');
+            return;
+        }
+
+        try {
+            utils.mostrarToast('Gerando PDF de pontos...', 'info');
+
+            const cfg = await app._getAppConfig();
+            const professorNome = String(cfg?.professor_nome || '').trim();
+            const mesPad = String(mes).padStart(2, '0');
+            const prefixo = `${ano}-${mesPad}`;
+            const nomeMes = new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+            const turma = turmas.turmaAtual;
+            const alunos = await db.getByIndex('alunos', 'turmaId', turma.id);
+            alunos.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+
+            // Montar dados por aluno
+            const linhasAlunos = [];
+            for (const aluno of alunos) {
+                const eventos = await db.getByIndex('eventos_nota', 'alunoId', aluno.id);
+                const eventosMes = eventos.filter(e => (e.dataISO || '').startsWith(prefixo));
+                eventosMes.sort((a, b) => (a.dataISO || '').localeCompare(b.dataISO || ''));
+                const total = eventosMes.reduce((s, e) => s + (Number(e.valor) || 0), 0);
+                linhasAlunos.push({ aluno, eventos: eventosMes, total });
+            }
+
+            // Logo (escola ou padrão)
+            const logoData = await utils.carregarLogoParaPDF(turma);
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const pageW = doc.internal.pageSize.getWidth();
+            const pageH = doc.internal.pageSize.getHeight();
+            let y = 10;
+
+            // Cabeçalho
+            if (logoData) {
+                doc.addImage(logoData, 'PNG', 10, y, 14, 14);
+                doc.setFontSize(14);
+                doc.setFont(undefined, 'bold');
+                doc.text('Chamada Fácil', 26, y + 9);
+            }
+
+            doc.setFontSize(13);
+            doc.setFont(undefined, 'bold');
+            doc.text(`Pontos Extras — ${turma.nome}`, pageW - 10, y + 5, { align: 'right' });
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Mês: ${nomeMes}`, pageW - 10, y + 11, { align: 'right' });
+            y += 20;
+
+            doc.setDrawColor(200, 200, 200);
+            doc.setLineWidth(0.3);
+            doc.line(10, y, pageW - 10, y);
+            y += 6;
+
+            // Tabela
+            const colNome = 80;
+            const colMat = 35;
+            const colDesc = 55;
+            const colData = 22;
+            const colPts = 18;
+            const tableX = 10;
+            const rowH = 7;
+
+            const drawHeader = () => {
+                doc.setFillColor(243, 244, 246);
+                doc.rect(tableX, y, pageW - 20, rowH, 'F');
+                doc.setFontSize(9);
+                doc.setFont(undefined, 'bold');
+                doc.setTextColor(55, 65, 81);
+                doc.text('Aluno', tableX + 2, y + 5);
+                doc.text('Matrícula', tableX + colNome + 2, y + 5);
+                doc.text('Descrição', tableX + colNome + colMat + 2, y + 5);
+                doc.text('Data', tableX + colNome + colMat + colDesc + 2, y + 5);
+                doc.text('Pts', tableX + colNome + colMat + colDesc + colData + 2, y + 5);
+                doc.setTextColor(0, 0, 0);
+                y += rowH;
+            };
+
+            drawHeader();
+
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(8.5);
+
+            for (const { aluno, eventos, total } of linhasAlunos) {
+                if (eventos.length === 0) continue;
+
+                const needed = eventos.length * rowH + rowH + 4;
+                if (y + needed > pageH - 20) {
+                    doc.addPage();
+                    y = 14;
+                    drawHeader();
+                }
+
+                // Bloco do aluno
+                const blocoY = y;
+                eventos.forEach((ev, idx) => {
+                    const dataFmt = (ev.dataISO || '').split('-').reverse().join('/');
+                    const valor = Number(ev.valor) || 0;
+                    const isLast = idx === eventos.length - 1;
+
+                    if (idx === 0) {
+                        doc.setFont(undefined, 'bold');
+                        doc.text(utils.escapeHtml(aluno.nome).slice(0, 30), tableX + 2, y + 5);
+                        doc.text(utils.escapeHtml(aluno.matricula), tableX + colNome + 2, y + 5);
+                        doc.setFont(undefined, 'normal');
+                    }
+                    doc.text((ev.descricao || '').slice(0, 24), tableX + colNome + colMat + 2, y + 5);
+                    doc.text(dataFmt, tableX + colNome + colMat + colDesc + 2, y + 5);
+                    doc.text(String(valor), tableX + colNome + colMat + colDesc + colData + 2, y + 5);
+
+                    doc.setDrawColor(220, 220, 220);
+                    doc.setLineWidth(0.2);
+                    doc.line(tableX, y + rowH, pageW - 10, y + rowH);
+                    y += rowH;
+                });
+
+                // Linha de total do aluno
+                doc.setFillColor(255, 249, 230);
+                doc.rect(tableX, y, pageW - 20, rowH, 'F');
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(8.5);
+                doc.text(`Total: ${aluno.nome.split(' ')[0]}`, tableX + 2, y + 5);
+                doc.text(`${total} pts`, tableX + colNome + colMat + colDesc + colData + 2, y + 5);
+                doc.setFont(undefined, 'normal');
+                y += rowH + 2;
+            }
+
+            // Assinatura
+            if (professorNome) {
+                y = Math.max(y + 10, pageH - 24);
+                doc.setFontSize(9);
+                doc.setTextColor(55, 65, 81);
+                doc.text('Assinatura do Professor(a)', pageW - 74, y);
+                doc.setDrawColor(107, 114, 128);
+                doc.setLineWidth(0.35);
+                doc.line(pageW - 74, y + 8, pageW - 12, y + 8);
+                doc.setFontSize(8.5);
+                doc.text(professorNome, pageW - 74, y + 13);
+            }
+
+            const turmaSlug = (turma.nome || 'turma').replace(/[^a-z0-9._-]/gi, '_');
+            doc.save(`pontos_extras_${turmaSlug}_${ano}_${mesPad}.pdf`);
+            utils.mostrarToast('PDF de pontos gerado!', 'success');
+        } catch (e) {
+            console.error('Erro ao gerar PDF de pontos:', e);
+            utils.mostrarToast('Erro ao gerar PDF de pontos', 'error');
         }
     },
 
@@ -876,6 +1087,10 @@ const chamadas = {
                 }
             };
 
+            // Logo (escola ou padrão)
+            const turmaParaLogo = turmas.turmaAtual || { escolaId: relatorio.turmaId };
+            const logoDataMensal = await utils.carregarLogoParaPDF(turmaParaLogo);
+
             const horarios = [{ slot: 1, titulo: '1º Horário' }];
             if (relatorio.segundoHorarioAtivo) {
                 horarios.push({ slot: 2, titulo: '2º Horário' });
@@ -894,8 +1109,12 @@ const chamadas = {
                     if (!primeiraPagina) {
                         doc.addPage('a4', 'landscape');
                     }
+                    // Logo no cabeçalho de cada página
+                    if (logoDataMensal) {
+                        doc.addImage(logoDataMensal, 'PNG', 10, 4, 10, 10);
+                    }
                     doc.setFontSize(12);
-                    doc.text(page > 0 ? `${title} (cont.)` : title, 10, headerTopY);
+                    doc.text(page > 0 ? `${title} (cont.)` : title, logoDataMensal ? 22 : 10, headerTopY);
 
                     const sliceH = Math.min(maxSlicePx, canvas.height - offsetY);
                     const sliceCanvas = document.createElement('canvas');

@@ -351,5 +351,22 @@ const utils = {
     // Gerar ID único para QR Code
     gerarQrId() {
         return "qr_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    },
+
+    // Carregar logo para PDF: usa foto da escola (se tiver) ou fallback do site
+    async carregarLogoParaPDF(turma) {
+        try {
+            // turma pode ser um objeto turma ou ter escolaId
+            if (turma && turma.escolaId) {
+                const escola = await db.get('escolas', turma.escolaId);
+                if (escola && escola.foto) {
+                    return escola.foto; // já é base64
+                }
+            }
+        } catch (e) {
+            console.warn('Erro ao buscar logo da escola, usando padrão:', e);
+        }
+        // Fallback: logo do site
+        return qrgen.carregarLogo('assets/logo1024.svg');
     }
 };

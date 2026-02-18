@@ -140,17 +140,20 @@
                         <input type="checkbox" id="config-multi-escola">
                         <span>Várias escolas</span>
                     </label>
-                    <small class="multi-escola-hint">Gerenciar escolas no menu ☰</small>
+                    <button class="btn btn-primary btn-sm btn-adicionar-turma" onclick="turmas.mostrarModalNovaTurma()">
+                        + Adicionar turma
+                    </button>
+                </div>
+                <div id="btn-gerenciar-escolas-container" class="multi-escola-only hidden" style="display:none;">
+                    <button class="btn btn-secondary btn-sm" onclick="escolas.mostrarModalGerenciar()">
+                        🏫 Gerenciar Escolas
+                    </button>
                 </div>
             </div>
 
             <div id="lista-turmas" class="turmas-list">
                 <!-- Turmas serão inseridas aqui -->
             </div>
-
-            <button class="btn-fab" onclick="turmas.mostrarModalNovaTurma()">
-                +
-            </button>
 
             <div class="empty-state" id="empty-turmas" style="display: none;">
                 <div class="empty-icon">📚</div>
@@ -184,14 +187,14 @@
                         </span>
                     </label>
                     <div class="turma-actions">
+                        <button class="btn btn-secondary btn-sm turma-action-btn" onclick="turmas.editarTurma(turmas.turmaAtual?.id)">
+                            Editar Turma
+                        </button>
                         <button class="btn btn-secondary btn-sm turma-action-btn" onclick="turmas.exportarBackupTurmaAtual()">
                             Backup da Turma
                         </button>
                         <button class="btn btn-secondary btn-sm turma-action-btn" onclick="turmas.recuperarBackupTurmaAtual()">
                             Recuperar Turma
-                        </button>
-                        <button class="btn btn-secondary btn-sm turma-action-btn" onclick="turmas.editarTurma(turmas.turmaAtual?.id)">
-                            Editar Turma
                         </button>
                         <button class="btn btn-danger btn-sm turma-action-btn" onclick="turmas.excluirTurma(turmas.turmaAtual?.id)">
                             Excluir Turma
@@ -210,14 +213,14 @@
                 <div class="section-header">
                     <h3>Lista de Alunos</h3>
                     <div class="action-buttons">
+                        <button class="btn btn-primary btn-sm" onclick="alunos.mostrarModalNovoAluno()">
+                            + Adicionar
+                        </button>
                         <button class="btn btn-secondary btn-sm" onclick="alunos.importarCSV()">
-                            📥 Importar CSV
+                            📥 Importar planilha
                         </button>
                         <button class="btn btn-secondary btn-sm" onclick="alunos.gerarQRCodesPDF()">
                             📄 Gerar QR Codes
-                        </button>
-                        <button class="btn btn-primary btn-sm" onclick="alunos.mostrarModalNovoAluno()">
-                            + Adicionar
                         </button>
                     </div>
                     <div class="csv-modelo-download">
@@ -269,23 +272,10 @@
                             onclick="chamadas.cancelarModoSelecaoHistorico()" style="display: none;">
                             Cancelar
                         </button>
-                        <button class="btn btn-primary btn-sm" onclick="chamadas.toggleRelatorioMensal()">
-                            Relatório Mensal
+                        <button class="btn btn-primary btn-sm" onclick="chamadas.abrirModalRelatorios()">
+                            📊 Relatórios
                         </button>
                     </div>
-                </div>
-
-                <div id="relatorio-mensal-container" class="relatorio-mensal-container" style="display: none;">
-                    <div class="relatorio-mensal-controls">
-                        <input type="month" id="relatorio-mensal-mes" />
-                        <button class="btn btn-secondary btn-sm" onclick="chamadas.exportarRelatorioMensalCSV()">
-                            Exportar CSV
-                        </button>
-                        <button class="btn btn-secondary btn-sm" onclick="chamadas.exportarRelatorioMensalPDF()">
-                            Exportar PDF
-                        </button>
-                    </div>
-                    <div id="relatorio-mensal-tabela-wrap" class="relatorio-mensal-tabela-wrap"></div>
                 </div>
 
                 <div id="lista-historico" class="historico-list">
@@ -636,11 +626,6 @@
                     <span class="menu-icon">⚙️</span>
                     <span>Configurações</span>
                 </button>
-                <button class="menu-item multi-escola-only hidden"
-                    onclick="escolas.mostrarModalGerenciar(); app.fecharModal('modal-menu');">
-                    <span class="menu-icon">🏫</span>
-                    <span>Gerenciar Escolas</span>
-                </button>
                 <button class="menu-item" onclick="app.exportarBackup(); app.fecharModal('modal-menu');">
                     <span class="menu-icon">📦</span>
                     <span>Exportar Backup</span>
@@ -674,11 +659,69 @@
                         </button>
                     </div>
                 </div>
+                <div class="form-group" style="margin-top: 12px;">
+                    <label>Logo da Escola (opcional)</label>
+                    <div class="escola-foto-add-row">
+                        <div id="escola-foto-preview-nova" class="escola-foto-preview-mini" onclick="document.getElementById('input-escola-foto-nova').click()" title="Clique para adicionar logo">
+                            <span>🏫</span>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('input-escola-foto-nova').click()">
+                                📷 Selecionar Logo
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="btn-remover-foto-nova-escola" style="display:none;" onclick="escolas.removerFotoNova()">
+                                Remover
+                            </button>
+                            <br><small class="text-muted">Será usada nos relatórios em PDF.</small>
+                        </div>
+                    </div>
+                    <input type="file" id="input-escola-foto-nova" accept="image/*" style="display:none;"
+                        onchange="escolas.processarFotoNova(this.files[0])">
+                </div>
 
                 <h4 style="margin-top: 24px; margin-bottom: 12px;">Escolas Cadastradas</h4>
                 <div id="lista-escolas-gerenciar" class="escolas-list">
                     <!-- Escolas serão inseridas aqui -->
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Editar Escola -->
+    <div id="modal-editar-escola" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Editar Escola</h3>
+                <button class="btn-close" onclick="app.fecharModal('modal-editar-escola')">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="input-editar-escola-id">
+                <div class="form-group">
+                    <label>Nome da Escola *</label>
+                    <input type="text" id="input-editar-escola-nome" placeholder="Nome da escola" />
+                </div>
+                <div class="form-group" style="margin-top: 12px;">
+                    <label>Logo da Escola (opcional)</label>
+                    <div class="escola-foto-add-row">
+                        <div id="escola-foto-preview-editar" class="escola-foto-preview-mini" onclick="document.getElementById('input-escola-foto-editar').click()" title="Clique para alterar logo">
+                            <span>🏫</span>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('input-escola-foto-editar').click()">
+                                📷 Alterar Logo
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="btn-remover-foto-editar-escola" style="display:none;" onclick="escolas.removerFotoEditar()">
+                                Remover
+                            </button>
+                        </div>
+                    </div>
+                    <input type="file" id="input-escola-foto-editar" accept="image/*" style="display:none;"
+                        onchange="escolas.processarFotoEditar(this.files[0])">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="app.fecharModal('modal-editar-escola')">Cancelar</button>
+                <button class="btn btn-primary" onclick="escolas.salvarEdicaoEscola()">Salvar</button>
             </div>
         </div>
     </div>
@@ -712,6 +755,53 @@
                         style="text-decoration: none; display: inline-block;">
                         🌐 Site Oficial
                     </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Relatórios -->
+    <div id="modal-relatorios" class="modal">
+        <div class="modal-content modal-relatorios-content">
+            <div class="modal-header">
+                <h3>📊 Relatórios</h3>
+                <button class="btn-close" onclick="app.fecharModal('modal-relatorios')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="relatorio-mensal-controls" style="margin-bottom: 16px;">
+                    <label for="relatorio-mensal-mes" style="font-weight: 600; margin-right: 8px;">Mês:</label>
+                    <input type="month" id="relatorio-mensal-mes" />
+                </div>
+
+                <div class="relatorio-secao">
+                    <h4 class="relatorio-secao-titulo">📅 Relatório Mensal de Chamadas</h4>
+                    <p class="text-muted" style="font-size: 13px; margin-bottom: 10px;">
+                        Tabela de presença e falta por aluno no mês selecionado.
+                    </p>
+                    <div class="relatorio-secao-acoes">
+                        <button class="btn btn-secondary btn-sm" onclick="chamadas.exportarRelatorioMensalCSV()">
+                            📄 Exportar CSV
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="chamadas.exportarRelatorioMensalPDF()">
+                            🖨️ Exportar PDF
+                        </button>
+                    </div>
+                    <div id="relatorio-mensal-tabela-wrap" class="relatorio-mensal-tabela-wrap" style="margin-top: 12px;"></div>
+                </div>
+
+                <hr style="margin: 20px 0; border-color: var(--border);">
+
+                <div class="relatorio-secao">
+                    <h4 class="relatorio-secao-titulo">⭐ Pontos Extras dos Alunos</h4>
+                    <p class="text-muted" style="font-size: 13px; margin-bottom: 10px;">
+                        Totalização dos pontos extras por aluno no mês selecionado.
+                    </p>
+                    <div class="relatorio-secao-acoes">
+                        <button class="btn btn-secondary btn-sm" onclick="chamadas.gerarRelatorioPontosPDF()">
+                            🖨️ Gerar PDF de Pontos
+                        </button>
+                    </div>
+                    <div id="relatorio-pontos-preview" class="relatorio-pontos-preview" style="margin-top: 12px;"></div>
                 </div>
             </div>
         </div>

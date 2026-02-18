@@ -70,16 +70,13 @@ const alunos = {
                 : `<div class="aluno-avatar" style="background: linear-gradient(135deg, ${cor} 0%, ${utils.adjustColor(cor, -40)} 100%)">${iniciais}</div>`;
 
             return `
-                <div class="aluno-card">
+                <div class="aluno-card" data-id="${aluno.id}" style="cursor: pointer;" title="Toque para editar">
                     ${avatarHtml}
                     <div class="aluno-info">
                         <h4>${utils.escapeHtml(aluno.nome)}</h4>
                         <p>Matrícula: ${utils.escapeHtml(aluno.matricula)}${aluno.email ? ' • ' + utils.escapeHtml(aluno.email) : ''}</p>
                     </div>
                     <div class="aluno-actions">
-                        <button class="btn-icon-sm btn-editar-aluno" data-id="${aluno.id}" title="Editar">
-                            ✏️
-                        </button>
                         <button class="btn-icon-sm btn-deletar-aluno" data-id="${aluno.id}" title="Excluir">
                             🗑️
                         </button>
@@ -89,14 +86,17 @@ const alunos = {
         }).join('');
 
         // Adicionar event listeners
-        document.querySelectorAll('.btn-editar-aluno').forEach(btn => {
-            btn.addEventListener('click', function () {
+        document.querySelectorAll('.aluno-card').forEach(card => {
+            card.addEventListener('click', function (event) {
+                // Não disparar edição ao clicar na lixeira
+                if (event.target.closest('.btn-deletar-aluno')) return;
                 alunos.editar(this.dataset.id);
             });
         });
 
         document.querySelectorAll('.btn-deletar-aluno').forEach(btn => {
-            btn.addEventListener('click', function () {
+            btn.addEventListener('click', function (event) {
+                event.stopPropagation();
                 alunos.deletar(this.dataset.id);
             });
         });
@@ -433,10 +433,16 @@ const alunos = {
     // Aplicar dados do QR importado ao formulário
     aplicarDadosQrImportado(dados) {
         this.qrImportado = dados;
-        if (dados.n) document.getElementById('input-aluno-nome').value = dados.n;
-        if (dados.m) document.getElementById('input-aluno-matricula').value = dados.m;
-        if (dados.e) document.getElementById('input-aluno-email').value = dados.e;
-        if (dados.o) document.getElementById('input-aluno-obs').value = dados.o;
+        // Formato novo CF1: {id, matricula, nome}
+        // Formato legado: {n, m, e, o}
+        const nome = dados.nome || dados.n || '';
+        const matricula = dados.matricula || dados.m || '';
+        const email = dados.email || dados.e || '';
+        const obs = dados.obs || dados.o || '';
+        if (nome) document.getElementById('input-aluno-nome').value = nome;
+        if (matricula) document.getElementById('input-aluno-matricula').value = matricula;
+        if (email) document.getElementById('input-aluno-email').value = email;
+        if (obs) document.getElementById('input-aluno-obs').value = obs;
         utils.mostrarToast('Dados importados do QR Code!', 'success');
     },
 
