@@ -27,7 +27,7 @@
 
 **Manualmente:**
 1. Entre na turma criada
-2. Na aba "Alunos", clique em **"+ Adicionar"**
+2. Na aba "Alunos", clique em **"Adicionar"**
 3. Preencha: Nome, Matrícula e Email (opcional)
 4. Clique em **"Salvar"**
 

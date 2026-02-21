@@ -17,7 +17,7 @@
 
 ### Passo 4: Adicionar Alunos de Teste
 1. Clique na turma criada
-2. Clique em **"+ Adicionar"**
+2. Clique em **"Adicionar"**
 3. Adicione estes alunos de exemplo:
 
 **Aluno 1:**

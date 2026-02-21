@@ -498,7 +498,7 @@ const app = {
                 </div>
                 <div class="modal-body">
                     <h4>📚 Criar Turma</h4>
-                    <p>Clique no botão "+" para criar uma nova turma. Informe o nome e descrição.</p>
+                    <p>Clique em "Adicionar turma" para criar uma nova turma. Informe o nome e descrição.</p>
                     
                     <h4>👥 Adicionar Alunos</h4>
                     <p>Entre na turma e adicione alunos manualmente ou importe uma lista CSV.</p>
