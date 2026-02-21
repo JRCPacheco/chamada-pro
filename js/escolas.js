@@ -288,7 +288,8 @@ const escolas = {
 
         // Popular options
         const options = escolasArray.map(escola => {
-            return `<option value="${escola.id}">${utils.escapeHtml(escola.nome)}</option>`;
+            const sufixoAtual = (selectId === 'filter-escola' && escola.id === 'default') ? ' (Escola atual)' : '';
+            return `<option value="${escola.id}">${utils.escapeHtml(escola.nome)}${sufixoAtual}</option>`;
         }).join('');
 
         // Se for filtro, adicionar opção "Todas"
@@ -302,6 +303,16 @@ const escolas = {
         if (selectedValue) {
             select.value = selectedValue;
         }
+    },
+
+    async obterEscolaPreferencialId() {
+        const escolasArray = await db.getAll('escolas');
+        if (!escolasArray.length) return '';
+
+        const escolaDefault = escolasArray.find(e => e.id === 'default');
+        if (escolaDefault) return escolaDefault.id;
+
+        return escolasArray[0].id || '';
     },
 
     // Atualizar todos os dropdowns existentes

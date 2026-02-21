@@ -76,6 +76,12 @@
                 <small class="text-muted">Será usado para identificação em relatórios e PDF.</small>
             </div>
 
+            <div class="onboarding-profile">
+                <label for="onboarding-escola-nome">Qual a sua escola? *</label>
+                <input type="text" id="onboarding-escola-nome" maxlength="100" placeholder="Ex: Colégio São José" />
+                <small class="text-muted">Campo obrigatório para vincular suas turmas.</small>
+            </div>
+
             <div class="onboarding-actions">
                 <button class="btn btn-primary onboarding-cta" data-action="app-concluir-onboarding">
                     Começar Agora
@@ -158,7 +164,7 @@
                 </div>
 
                 <!-- Linha 3: botão Adicionar turma centralizado -->
-                <div class="adicionar-turma-wrapper">
+                <div class="adicionar-turma-wrapper" id="adicionar-turma-wrapper">
                     <button class="btn-adicionar-turma" data-action="turmas-mostrar-nova">
                         Adicionar turma
                     </button>
@@ -174,7 +180,7 @@
                 <h3>Nenhuma turma cadastrada</h3>
                 <p>Crie sua primeira turma para começar</p>
                 <button class="btn btn-primary" data-action="turmas-mostrar-nova">
-                    Criar Turma
+                    Criar primeira turma
                 </button>
             </div>
         </div>
@@ -504,6 +510,54 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-action="close-modal" data-modal-id="modal-nova-turma">Cancelar</button>
                 <button class="btn btn-primary" data-action="turmas-salvar-nova">Criar Turma</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Editar Turma -->
+    <div id="modal-editar-turma" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Editar Turma</h3>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-editar-turma">×</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="input-editar-turma-id">
+
+                <div class="form-group">
+                    <label>Nome da Turma *</label>
+                    <input type="text" id="input-editar-turma-nome" placeholder="Ex: 3º Ano A - Matemática" />
+                </div>
+
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <textarea id="input-editar-turma-descricao" placeholder="Informações adicionais (opcional)"
+                        rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Escola *</label>
+                    <select id="input-editar-turma-escola">
+                        <option value="">Selecione uma escola...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="toggle-field" for="input-editar-turma-segundo-horario">
+                        <span class="toggle-field-copy">
+                            <span class="toggle-field-title">Segundo horário?</span>
+                            <small class="text-muted">Ative apenas se a turma costuma ter duas chamadas no mesmo dia.</small>
+                        </span>
+                        <span class="toggle-switch">
+                            <input type="checkbox" id="input-editar-turma-segundo-horario" />
+                            <span class="toggle-slider" aria-hidden="true"></span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-action="close-modal" data-modal-id="modal-editar-turma">Cancelar</button>
+                <button class="btn btn-primary" data-action="turmas-salvar-edicao">Salvar Alterações</button>
             </div>
         </div>
     </div>

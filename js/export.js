@@ -23,6 +23,87 @@ const exportModule = {
             .toLowerCase();
     },
 
+    _normalizarNomeEscola(nome) {
+        return String(nome || '').trim().replace(/\s+/g, ' ').slice(0, 100);
+    },
+
+    async _resolverEscolaParaTurmaBackup(turmaOriginal, escolaOriginal = null) {
+        const escolaIdOriginal = String(turmaOriginal?.escolaId || turmaOriginal?.escola_id || escolaOriginal?.id || '').trim();
+        const nomePreferencial = this._normalizarNomeEscola(
+            escolaOriginal?.nome ||
+            turmaOriginal?.escolaNome ||
+            turmaOriginal?.escola_nome ||
+            turmaOriginal?.escolaName
+        );
+
+        // Sem escola no backup: mantém padrão.
+        if (!escolaIdOriginal && !nomePreferencial) {
+            return { escolaId: 'default', escolaImportadaNome: null };
+        }
+
+        // Tenta reutilizar por ID (quando existir no backup).
+        if (escolaIdOriginal) {
+            const existente = await db.get('escolas', escolaIdOriginal);
+            if (existente) {
+                // Caso comum de conflito: backup usa id "default", mas com outro nome de escola.
+                // Nessa situação, não devemos sobrescrever/forçar a escola default local.
+                const nomeExistente = this._normalizarNomeEscola(existente.nome);
+                const nomeConflitante = !!nomePreferencial && nomeExistente.toLowerCase() !== nomePreferencial.toLowerCase();
+
+                if (nomeConflitante) {
+                    // Primeiro tenta encontrar escola já existente pelo nome do backup.
+                    const escolas = await db.getAll('escolas');
+                    const matchNome = escolas.find(
+                        (e) => this._normalizarNomeEscola(e.nome).toLowerCase() === nomePreferencial.toLowerCase()
+                    );
+                    if (matchNome) {
+                        return { escolaId: matchNome.id, escolaImportadaNome: null };
+                    }
+
+                    // Se não houver, cria nova escola para preservar a identidade do backup.
+                    const novaEscolaId = `escola_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+                    await db.put('escolas', {
+                        id: novaEscolaId,
+                        nome: nomePreferencial,
+                        criadoEm: new Date().toISOString(),
+                        atualizadoEm: new Date().toISOString()
+                    });
+                    return { escolaId: novaEscolaId, escolaImportadaNome: nomePreferencial };
+                }
+
+                return { escolaId: existente.id, escolaImportadaNome: null };
+            }
+
+            // ID existe no backup mas não existe localmente: cria escola automaticamente.
+            const nome = nomePreferencial || `Escola (${escolaIdOriginal})`;
+            await db.put('escolas', {
+                id: escolaIdOriginal,
+                nome: nome,
+                criadoEm: new Date().toISOString(),
+                atualizadoEm: new Date().toISOString()
+            });
+            return { escolaId: escolaIdOriginal, escolaImportadaNome: nome };
+        }
+
+        // Backup sem ID, mas com nome: tenta match por nome e cria se necessário.
+        const escolas = await db.getAll('escolas');
+        const nomeLower = nomePreferencial.toLowerCase();
+        const match = escolas.find((e) => String(e.nome || '').trim().toLowerCase() === nomeLower);
+        if (match) {
+            return { escolaId: match.id, escolaImportadaNome: null };
+        }
+
+        const novaEscolaId = `escola_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+        await db.put('escolas', {
+            id: novaEscolaId,
+            nome: nomePreferencial,
+            criadoEm: new Date().toISOString(),
+            atualizadoEm: new Date().toISOString()
+        });
+
+        return { escolaId: novaEscolaId, escolaImportadaNome: nomePreferencial };
+    },
+
     // Exportar backup completo (V1 com versionamento)
     async exportarBackup() {
         try {
@@ -161,6 +242,7 @@ const exportModule = {
 
             const chamadas = await db.getByIndex('chamadas', 'turmaId', turmaId);
             const alunos = await db.getByIndex('alunos', 'turmaId', turmaId);
+            const escola = turma.escolaId ? await db.get('escolas', turma.escolaId) : null;
 
             const dados = {
                 schemaVersion: 1,
@@ -169,6 +251,7 @@ const exportModule = {
                 exportedAt: new Date().toISOString(),
                 data: {
                     turma: turma,
+                    escola: escola,
                     alunos: alunos,
                     chamadas: chamadas
                 }
@@ -240,6 +323,7 @@ const exportModule = {
                         const rawBackup = JSON.parse(event.target.result);
                         const backup = this.migrateTurmaBackupIfNeeded(rawBackup);
                         const turmaOriginal = backup.data.turma || {};
+                        const escolaOriginal = backup.data.escola || null;
                         const alunosOriginais = backup.data.alunos || [];
                         const chamadasOriginais = backup.data.chamadas || [];
 
@@ -256,13 +340,16 @@ const exportModule = {
                         utils.mostrarToast('Recuperando turma...', 'info');
 
                         // Restaurar como nova turma (seguro, sem sobrescrever turma atual)
+                        const escolaResolvida = await this._resolverEscolaParaTurmaBackup(turmaOriginal, escolaOriginal);
                         const novaTurma = {
                             ...turmaOriginal,
                             id: undefined,
                             nome: turmaOriginal.nome || 'Turma recuperada',
+                            escolaId: escolaResolvida.escolaId || 'default',
                             criadaEm: new Date().toISOString()
                         };
                         delete novaTurma.id;
+                        delete novaTurma.escola_id;
 
                         const novaTurmaId = await db.add('turmas', novaTurma);
                         const mapaAlunoId = {};
@@ -298,6 +385,10 @@ const exportModule = {
                             }
 
                             await db.add('chamadas', novaChamada);
+                        }
+
+                        if (escolaResolvida.escolaImportadaNome) {
+                            utils.mostrarToast(`Escola "${escolaResolvida.escolaImportadaNome}" adicionada ao cadastro`, 'info');
                         }
 
                         utils.mostrarToast('Turma recuperada com sucesso!', 'success');

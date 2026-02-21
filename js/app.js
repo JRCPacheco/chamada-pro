@@ -52,6 +52,7 @@ const app = {
             case 'turmas-recuperar-backup-atual': return turmas.recuperarBackupTurmaAtual();
             case 'turmas-excluir-atual': return turmas.excluirTurma(turmas.turmaAtual?.id);
             case 'turmas-salvar-nova': return turmas.salvarNovaTurma();
+            case 'turmas-salvar-edicao': return turmas.salvarEdicaoTurma();
             case 'alunos-mostrar-novo': return alunos.mostrarModalNovoAluno();
             case 'alunos-importar-csv': return alunos.importarCSV();
             case 'alunos-gerar-qr-pdf': return alunos.gerarQRCodesPDF();
@@ -229,7 +230,37 @@ const app = {
         return String(nome || '').trim().replace(/\s+/g, ' ').slice(0, 80);
     },
 
+    _normalizarNomeEscola(nome) {
+        return String(nome || '').trim().replace(/\s+/g, ' ').slice(0, 100);
+    },
+
+    async _salvarEscolaInicialObrigatoria() {
+        const inputEscola = document.getElementById('onboarding-escola-nome');
+        const nomeEscola = this._normalizarNomeEscola(inputEscola ? inputEscola.value : '');
+
+        if (!nomeEscola) {
+            utils.mostrarToast('Informe o nome da escola para continuar', 'warning');
+            if (inputEscola) inputEscola.focus();
+            return false;
+        }
+
+        const escolaDefault = await db.get('escolas', 'default');
+        const escola = {
+            id: 'default',
+            nome: nomeEscola,
+            criadoEm: escolaDefault?.criadoEm || new Date().toISOString(),
+            atualizadoEm: new Date().toISOString(),
+            foto: escolaDefault?.foto || null
+        };
+
+        await db.put('escolas', escola);
+        return true;
+    },
+
     async concluirOnboarding(salvarNome = true) {
+        const escolaOk = await this._salvarEscolaInicialObrigatoria();
+        if (!escolaOk) return;
+
         const cfg = await this._getAppConfig();
         cfg.onboarding_done = true;
 
@@ -548,16 +579,24 @@ const app = {
 
         // MULTI ESCOLA: Popularizar filtro e setup listener
         if (multi_escola) {
-            escolas.renderizarDropdown('filter-escola');
+            await escolas.renderizarDropdown('filter-escola');
 
             // Setup listener para filtro
             if (filterSelect) {
+                const escolaPreferencialId = await escolas.obterEscolaPreferencialId();
+                if (!filterSelect.value && escolaPreferencialId) {
+                    filterSelect.value = escolaPreferencialId;
+                }
+
                 // Remover listener antigo se existir para evitar duplicação ou conflitos
                 filterSelect.onchange = null;
 
                 filterSelect.onchange = () => {
                     turmas.filtrarPorEscola(filterSelect.value);
                 };
+
+                // Menos cliques: ao ativar multi-escola, inicia filtrando pela escola padrão.
+                await turmas.filtrarPorEscola(filterSelect.value || escolaPreferencialId || '');
             }
         } else {
             // Resetar filtro se desativado

@@ -22,6 +22,7 @@ const turmas = {
     async listar() {
         const container = document.getElementById('lista-turmas');
         const emptyState = document.getElementById('empty-turmas');
+        const adicionarTurmaWrapper = document.getElementById('adicionar-turma-wrapper');
         const searchInput = document.getElementById('search-turmas');
         const filterEscola = document.getElementById('filter-escola');
 
@@ -41,8 +42,10 @@ const turmas = {
         if (turmasArray.length === 0) {
             container.innerHTML = '';
             emptyState.style.display = 'block';
+            if (adicionarTurmaWrapper) adicionarTurmaWrapper.style.display = 'none';
         } else {
             emptyState.style.display = 'none';
+            if (adicionarTurmaWrapper) adicionarTurmaWrapper.style.display = '';
 
             // Filtragem local por busca de texto (nome/descricao)
             if (searchInput && searchInput.value.trim()) {
@@ -170,6 +173,11 @@ const turmas = {
         const config = await app._getAppConfig();
         if (config.multi_escola) {
             await escolas.renderizarDropdown('input-turma-escola');
+            const escolaPreferencialId = await escolas.obterEscolaPreferencialId();
+            const selectEscola = document.getElementById('input-turma-escola');
+            if (selectEscola && escolaPreferencialId) {
+                selectEscola.value = escolaPreferencialId;
+            }
         }
 
         // Focar no primeiro campo
@@ -376,6 +384,13 @@ const turmas = {
             const novaTurmaId = await exportModule.importarTurmaJSON();
             if (!novaTurmaId) return;
 
+            // Atualizar dropdowns de escola após recuperação (caso backup traga escola nova)
+            if (typeof escolas?.renderizarDropdown === 'function') {
+                await escolas.renderizarDropdown('filter-escola');
+                await escolas.renderizarDropdown('input-turma-escola');
+                await escolas.renderizarDropdown('input-editar-turma-escola');
+            }
+
             await this.listar();
             await this.abrirDetalhes(novaTurmaId);
         } catch (error) {
@@ -386,27 +401,82 @@ const turmas = {
 
     // Editar turma
     async editarTurma(id) {
+        await this.mostrarModalEditarTurma(id);
+    },
+
+    async mostrarModalEditarTurma(id) {
         const turma = await db.get('turmas', id);
         if (!turma) {
             utils.mostrarToast('Turma não encontrada', 'error');
             return;
         }
 
-        const novoNome = prompt('Nome da turma:', turma.nome || '');
-        if (!novoNome) return;
+        const modal = document.getElementById('modal-editar-turma');
+        if (!modal) return;
 
-        const novaDescricao = prompt('Descrição:', turma.descricao || '');
+        await escolas.renderizarDropdown('input-editar-turma-escola');
 
-        turma.nome = novoNome.trim();
-        turma.descricao = (novaDescricao || '').trim();
+        document.getElementById('input-editar-turma-id').value = turma.id;
+        document.getElementById('input-editar-turma-nome').value = turma.nome || '';
+        document.getElementById('input-editar-turma-descricao').value = turma.descricao || '';
+        document.getElementById('input-editar-turma-segundo-horario').checked = !!turma.segundoHorarioAtivo;
 
+        const selectEscola = document.getElementById('input-editar-turma-escola');
+        if (selectEscola) {
+            selectEscola.value = turma.escolaId || 'default';
+            if (!selectEscola.value) selectEscola.value = 'default';
+        }
+
+        modal.classList.add('active');
+        setTimeout(() => document.getElementById('input-editar-turma-nome')?.focus(), 100);
+    },
+
+    async salvarEdicaoTurma() {
+        const turmaId = document.getElementById('input-editar-turma-id')?.value;
+        if (!turmaId) {
+            utils.mostrarToast('Turma não encontrada', 'error');
+            return;
+        }
+
+        const turma = await db.get('turmas', turmaId);
+        if (!turma) {
+            utils.mostrarToast('Turma não encontrada', 'error');
+            return;
+        }
+
+        const novoNome = (document.getElementById('input-editar-turma-nome')?.value || '').trim();
+        const novaDescricao = (document.getElementById('input-editar-turma-descricao')?.value || '').trim();
+        const novaEscolaId = (document.getElementById('input-editar-turma-escola')?.value || '').trim();
+        const novoSegundoHorario = !!document.getElementById('input-editar-turma-segundo-horario')?.checked;
+
+        if (!novoNome) {
+            utils.mostrarToast('Por favor, informe o nome da turma', 'warning');
+            document.getElementById('input-editar-turma-nome')?.focus();
+            return;
+        }
+
+        if (!novaEscolaId) {
+            utils.mostrarToast('Por favor, selecione uma escola', 'warning');
+            document.getElementById('input-editar-turma-escola')?.focus();
+            return;
+        }
+
+        const valorSegundoHorarioAtual = !!turma.segundoHorarioAtivo;
+        turma.nome = novoNome;
+        turma.descricao = novaDescricao;
+        turma.escolaId = novaEscolaId;
         await db.put('turmas', turma);
 
+        if (valorSegundoHorarioAtual !== novoSegundoHorario) {
+            await this.definirSegundoHorario(turmaId, novoSegundoHorario);
+        }
+
+        app.fecharModal('modal-editar-turma');
         utils.mostrarToast('Turma atualizada', 'success');
         await this.listar();
 
-        if (this.turmaAtual && this.turmaAtual.id === id) {
-            await this.abrirDetalhes(id);
+        if (this.turmaAtual && this.turmaAtual.id === turmaId) {
+            await this.abrirDetalhes(turmaId);
         }
     },
 
