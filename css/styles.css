@@ -1970,7 +1970,44 @@ body {
 }
 
 .menu-icon {
-    font-size: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    width: 24px;
+    height: 24px;
+}
+
+.icon-svg {
+    width: 1em;
+    height: 1em;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex: 0 0 auto;
+}
+
+.icon-14 {
+    font-size: 14px;
+}
+
+.icon-16 {
+    font-size: 16px;
+}
+
+.icon-20 {
+    font-size: 20px;
+}
+
+.icon-inline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    margin-right: 6px;
+    color: currentColor;
 }
 
 /* ===== TOAST ===== */
@@ -2381,6 +2418,15 @@ body {
     margin-top: 6px;
     font-size: 13px;
     color: var(--gray-700);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.gerenciar-turma-meta .meta-dot {
+    color: var(--gray-400);
+    margin: 0 2px;
 }
 
 .gerenciar-turma-actions {

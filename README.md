@@ -267,3 +267,22 @@ Este projeto foi desenvolvido para uso educacional.
 
 **Desenvolvido com ❤️ para professores que fazem a diferença!**
 
+
+---
+
+## Anti-mojibake (pre-commit)
+
+- Padrao de encoding do projeto: UTF-8
+- Validar alteracoes staged antes de commit:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/check-mojibake.ps1
+```
+
+- Escaneamento completo (opcional):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/check-mojibake.ps1 -All
+```
+
+- Hook automatico de commit ja configurado neste repo em `.githooks/pre-commit`.

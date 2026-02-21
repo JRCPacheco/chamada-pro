@@ -110,6 +110,11 @@ const turmas = {
         });
 
         // Renderizar usando mapas (sync, sem await)
+        const iconSchool = '<svg class="icon-svg icon-14" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg>';
+        const iconTrash = '<svg class="icon-svg icon-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>';
+        const iconUsers = '<svg class="icon-svg icon-14" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="3"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a3 3 0 0 1 0 5.75"/></svg>';
+        const iconCalls = '<svg class="icon-svg icon-14" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8"/><path d="M9 2v2"/><path d="M15 2v2"/><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M8 11h8"/><path d="M8 15h5"/></svg>';
+
         const cardsHtml = turmasArray.map(turma => {
             const totalAlunos = mapAlunosPorTurma[turma.id] || 0;
             const totalChamadas = mapChamadasPorTurma[turma.id] || 0;
@@ -119,7 +124,7 @@ const turmas = {
             if (multi_escola && turma.escolaId) {
                 const nomeEscola = escolasMap[turma.escolaId];
                 if (nomeEscola) {
-                    escolaBadge = `<span class="escola-badge">🏫 ${utils.escapeHtml(nomeEscola)}</span>`;
+                    escolaBadge = `<span class="escola-badge">${iconSchool} ${utils.escapeHtml(nomeEscola)}</span>`;
                 }
             }
 
@@ -129,13 +134,13 @@ const turmas = {
                     <div class="turma-card-header">
                         <h3>${utils.escapeHtml(turma.nome)}</h3>
                         <button type="button" class="turma-delete-btn" data-turma-id="${turma.id}" aria-label="Excluir turma" title="Segure por 1s para excluir">
-                            🗑️
+                            ${iconTrash}
                         </button>
                     </div>
                     <p>${turma.descricao ? utils.escapeHtml(turma.descricao) : 'Sem descrição'}</p>
                     <div class="turma-meta">
-                        <span>👥 ${totalAlunos} aluno${totalAlunos !== 1 ? 's' : ''}</span>
-                        <span>📄 ${totalChamadas} chamada${totalChamadas !== 1 ? 's' : ''}</span>
+                        <span>${iconUsers} ${totalAlunos} aluno${totalAlunos !== 1 ? 's' : ''}</span>
+                        <span>${iconCalls} ${totalChamadas} chamada${totalChamadas !== 1 ? 's' : ''}</span>
                     </div>
                 </div>
             `;
@@ -482,6 +487,9 @@ const turmas = {
         const listaEl = document.getElementById('lista-gerenciar-turmas');
         const emptyEl = document.getElementById('empty-gerenciar-turmas');
         if (!listaEl || !emptyEl) return;
+        const iconSchool = '<svg class="icon-svg icon-14" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg>';
+        const iconUsers = '<svg class="icon-svg icon-14" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="3"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a3 3 0 0 1 0 5.75"/></svg>';
+        const iconCalls = '<svg class="icon-svg icon-14" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8"/><path d="M9 2v2"/><path d="M15 2v2"/><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M8 11h8"/><path d="M8 15h5"/></svg>';
 
         const [turmasAll, alunosAll, chamadasAll, escolasAll] = await Promise.all([
             db.getAll('turmas'),
@@ -528,11 +536,11 @@ const turmas = {
                         <div class="gerenciar-turma-card-head">
                             <div>
                                 <strong>${utils.escapeHtml(turma.nome || 'Turma')}</strong>
-                                <small>🏫 ${utils.escapeHtml(escolaNome)}</small>
+                                <small>${iconSchool} ${utils.escapeHtml(escolaNome)}</small>
                             </div>
                             ${selectHtml}
                         </div>
-                        <div class="gerenciar-turma-meta">👥 ${alunosQtd} alunos • 📄 ${chamadasQtd} chamadas</div>
+                        <div class="gerenciar-turma-meta">${iconUsers} ${alunosQtd} alunos <span class="meta-dot">•</span> ${iconCalls} ${chamadasQtd} chamadas</div>
                         <div class="gerenciar-turma-actions">
                             <button class="btn btn-secondary btn-sm" data-action="turmas-abrir-item-gerenciar" data-turma-id="${turma.id}">Abrir</button>
                             <button class="btn btn-secondary btn-sm" data-action="turmas-editar-item-gerenciar" data-turma-id="${turma.id}">Editar</button>

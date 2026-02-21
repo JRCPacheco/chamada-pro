@@ -57,15 +57,15 @@
 
             <div class="onboarding-steps">
                 <div class="step">
-                    <div class="step-icon">📚</div>
+                    <div class="step-icon"><svg class="icon-svg icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
                     <h3>Crie suas turmas</h3>
                 </div>
                 <div class="step">
-                    <div class="step-icon">📱</div>
+                    <div class="step-icon"><svg class="icon-svg icon-20" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div>
                     <h3>Escaneie QR Codes</h3>
                 </div>
                 <div class="step">
-                    <div class="step-icon">📊</div>
+                    <div class="step-icon"><svg class="icon-svg icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="6"/><rect x="12" y="7" width="3" height="9"/><rect x="17" y="5" width="3" height="11"/></svg></div>
                     <h3>Exporte relatórios</h3>
                 </div>
             </div>
@@ -108,8 +108,8 @@
                 </div>
             </div>
             <h1 id="header-title">Minhas Turmas</h1>
-            <button class="btn-icon btn-menu" id="btn-menu">
-                ☰
+            <button class="btn-icon btn-menu" id="btn-menu" aria-label="Menu">
+                <svg class="icon-svg icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg>
             </button>
         </header>
 
@@ -150,14 +150,14 @@
                     </label>
                     <div id="btn-gerenciar-escolas-container" class="multi-escola-only hidden" style="display:none;">
                         <button class="btn btn-secondary btn-sm" data-action="escolas-mostrar-gerenciar">
-                            🏫 Gerenciar Escolas
+                            <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg></span>Gerenciar Escolas
                         </button>
                     </div>
                 </div>
 
                 <!-- Linha 2: filtro por escola (multi-escola only) -->
                 <div id="filter-escola-container" class="filter-container multi-escola-only hidden" style="display: none;">
-                    <label for="filter-escola">🏫 Filtrar por Escola:</label>
+                    <label for="filter-escola"><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg></span>Filtrar por Escola:</label>
                     <select id="filter-escola">
                         <option value="">Todas as Escolas</option>
                     </select>
@@ -176,7 +176,7 @@
             </div>
 
             <div class="empty-state" id="empty-turmas" style="display: none;">
-                <div class="empty-icon">📚</div>
+                <div class="empty-icon"><svg class="icon-svg icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
                 <h3>Nenhuma turma cadastrada</h3>
                 <p>Crie sua primeira turma para começar</p>
                 <button class="btn btn-primary" data-action="turmas-mostrar-nova">
@@ -191,8 +191,8 @@
                 <h2 id="turma-nome-detalhe"></h2>
                 <p id="turma-descricao-detalhe"></p>
                 <div class="turma-stats">
-                    <span>👥 <strong id="turma-total-alunos">0</strong> alunos</span>
-                    <span>📅 <strong id="turma-total-chamadas-realizadas">0</strong> chamadas</span>
+                    <span><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="3"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a3 3 0 0 1 0 5.75"/></svg></span><strong id="turma-total-alunos">0</strong> alunos</span>
+                    <span><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M8 2h8"/><path d="M9 2v2"/><path d="M15 2v2"/><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M8 11h8"/><path d="M8 15h5"/></svg></span><strong id="turma-total-chamadas-realizadas">0</strong> chamadas</span>
                 </div>
                 <div class="turma-footer-row">
                     <label class="toggle-field turma-segundo-horario-toggle" for="input-detalhe-segundo-horario">
@@ -228,15 +228,15 @@
                             Adicionar
                         </button>
                         <button class="btn btn-secondary btn-sm" data-action="alunos-importar-csv">
-                            📥 Importar planilha
+                            <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg></span>Importar planilha
                         </button>
                         <button class="btn btn-secondary btn-sm" data-action="alunos-gerar-qr-pdf">
-                            📄 Gerar QR Codes
+                            <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></span>Gerar QR Codes
                         </button>
                     </div>
                     <div class="csv-modelo-download">
                         <a href="assets/modelos/modelo_alunos.csv" download class="btn btn-secondary btn-sm">
-                            ⬇️ Baixar modelo de planilha
+                            <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg></span>Baixar modelo de planilha
                         </a>
                         <small class="csv-modelo-hint">
                             Abra no Excel ou Google Sheets e não altere os nomes das colunas.
@@ -245,7 +245,7 @@
                 </div>
 
                 <div class="search-box">
-                    <input type="text" id="search-alunos" placeholder="🔍 Buscar aluno..." />
+                    <input type="text" id="search-alunos" placeholder="Buscar aluno..." />
                 </div>
 
                 <div id="lista-alunos" class="alunos-list">
@@ -253,7 +253,7 @@
                 </div>
 
                 <div class="empty-state" id="empty-alunos" style="display: none;">
-                    <div class="empty-icon">👥</div>
+                    <div class="empty-icon"><svg class="icon-svg icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="3"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a3 3 0 0 1 0 5.75"/></svg></div>
                     <h3>Nenhum aluno cadastrado</h3>
                     <p>Adicione alunos manualmente ou importe uma lista CSV</p>
                 </div>
@@ -303,7 +303,7 @@
                             Cancelar
                         </button>
                         <button class="btn btn-primary btn-sm" data-action="chamadas-abrir-relatorios">
-                            📊 Relatórios
+                            <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="6"/><rect x="12" y="7" width="3" height="9"/><rect x="17" y="5" width="3" height="11"/></svg></span>Relatórios
                         </button>
                     </div>
                     <h3>Histórico de Chamadas</h3>
@@ -314,14 +314,14 @@
                 </div>
 
                 <div class="empty-state" id="empty-historico" style="display: none;">
-                    <div class="empty-icon">📅</div>
+                    <div class="empty-icon"><svg class="icon-svg icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8"/><path d="M9 2v2"/><path d="M15 2v2"/><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M8 11h8"/><path d="M8 15h5"/></svg></div>
                     <h3>Nenhuma chamada realizada</h3>
                     <p>Inicie uma chamada para começar o histórico</p>
                 </div>
             </div>
 
             <button class="btn-fab" data-action="scanner-iniciar">
-                📷
+                <svg class="icon-svg icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3V4"/><path d="M20 7h-3V4"/><path d="M4 17h3v3"/><path d="M20 17h-3v3"/><rect x="6" y="7" width="12" height="10" rx="2"/></svg>
             </button>
         </div>
 
@@ -345,13 +345,13 @@
 
             <div class="scanner-controls">
                 <button class="btn btn-secondary" id="btn-toggle-camera">
-                    🔄 Alternar
+                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15 6.7"/><path d="M3 12a9 9 0 0 1 15-6.7"/><path d="m3 17 3 1-1 3"/><path d="m21 7-3-1 1-3"/></svg></span>Alternar
                 </button>
                 <button class="btn btn-warning" id="btn-torch">
-                    💡 Lanterna
+                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12v4h8v-4a7 7 0 0 0-4-12z"/></svg></span>Lanterna
                 </button>
                 <button class="btn btn-success" id="btn-finalizar-chamada">
-                    ✓ Finalizar
+                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>Finalizar
                 </button>
             </div>
 
@@ -400,10 +400,10 @@
 
             <div class="resumo-actions">
                 <button class="btn btn-secondary btn-large" data-action="chamadas-compartilhar">
-                    📤 Compartilhar
+                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5"/><path d="M15.4 6.5 8.6 10.5"/></svg></span>Compartilhar
                 </button>
                 <button class="btn btn-primary btn-large" data-action="chamadas-exportar-csv">
-                    📥 Baixar CSV
+                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg></span>Baixar CSV
                 </button>
                 <button class="btn btn-success btn-large" data-action="app-voltar-para-turma">
                     ✓ Concluir
@@ -463,15 +463,15 @@
                 <h3>Dados</h3>
 
                 <button class="btn btn-secondary btn-block" data-action="app-exportar-backup">
-                    📦 Exportar Backup
+                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z"/><path d="M3 8.5V16l9 4 9-4V8.5"/><path d="M12 13v7"/></svg></span>Exportar Backup
                 </button>
 
                 <button class="btn btn-secondary btn-block" data-action="app-importar-backup">
-                    📥 Importar Backup
+                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 21V9"/><path d="m17 14-5-5-5 5"/><path d="M4 3h16"/></svg></span>Importar Backup
                 </button>
 
                 <button class="btn btn-danger btn-block" data-action="app-limpar-dados">
-                    🗑️ Limpar Todos os Dados
+                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></span>Limpar Todos os Dados
                 </button>
             </div>
 
@@ -621,7 +621,7 @@
                 <div class="form-group center-content" style="text-align: center; margin-bottom: 20px;">
                     <div id="aluno-foto-preview" class="avatar-placeholder"
                         data-action="alunos-escolher-fonte-foto">
-                        <span id="foto-placeholder-icon" style="font-size: 24px;">📷</span>
+                        <span id="foto-placeholder-icon" style="font-size: 24px;"><svg class="icon-svg icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3V4"/><path d="M20 7h-3V4"/><path d="M4 17h3v3"/><path d="M20 17h-3v3"/><rect x="6" y="7" width="12" height="10" rx="2"/></svg></span>
                         <span id="foto-placeholder-text"
                             style="font-size: 12px; display: block; margin-top: 4px; color: var(--primary);">Adicionar
                             Foto</span>
@@ -631,7 +631,7 @@
                 </div>
                 <div class="form-group" style="text-align: center; margin-bottom: 20px;">
                     <button type="button" class="btn btn-secondary" data-action="alunos-ler-qr-existente">
-                        📷 Ler QR Existente
+                        <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M4 4h6v6H4z"/><path d="M14 4h6v6h-6z"/><path d="M4 14h6v6H4z"/><path d="M14 14h2"/><path d="M18 14h2"/><path d="M14 18h2"/><path d="M18 18h2"/></svg></span>Ler QR Existente
                     </button>
                     <br>
                     <small class="text-muted">Importar dados de um QR Code já cadastrado</small>
@@ -647,7 +647,7 @@
 
                 <div id="aluno-pontos-section" class="aluno-pontos-section" style="display: none;">
                     <div class="aluno-pontos-header">
-                        <h4>📌 Pontuação do aluno</h4>
+                        <h4><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M7 8h6a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h8"/></svg></span>Pontuação do aluno</h4>
                         <div class="aluno-pontos-header-actions">
                             <button type="button" class="btn btn-secondary btn-sm" data-action="alunos-abrir-evento-ponto">
                                 Adicionar Ponto
@@ -662,7 +662,7 @@
 
                 <div class="form-group">
                     <div class="obs-label-row">
-                        <label for="input-aluno-obs">📝 Observações</label>
+                        <label for="input-aluno-obs"><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></span>Observações</label>
                         <button type="button" id="btn-obs-visibilidade" class="btn-obs-eye"
                             data-action="alunos-toggle-obs"
                             title="Ocultar/exibir esta observação do aluno">
@@ -676,9 +676,7 @@
                             </svg>
                         </button>
                     </div>
-                    <small id="obs-oculta-hint" class="obs-oculta-hint" style="display:none;">
-                        🔒 Observação marcada como privada — não aparece em relatórios para alunos
-                    </small>
+                    <small id="obs-oculta-hint" class="obs-oculta-hint" style="display:none;"><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>Observação marcada como privada e não aparece em relatórios para alunos</small>
                     <textarea id="input-aluno-obs" rows="2" placeholder="Anotações sobre o aluno"></textarea>
                 </div>
             </div>
@@ -702,10 +700,10 @@
                 <p class="text-muted" style="margin-bottom: 12px;">Como deseja adicionar a foto do aluno?</p>
                 <div class="action-buttons" style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <button type="button" class="btn btn-primary" data-action="alunos-foto-camera">
-                        📷 Tirar Foto
+                        <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M4 7h3V4"/><path d="M20 7h-3V4"/><path d="M4 17h3v3"/><path d="M20 17h-3v3"/><rect x="6" y="7" width="12" height="10" rx="2"/></svg></span>Tirar Foto
                     </button>
                     <button type="button" class="btn btn-secondary" data-action="alunos-foto-dispositivo">
-                        🖼️ Escolher do Dispositivo
+                        <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></span>Escolher do Dispositivo
                     </button>
                 </div>
             </div>
@@ -748,23 +746,33 @@
             </div>
             <div class="modal-body">
                 <button class="menu-item" data-action="menu-ir-turmas">
-                    <span class="menu-icon">🏠</span>
+                    <span class="menu-icon" aria-hidden="true">
+                        <svg class="icon-svg icon-20" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg>
+                    </span>
                     <span>Home</span>
                 </button>
                 <button class="menu-item" data-action="menu-ir-config">
-                    <span class="menu-icon">⚙️</span>
+                    <span class="menu-icon" aria-hidden="true">
+                        <svg class="icon-svg icon-20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.08V21a2 2 0 0 1-4 0v-.09a1.7 1.7 0 0 0-.4-1.08 1.7 1.7 0 0 0-1-.6 1.7 1.7 0 0 0-1.82.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.08-.4H2.9a2 2 0 0 1 0-4H3a1.7 1.7 0 0 0 1.08-.4 1.7 1.7 0 0 0 .6-1 1.7 1.7 0 0 0-.34-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6A1.7 1.7 0 0 0 10.4 2.9V2.9a2 2 0 0 1 4 0V3a1.7 1.7 0 0 0 .4 1.08 1.7 1.7 0 0 0 1 .6 1.7 1.7 0 0 0 1.82-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c0 .38.14.74.4 1a1.7 1.7 0 0 0 1.08.4h.09a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.08.4 1.7 1.7 0 0 0-.4 1Z"/></svg>
+                    </span>
                     <span>Configurações</span>
                 </button>
                 <button class="menu-item" data-action="menu-exportar-backup">
-                    <span class="menu-icon">📦</span>
+                    <span class="menu-icon" aria-hidden="true">
+                        <svg class="icon-svg icon-20" viewBox="0 0 24 24"><path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z"/><path d="M3 8.5V16l9 4 9-4V8.5"/><path d="M12 13v7"/></svg>
+                    </span>
                     <span>Exportar Backup</span>
                 </button>
                 <button class="menu-item" data-action="app-abrir-sobre">
-                    <span class="menu-icon">🌐</span>
+                    <span class="menu-icon" aria-hidden="true">
+                        <svg class="icon-svg icon-20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10Z"/></svg>
+                    </span>
                     <span>Sobre o Chamada Fácil</span>
                 </button>
                 <button class="menu-item" data-action="menu-abrir-ajuda">
-                    <span class="menu-icon">❓</span>
+                    <span class="menu-icon" aria-hidden="true">
+                        <svg class="icon-svg icon-20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.4 1.8c-.7.9-1.5 1.3-1.9 2.2-.1.2-.1.5-.1 1"/><path d="M12 17h.01"/></svg>
+                    </span>
                     <span>Ajuda</span>
                 </button>
             </div>
@@ -775,7 +783,7 @@
     <div id="modal-gerenciar-escolas" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>🏫 Gerenciar Escolas</h3>
+                <h3><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-20" viewBox="0 0 24 24"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg></span>Gerenciar Escolas</h3>
                 <button class="btn-close" data-action="close-modal" data-modal-id="modal-gerenciar-escolas">×</button>
             </div>
             <div class="modal-body">
@@ -792,11 +800,11 @@
                     <label>Logo da Escola (opcional)</label>
                     <div class="escola-foto-add-row">
                         <div id="escola-foto-preview-nova" class="escola-foto-preview-mini" data-action="escolas-click-foto-nova" title="Clique para adicionar logo">
-                            <span>🏫</span>
+                            <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-20" viewBox="0 0 24 24"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg></span>
                         </div>
                         <div>
                             <button type="button" class="btn btn-secondary btn-sm" data-action="escolas-click-foto-nova">
-                                📷 Selecionar Logo
+                                <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M4 7h3V4"/><path d="M20 7h-3V4"/><path d="M4 17h3v3"/><path d="M20 17h-3v3"/><rect x="6" y="7" width="12" height="10" rx="2"/></svg></span>Selecionar Logo
                             </button>
                             <button type="button" class="btn btn-secondary btn-sm" id="btn-remover-foto-nova-escola" style="display:none;" data-action="escolas-remover-foto-nova">
                                 Remover
@@ -833,11 +841,11 @@
                     <label>Logo da Escola (opcional)</label>
                     <div class="escola-foto-add-row">
                         <div id="escola-foto-preview-editar" class="escola-foto-preview-mini" data-action="escolas-click-foto-editar" title="Clique para alterar logo">
-                            <span>🏫</span>
+                            <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-20" viewBox="0 0 24 24"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg></span>
                         </div>
                         <div>
                             <button type="button" class="btn btn-secondary btn-sm" data-action="escolas-click-foto-editar">
-                                📷 Alterar Logo
+                                <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M4 7h3V4"/><path d="M20 7h-3V4"/><path d="M4 17h3v3"/><path d="M20 17h-3v3"/><rect x="6" y="7" width="12" height="10" rx="2"/></svg></span>Alterar Logo
                             </button>
                             <button type="button" class="btn btn-secondary btn-sm" id="btn-remover-foto-editar-escola" style="display:none;" data-action="escolas-remover-foto-editar">
                                 Remover
@@ -871,7 +879,7 @@
                 </p>
 
                 <p style="margin-top: 12px;">
-                    📧 E-mail:
+                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>E-mail:
                     <a href="mailto:contato@chamadafacil.net.br">
                         contato@chamadafacil.net.br
                     </a>
@@ -882,7 +890,7 @@
                 <div style="margin-top: 24px; text-align: center;">
                     <a href="https://www.chamadafacil.net.br" target="_blank" rel="noopener noreferrer" class="btn btn-primary"
                         style="text-decoration: none; display: inline-block;">
-                        🌐 Site Oficial
+                        <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10Z"/></svg></span>Site Oficial
                     </a>
                 </div>
             </div>
@@ -893,21 +901,21 @@
     <div id="modal-relatorios" class="modal">
         <div class="modal-content modal-relatorios-content">
             <div class="modal-header">
-                <h3>📊 Relatórios</h3>
+                <h3><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-20" viewBox="0 0 24 24"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="6"/><rect x="12" y="7" width="3" height="9"/><rect x="17" y="5" width="3" height="11"/></svg></span>Relatórios</h3>
                 <button class="btn-close" data-action="close-modal" data-modal-id="modal-relatorios">×</button>
             </div>
             <div class="modal-body">
                 <div class="relatorio-secao">
-                    <h4 class="relatorio-secao-titulo">📅 Relatório Mensal de Chamadas</h4>
+                    <h4 class="relatorio-secao-titulo"><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M8 2h8"/><path d="M9 2v2"/><path d="M15 2v2"/><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M8 11h8"/><path d="M8 15h5"/></svg></span>Relatório Mensal de Chamadas</h4>
                     <p class="text-muted" style="font-size: 13px; margin-bottom: 10px;">
                         Exporta a tabela de presença/falta do mês selecionado no Diário de Classe.
                     </p>
                     <div class="relatorio-secao-acoes">
                         <button class="btn btn-secondary btn-sm" data-action="chamadas-exportar-relatorio-csv">
-                            📄 Exportar Plan
+                            <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></span>Exportar Plan
                         </button>
                         <button class="btn btn-secondary btn-sm" data-action="chamadas-exportar-relatorio-pdf">
-                            🖨️ Exportar PDF
+                            <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M6 9V4h12v5"/><rect x="4" y="9" width="16" height="7" rx="2"/><path d="M6 16h12v4H6z"/></svg></span>Exportar PDF
                         </button>
                     </div>
                 </div>
@@ -915,13 +923,13 @@
                 <hr style="margin: 20px 0; border-color: var(--border);">
 
                 <div class="relatorio-secao">
-                    <h4 class="relatorio-secao-titulo">⭐ Pontuação</h4>
+                    <h4 class="relatorio-secao-titulo"><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M7 8h6a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h8"/></svg></span>Pontuação</h4>
                     <p class="text-muted" style="font-size: 13px; margin-bottom: 10px;">
                         Totalização da pontuação por aluno no mês selecionado no Diário de Classe.
                     </p>
                     <div class="relatorio-secao-acoes">
                         <button class="btn btn-secondary btn-sm" data-action="chamadas-gerar-pontos-pdf">
-                            🖨️ Gerar PDF de Pontos
+                            <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M6 9V4h12v5"/><rect x="4" y="9" width="16" height="7" rx="2"/><path d="M6 16h12v4H6z"/></svg></span>Gerar PDF de Pontos
                         </button>
                     </div>
                     <div id="relatorio-pontos-preview" class="relatorio-pontos-preview" style="margin-top: 12px;"></div>
@@ -961,5 +969,15 @@
 </body>
 
 </html>
+
+
+
+
+
+
+
+
+
+
 
 

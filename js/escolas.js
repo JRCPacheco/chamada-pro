@@ -6,6 +6,12 @@ const escolas = {
 
     fotoNovaTemp: null,
     fotoEditarTemp: null,
+    _iconSchoolSvg(sizeClass = 'icon-16') {
+        return `<svg class="icon-svg ${sizeClass}" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg>`;
+    },
+    _iconTrashSvg(sizeClass = 'icon-16') {
+        return `<svg class="icon-svg ${sizeClass}" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>`;
+    },
 
     // Listar escolas no modal de gerenciamento
     async listarEscolas() {
@@ -20,6 +26,8 @@ const escolas = {
         }
 
         const allTurmas = await db.getAll('turmas');
+        const iconSchool = this._iconSchoolSvg('icon-16');
+        const iconTrash = this._iconTrashSvg('icon-16');
 
         container.innerHTML = escolasArray.map(escola => {
             const isDefault = escola.id === 'default';
@@ -27,7 +35,7 @@ const escolas = {
             const temTurmas = turmasDaEscola.length > 0;
             const logoHtml = escola.foto
                 ? `<img src="${escola.foto}" class="escola-item-logo" alt="Logo">`
-                : `<div class="escola-foto-preview-mini" style="width:36px;height:36px;font-size:18px;cursor:default;pointer-events:none;"><span>&#127979;</span></div>`;
+                : `<div class="escola-foto-preview-mini" style="width:36px;height:36px;font-size:18px;cursor:default;pointer-events:none;">${iconSchool}</div>`;
 
             return `
                 <div class="escola-item" data-action="escolas-abrir-editar-item" data-escola-id="${escola.id}" role="button" tabindex="0" title="Editar escola">
@@ -42,7 +50,7 @@ const escolas = {
                     <div class="escola-item-actions">
                         ${!isDefault ? `
                             <button class="btn-icon btn-sm" data-action="escolas-excluir-item" data-escola-id="${escola.id}" title="Excluir">
-                                &#128465;&#65039;
+                                ${iconTrash}
                             </button>
                         ` : ''}
                     </div>
@@ -116,7 +124,7 @@ const escolas = {
 
     resetarFotoNova() {
         const preview = document.getElementById('escola-foto-preview-nova');
-        if (preview) preview.innerHTML = '<span>&#127979;</span>';
+        if (preview) preview.innerHTML = this._iconSchoolSvg('icon-20');
         const btnRemover = document.getElementById('btn-remover-foto-nova-escola');
         if (btnRemover) btnRemover.style.display = 'none';
         const input = document.getElementById('input-escola-foto-nova');
@@ -139,7 +147,7 @@ const escolas = {
     removerFotoEditar() {
         this.fotoEditarTemp = null;
         const preview = document.getElementById('escola-foto-preview-editar');
-        if (preview) preview.innerHTML = '<span>&#127979;</span>';
+        if (preview) preview.innerHTML = this._iconSchoolSvg('icon-20');
         const btnRemover = document.getElementById('btn-remover-foto-editar-escola');
         if (btnRemover) btnRemover.style.display = 'none';
         const input = document.getElementById('input-escola-foto-editar');
@@ -193,7 +201,7 @@ const escolas = {
                 preview.innerHTML = `<img src="${escola.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">`;
                 if (btnRemover) btnRemover.style.display = '';
             } else {
-                if (preview) preview.innerHTML = '<span>&#127979;</span>';
+                if (preview) preview.innerHTML = this._iconSchoolSvg('icon-20');
                 if (btnRemover) btnRemover.style.display = 'none';
             }
 
