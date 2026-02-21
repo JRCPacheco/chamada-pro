@@ -238,7 +238,7 @@ const qrgen = {
             <div class="modal-content" style="max-width: 400px; text-align: center;">
                 <div class="modal-header">
                     <h3>QR Code - ${utils.escapeHtml(nome)}</h3>
-                    <button class="btn-close" onclick="this.closest('.modal').remove()">×</button>
+                    <button class="btn-close" data-action="close-nearest-modal">×</button>
                 </div>
                 <div class="modal-body">
                     <div id="qr-individual-container" style="display: flex; justify-content: center; margin: 20px 0;">

@@ -41,10 +41,10 @@ const escolas = {
                     </div>
                     <div class="escola-item-actions">
                         ${!isDefault ? `
-                            <button class="btn-icon btn-sm" onclick="escolas.abrirModalEditar('${escola.id}')" title="Editar">
+                            <button class="btn-icon btn-sm" data-action="escolas-abrir-editar-item" data-escola-id="${escola.id}" title="Editar">
                                 ✏️
                             </button>
-                            <button class="btn-icon btn-sm" onclick="escolas.excluirEscola('${escola.id}')" title="Excluir">
+                            <button class="btn-icon btn-sm" data-action="escolas-excluir-item" data-escola-id="${escola.id}" title="Excluir">
                                 🗑️
                             </button>
                         ` : ''}

@@ -144,6 +144,33 @@ Na aba "Histórico" você pode:
 - 📷 Câmera (para escanear QR Codes)
 - 💾 Armazenamento local (para salvar dados)
 
+### Release Checklist (Service Worker)
+Antes de publicar uma nova versão:
+1. Atualize `SW_VERSION` em `sw.js` (ex: `v2` -> `v3`) sempre que mudar arquivos estáticos.
+2. Publique os arquivos atualizados (`index.html`, `css/`, `js/`, `libs/`, `assets/`, `manifest.json`, `sw.js`).
+3. Valide no navegador:
+   - online: app carrega normalmente;
+   - offline: app continua abrindo;
+   - update: ao publicar nova versão, o aviso de atualização aparece e o reload aplica a versão nova.
+
+### Segurança Web (CSP)
+- O app usa CSP via `<meta http-equiv="Content-Security-Policy">` em `index.html`.
+- Ao incluir novos recursos externos (scripts, fontes, APIs, imagens), atualize a CSP para evitar bloqueio em produção.
+
+### Checklist Formal de Release
+- Siga `RELEASE-CHECKLIST.md` antes de cada publicação web/PWA.
+- Para validação iOS sem device físico, execute `QA-IOS-REMOTO.md`.
+
+### Versão do App (Menu > Sobre)
+Fonte única da versão exibida no app:
+- Arquivo: `js/app-version.js`
+- Campos: `version`, `stage` e `label` (ex: `v0.3.6-beta`)
+
+Fluxo recomendado em release:
+1. Atualize `js/app-version.js` para a nova versão.
+2. Faça bump de `SW_VERSION` em `sw.js`.
+3. Publique e valide atualização (online/offline/update).
+
 ---
 
 ## 📊 Formato de Exportação CSV
@@ -232,7 +259,7 @@ Este projeto foi desenvolvido para uso educacional.
 
 ## 👨‍💻 Desenvolvimento
 
-**Versão**: 1.0
+**Versão**: definida em `js/app-version.js`
 **Data**: Janeiro 2026
 **Tecnologias**: HTML5, CSS3, JavaScript (Vanilla), Html5-QrCode, jsPDF, QRCode.js
 

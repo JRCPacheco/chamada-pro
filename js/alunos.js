@@ -567,8 +567,8 @@ const alunos = {
                             <div class="evento-ponto-meta">${dataFmt}</div>
                         </div>
                         <div class="evento-ponto-actions">
-                            <button class="btn-icon-sm" onclick="alunos.editarEventoPonto('${evento.id}')" title="Editar">🖉</button>
-                            <button class="btn-icon-sm" onclick="alunos.excluirEventoPonto('${evento.id}')" title="Excluir">🗑</button>
+                            <button class="btn-icon-sm" data-action="alunos-editar-evento-ponto" data-evento-id="${evento.id}" title="Editar">🖉</button>
+                            <button class="btn-icon-sm" data-action="alunos-excluir-evento-ponto" data-evento-id="${evento.id}" title="Excluir">🗑</button>
                         </div>
                     </div>
                 `;

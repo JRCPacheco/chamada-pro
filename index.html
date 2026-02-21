@@ -3,6 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; manifest-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' blob:; worker-src 'self' blob:">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Chamada Fácil - Scanner de Presença</title>
 
@@ -16,11 +18,10 @@
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="assets/logo1024.svg">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
 
     <!-- Styles -->
     <link rel="stylesheet" href="css/inter-local.css?v=1">
@@ -76,7 +77,7 @@
             </div>
 
             <div class="onboarding-actions">
-                <button class="btn btn-primary onboarding-cta" onclick="app.concluirOnboarding(true)">
+                <button class="btn btn-primary onboarding-cta" data-action="app-concluir-onboarding">
                     Começar Agora
                 </button>
             </div>
@@ -142,7 +143,7 @@
                         <span>Várias escolas</span>
                     </label>
                     <div id="btn-gerenciar-escolas-container" class="multi-escola-only hidden" style="display:none;">
-                        <button class="btn btn-secondary btn-sm" onclick="escolas.mostrarModalGerenciar()">
+                        <button class="btn btn-secondary btn-sm" data-action="escolas-mostrar-gerenciar">
                             🏫 Gerenciar Escolas
                         </button>
                     </div>
@@ -158,7 +159,7 @@
 
                 <!-- Linha 3: botão Adicionar turma centralizado -->
                 <div class="adicionar-turma-wrapper">
-                    <button class="btn-adicionar-turma" onclick="turmas.mostrarModalNovaTurma()">
+                    <button class="btn-adicionar-turma" data-action="turmas-mostrar-nova">
                         Adicionar turma
                     </button>
                 </div>
@@ -172,7 +173,7 @@
                 <div class="empty-icon">📚</div>
                 <h3>Nenhuma turma cadastrada</h3>
                 <p>Crie sua primeira turma para começar</p>
-                <button class="btn btn-primary" onclick="turmas.mostrarModalNovaTurma()">
+                <button class="btn btn-primary" data-action="turmas-mostrar-nova">
                     Criar Turma
                 </button>
             </div>
@@ -195,21 +196,21 @@
                         </span>
                         <span class="toggle-switch">
                             <input type="checkbox" id="input-detalhe-segundo-horario"
-                                onchange="turmas.alterarSegundoHorarioDetalhe(this)" />
+                                data-change="turmas-segundo-horario" />
                             <span class="toggle-slider" aria-hidden="true"></span>
                         </span>
                     </label>
                     <div class="turma-actions">
-                        <button class="btn btn-secondary btn-sm turma-action-btn" onclick="turmas.editarTurma(turmas.turmaAtual?.id)">
+                        <button class="btn btn-secondary btn-sm turma-action-btn" data-action="turmas-editar-atual">
                             Editar Turma
                         </button>
-                        <button class="btn btn-secondary btn-sm turma-action-btn" onclick="turmas.exportarBackupTurmaAtual()">
+                        <button class="btn btn-secondary btn-sm turma-action-btn" data-action="turmas-exportar-backup-atual">
                             Backup da Turma
                         </button>
-                        <button class="btn btn-secondary btn-sm turma-action-btn" onclick="turmas.recuperarBackupTurmaAtual()">
+                        <button class="btn btn-secondary btn-sm turma-action-btn" data-action="turmas-recuperar-backup-atual">
                             Recuperar Turma
                         </button>
-                        <button class="btn btn-danger btn-sm turma-action-btn" onclick="turmas.excluirTurma(turmas.turmaAtual?.id)">
+                        <button class="btn btn-danger btn-sm turma-action-btn" data-action="turmas-excluir-atual">
                             Excluir Turma
                         </button>
                     </div>
@@ -226,13 +227,13 @@
                 <div class="section-header">
                     <h3>Lista de Alunos</h3>
                     <div class="action-buttons">
-                        <button class="btn btn-primary btn-sm" onclick="alunos.mostrarModalNovoAluno()">
+                        <button class="btn btn-primary btn-sm" data-action="alunos-mostrar-novo">
                             Adicionar
                         </button>
-                        <button class="btn btn-secondary btn-sm" onclick="alunos.importarCSV()">
+                        <button class="btn btn-secondary btn-sm" data-action="alunos-importar-csv">
                             📥 Importar planilha
                         </button>
-                        <button class="btn btn-secondary btn-sm" onclick="alunos.gerarQRCodesPDF()">
+                        <button class="btn btn-secondary btn-sm" data-action="alunos-gerar-qr-pdf">
                             📄 Gerar QR Codes
                         </button>
                     </div>
@@ -266,26 +267,26 @@
                 <div class="section-header">
                     <h3>Histórico de Chamadas</h3>
                     <div class="action-buttons">
-                        <button class="btn btn-secondary btn-sm" onclick="chamadas.exportarHistorico()">
+                        <button class="btn btn-secondary btn-sm" data-action="chamadas-exportar-historico">
                             Exportar Tudo
                         </button>
                         <button class="btn btn-secondary btn-sm" id="btn-historico-selecionar"
-                            onclick="chamadas.alternarModoSelecaoHistorico()">
+                            data-action="chamadas-toggle-selecao">
                             Selecionar
                         </button>
                         <button class="btn btn-secondary btn-sm" id="btn-historico-selecionar-todas"
-                            onclick="chamadas.alternarSelecionarTodasHistorico()" style="display: none;">
+                            data-action="chamadas-selecionar-todas" style="display: none;">
                             Selecionar Todas
                         </button>
                         <button class="btn btn-danger btn-sm" id="btn-historico-excluir-selecionadas"
-                            onclick="chamadas.excluirChamadasSelecionadas()" style="display: none;">
+                            data-action="chamadas-excluir-selecionadas" style="display: none;">
                             Excluir Selecionadas
                         </button>
                         <button class="btn btn-secondary btn-sm" id="btn-historico-cancelar-selecao"
-                            onclick="chamadas.cancelarModoSelecaoHistorico()" style="display: none;">
+                            data-action="chamadas-cancelar-selecao" style="display: none;">
                             Cancelar
                         </button>
-                        <button class="btn btn-primary btn-sm" onclick="chamadas.abrirModalRelatorios()">
+                        <button class="btn btn-primary btn-sm" data-action="chamadas-abrir-relatorios">
                             📊 Relatórios
                         </button>
                     </div>
@@ -302,7 +303,7 @@
                 </div>
             </div>
 
-            <button class="btn-fab" onclick="scanner.iniciarChamada(turmas.turmaAtual?.id)">
+            <button class="btn-fab" data-action="scanner-iniciar">
                 📷
             </button>
         </div>
@@ -381,13 +382,13 @@
             </div>
 
             <div class="resumo-actions">
-                <button class="btn btn-secondary btn-large" onclick="chamadas.compartilhar()">
+                <button class="btn btn-secondary btn-large" data-action="chamadas-compartilhar">
                     📤 Compartilhar
                 </button>
-                <button class="btn btn-primary btn-large" onclick="chamadas.exportarCSV()">
+                <button class="btn btn-primary btn-large" data-action="chamadas-exportar-csv">
                     📥 Baixar CSV
                 </button>
-                <button class="btn btn-success btn-large" onclick="app.voltarParaTurma()">
+                <button class="btn btn-success btn-large" data-action="app-voltar-para-turma">
                     ✓ Concluir
                 </button>
             </div>
@@ -432,10 +433,10 @@
                 </div>
 
                 <div class="config-profile-actions">
-                    <button class="btn btn-primary" onclick="app.salvarNomeProfessor()">
+                    <button class="btn btn-primary" data-action="app-salvar-professor">
                         Salvar Nome
                     </button>
-                    <button class="btn btn-secondary" onclick="app.removerNomeProfessor()">
+                    <button class="btn btn-secondary" data-action="app-remover-professor">
                         Remover Nome
                     </button>
                 </div>
@@ -444,15 +445,15 @@
             <div class="config-section">
                 <h3>Dados</h3>
 
-                <button class="btn btn-secondary btn-block" onclick="app.exportarBackup()">
+                <button class="btn btn-secondary btn-block" data-action="app-exportar-backup">
                     📦 Exportar Backup
                 </button>
 
-                <button class="btn btn-secondary btn-block" onclick="app.importarBackup()">
+                <button class="btn btn-secondary btn-block" data-action="app-importar-backup">
                     📥 Importar Backup
                 </button>
 
-                <button class="btn btn-danger btn-block" onclick="app.limparTodosDados()">
+                <button class="btn btn-danger btn-block" data-action="app-limpar-dados">
                     🗑️ Limpar Todos os Dados
                 </button>
             </div>
@@ -466,7 +467,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Nova Turma</h3>
-                <button class="btn-close" onclick="app.fecharModal('modal-nova-turma')">×</button>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-nova-turma">×</button>
             </div>
             <div class="modal-body">
                 <!-- MULTI ESCOLA: exibido somente quando config.multi_escola === true -->
@@ -501,8 +502,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="app.fecharModal('modal-nova-turma')">Cancelar</button>
-                <button class="btn btn-primary" onclick="turmas.salvarNovaTurma()">Criar Turma</button>
+                <button class="btn btn-secondary" data-action="close-modal" data-modal-id="modal-nova-turma">Cancelar</button>
+                <button class="btn btn-primary" data-action="turmas-salvar-nova">Criar Turma</button>
             </div>
         </div>
     </div>
@@ -513,22 +514,22 @@
             <div class="modal-header">
                 <h3 id="modal-aluno-titulo">Novo Aluno</h3>
                 <button class="btn-close"
-                    onclick="alunos.resetarPreviewFoto(); app.fecharModal('modal-novo-aluno')">×</button>
+                    data-action="alunos-cancelar-modal">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group center-content" style="text-align: center; margin-bottom: 20px;">
                     <div id="aluno-foto-preview" class="avatar-placeholder"
-                        onclick="alunos.escolherFonteFoto()">
+                        data-action="alunos-escolher-fonte-foto">
                         <span id="foto-placeholder-icon" style="font-size: 24px;">📷</span>
                         <span id="foto-placeholder-text"
                             style="font-size: 12px; display: block; margin-top: 4px; color: var(--primary);">Adicionar
                             Foto</span>
                     </div>
                     <input type="file" id="input-aluno-foto" accept="image/*"
-                        style="display: none;" onchange="alunos.processarFoto(this.files[0])">
+                        style="display: none;" data-change="alunos-processar-foto">
                 </div>
                 <div class="form-group" style="text-align: center; margin-bottom: 20px;">
-                    <button type="button" class="btn btn-secondary" onclick="alunos.lerQrExistente()">
+                    <button type="button" class="btn btn-secondary" data-action="alunos-ler-qr-existente">
                         📷 Ler QR Existente
                     </button>
                     <br>
@@ -547,7 +548,7 @@
                     <div class="aluno-pontos-header">
                         <h4>📌 Pontuação do aluno</h4>
                         <div class="aluno-pontos-header-actions">
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="alunos.abrirModalEventoPonto()">
+                            <button type="button" class="btn btn-secondary btn-sm" data-action="alunos-abrir-evento-ponto">
                                 Adicionar Ponto
                             </button>
                             <span id="aluno-pontos-total" class="aluno-pontos-total">Total de pontos: 0</span>
@@ -562,7 +563,7 @@
                     <div class="obs-label-row">
                         <label for="input-aluno-obs">📝 Observações</label>
                         <button type="button" id="btn-obs-visibilidade" class="btn-obs-eye"
-                            onclick="alunos.toggleObsVisibilidade()"
+                            data-action="alunos-toggle-obs"
                             title="Ocultar/exibir esta observação do aluno">
                             <svg id="obs-eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -582,33 +583,33 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary"
-                    onclick="alunos.resetarPreviewFoto(); app.fecharModal('modal-novo-aluno')">Cancelar</button>
-                <button class="btn btn-primary" id="btn-salvar-aluno" onclick="alunos.salvarNovoAluno()">Salvar</button>
+                    data-action="alunos-cancelar-modal">Cancelar</button>
+                <button class="btn btn-primary" id="btn-salvar-aluno" data-action="alunos-salvar">Salvar</button>
             </div>
         </div>
     </div>
 
     <!-- Modal: Fonte da Foto -->
     <div id="modal-fonte-foto" class="modal"
-        onclick="if (event.target === this) app.fecharModal('modal-fonte-foto')">
+        data-overlay-close="modal-fonte-foto">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Adicionar Foto</h3>
-                <button class="btn-close" onclick="app.fecharModal('modal-fonte-foto')">×</button>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-fonte-foto">×</button>
             </div>
             <div class="modal-body">
                 <p class="text-muted" style="margin-bottom: 12px;">Como deseja adicionar a foto do aluno?</p>
                 <div class="action-buttons" style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button type="button" class="btn btn-primary" onclick="alunos.escolherFotoPelaCamera()">
+                    <button type="button" class="btn btn-primary" data-action="alunos-foto-camera">
                         📷 Tirar Foto
                     </button>
-                    <button type="button" class="btn btn-secondary" onclick="alunos.escolherFotoDoDispositivo()">
+                    <button type="button" class="btn btn-secondary" data-action="alunos-foto-dispositivo">
                         🖼️ Escolher do Dispositivo
                     </button>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="app.fecharModal('modal-fonte-foto')">Cancelar</button>
+                <button class="btn btn-secondary" data-action="close-modal" data-modal-id="modal-fonte-foto">Cancelar</button>
             </div>
         </div>
     </div>
@@ -618,7 +619,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modal-evento-ponto-titulo">Adicionar Ponto</h3>
-                <button class="btn-close" onclick="app.fecharModal('modal-evento-ponto')">×</button>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-evento-ponto">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -631,8 +632,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="app.fecharModal('modal-evento-ponto')">Cancelar</button>
-                <button class="btn btn-primary" onclick="alunos.salvarEventoPonto()">Salvar</button>
+                <button class="btn btn-secondary" data-action="close-modal" data-modal-id="modal-evento-ponto">Cancelar</button>
+                <button class="btn btn-primary" data-action="alunos-salvar-evento-ponto">Salvar</button>
             </div>
         </div>
     </div>
@@ -642,26 +643,26 @@
         <div class="modal-content modal-menu-content">
             <div class="modal-header">
                 <h3>Menu</h3>
-                <button class="btn-close" onclick="app.fecharModal('modal-menu')">×</button>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-menu">×</button>
             </div>
             <div class="modal-body">
-                <button class="menu-item" onclick="app.mostrarTela('tela-turmas'); app.fecharModal('modal-menu');">
+                <button class="menu-item" data-action="menu-ir-turmas">
                     <span class="menu-icon">🏠</span>
                     <span>Minhas Turmas</span>
                 </button>
-                <button class="menu-item" onclick="app.mostrarTela('tela-config'); app.fecharModal('modal-menu');">
+                <button class="menu-item" data-action="menu-ir-config">
                     <span class="menu-icon">⚙️</span>
                     <span>Configurações</span>
                 </button>
-                <button class="menu-item" onclick="app.exportarBackup(); app.fecharModal('modal-menu');">
+                <button class="menu-item" data-action="menu-exportar-backup">
                     <span class="menu-icon">📦</span>
                     <span>Exportar Backup</span>
                 </button>
-                <button class="menu-item" onclick="app.abrirSobre()">
+                <button class="menu-item" data-action="app-abrir-sobre">
                     <span class="menu-icon">🌐</span>
                     <span>Sobre o Chamada Fácil</span>
                 </button>
-                <button class="menu-item" onclick="app.mostrarAjuda(); app.fecharModal('modal-menu');">
+                <button class="menu-item" data-action="menu-abrir-ajuda">
                     <span class="menu-icon">❓</span>
                     <span>Ajuda</span>
                 </button>
@@ -674,14 +675,14 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>🏫 Gerenciar Escolas</h3>
-                <button class="btn-close" onclick="app.fecharModal('modal-gerenciar-escolas')">×</button>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-gerenciar-escolas">×</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
                     <label>Nome da Escola *</label>
                     <div style="display: flex; gap: 8px;">
                         <input type="text" id="input-nova-escola" placeholder="Ex: Colégio São José" style="flex: 1;" />
-                        <button class="btn btn-primary" onclick="escolas.adicionarEscola()">
+                        <button class="btn btn-primary" data-action="escolas-adicionar">
                             Adicionar
                         </button>
                     </div>
@@ -689,21 +690,21 @@
                 <div class="form-group" style="margin-top: 12px;">
                     <label>Logo da Escola (opcional)</label>
                     <div class="escola-foto-add-row">
-                        <div id="escola-foto-preview-nova" class="escola-foto-preview-mini" onclick="document.getElementById('input-escola-foto-nova').click()" title="Clique para adicionar logo">
+                        <div id="escola-foto-preview-nova" class="escola-foto-preview-mini" data-action="escolas-click-foto-nova" title="Clique para adicionar logo">
                             <span>🏫</span>
                         </div>
                         <div>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('input-escola-foto-nova').click()">
+                            <button type="button" class="btn btn-secondary btn-sm" data-action="escolas-click-foto-nova">
                                 📷 Selecionar Logo
                             </button>
-                            <button type="button" class="btn btn-secondary btn-sm" id="btn-remover-foto-nova-escola" style="display:none;" onclick="escolas.removerFotoNova()">
+                            <button type="button" class="btn btn-secondary btn-sm" id="btn-remover-foto-nova-escola" style="display:none;" data-action="escolas-remover-foto-nova">
                                 Remover
                             </button>
                             <br><small class="text-muted">Será usada nos relatórios em PDF.</small>
                         </div>
                     </div>
                     <input type="file" id="input-escola-foto-nova" accept="image/*" style="display:none;"
-                        onchange="escolas.processarFotoNova(this.files[0])">
+                        data-change="escolas-processar-foto-nova">
                 </div>
 
                 <h4 style="margin-top: 24px; margin-bottom: 12px;">Escolas Cadastradas</h4>
@@ -719,7 +720,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Editar Escola</h3>
-                <button class="btn-close" onclick="app.fecharModal('modal-editar-escola')">×</button>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-editar-escola">×</button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="input-editar-escola-id">
@@ -730,25 +731,25 @@
                 <div class="form-group" style="margin-top: 12px;">
                     <label>Logo da Escola (opcional)</label>
                     <div class="escola-foto-add-row">
-                        <div id="escola-foto-preview-editar" class="escola-foto-preview-mini" onclick="document.getElementById('input-escola-foto-editar').click()" title="Clique para alterar logo">
+                        <div id="escola-foto-preview-editar" class="escola-foto-preview-mini" data-action="escolas-click-foto-editar" title="Clique para alterar logo">
                             <span>🏫</span>
                         </div>
                         <div>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('input-escola-foto-editar').click()">
+                            <button type="button" class="btn btn-secondary btn-sm" data-action="escolas-click-foto-editar">
                                 📷 Alterar Logo
                             </button>
-                            <button type="button" class="btn btn-secondary btn-sm" id="btn-remover-foto-editar-escola" style="display:none;" onclick="escolas.removerFotoEditar()">
+                            <button type="button" class="btn btn-secondary btn-sm" id="btn-remover-foto-editar-escola" style="display:none;" data-action="escolas-remover-foto-editar">
                                 Remover
                             </button>
                         </div>
                     </div>
                     <input type="file" id="input-escola-foto-editar" accept="image/*" style="display:none;"
-                        onchange="escolas.processarFotoEditar(this.files[0])">
+                        data-change="escolas-processar-foto-editar">
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="app.fecharModal('modal-editar-escola')">Cancelar</button>
-                <button class="btn btn-primary" onclick="escolas.salvarEdicaoEscola()">Salvar</button>
+                <button class="btn btn-secondary" data-action="close-modal" data-modal-id="modal-editar-escola">Cancelar</button>
+                <button class="btn btn-primary" data-action="escolas-salvar-edicao">Salvar</button>
             </div>
         </div>
     </div>
@@ -758,14 +759,14 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Sobre o Chamada Fácil</h3>
-                <button class="btn-close" onclick="app.fecharModal('modal-sobre')">×</button>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-sobre">×</button>
             </div>
             <div class="modal-body">
                 <p><strong>Chamada Fácil</strong></p>
                 <p>Sistema de chamada escolar com QR Code, focado em agilidade para professores.</p>
 
                 <p style="margin-top: 12px;">
-                    Versão: <strong>v0.3.5-beta</strong><br>
+                    Versão: <strong data-app-version>v0.0.0-dev</strong><br>
                 </p>
 
                 <p style="margin-top: 12px;">
@@ -792,7 +793,7 @@
         <div class="modal-content modal-relatorios-content">
             <div class="modal-header">
                 <h3>📊 Relatórios</h3>
-                <button class="btn-close" onclick="app.fecharModal('modal-relatorios')">×</button>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-relatorios">×</button>
             </div>
             <div class="modal-body">
                 <div class="relatorio-mensal-controls" style="margin-bottom: 16px;">
@@ -806,10 +807,10 @@
                         Tabela de presença e falta por aluno no mês selecionado.
                     </p>
                     <div class="relatorio-secao-acoes">
-                        <button class="btn btn-secondary btn-sm" onclick="chamadas.exportarRelatorioMensalCSV()">
+                        <button class="btn btn-secondary btn-sm" data-action="chamadas-exportar-relatorio-csv">
                             📄 Exportar Plan
                         </button>
-                        <button class="btn btn-secondary btn-sm" onclick="chamadas.exportarRelatorioMensalPDF()">
+                        <button class="btn btn-secondary btn-sm" data-action="chamadas-exportar-relatorio-pdf">
                             🖨️ Exportar PDF
                         </button>
                     </div>
@@ -824,7 +825,7 @@
                         Totalização da pontuação por aluno no mês selecionado.
                     </p>
                     <div class="relatorio-secao-acoes">
-                        <button class="btn btn-secondary btn-sm" onclick="chamadas.gerarRelatorioPontosPDF()">
+                        <button class="btn btn-secondary btn-sm" data-action="chamadas-gerar-pontos-pdf">
                             🖨️ Gerar PDF de Pontos
                         </button>
                     </div>
@@ -838,7 +839,7 @@
     <div id="qr-scan-overlay"
         style="position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column;">
         <div id="reader-temp" style="flex:1;"></div>
-        <button type="button" onclick="scanner.fecharOverlay()"
+        <button type="button" data-action="scanner-fechar-overlay"
             style="padding:16px; font-size:18px; background:#fff; border:none; cursor:pointer;">
             Fechar
         </button>
@@ -851,6 +852,7 @@
     <script src="js/utils.js?v=4"></script>
     <script src="js/db.js?v=4"></script>
     <script src="js/config-defaults.js?v=4"></script>
+    <script src="js/app-version.js?v=1"></script>
     <script src="js/escolas.js?v=4"></script>
     <script src="js/turmas.js?v=4"></script>
     <script src="js/alunos.js?v=4"></script>
