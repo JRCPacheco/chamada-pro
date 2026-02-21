@@ -156,10 +156,16 @@ const app = {
     atualizarHeader(telaId) {
         const headerTitle = document.getElementById('header-title');
         const btnBack = document.getElementById('btn-back');
+        const header = document.querySelector('.app-header');
+
+        if (telaId === 'tela-turmas') {
+            header.classList.add('tela-principal');
+        } else {
+            header.classList.remove('tela-principal');
+        }
 
         switch (telaId) {
             case 'tela-turmas':
-                headerTitle.textContent = 'Minhas Turmas';
                 btnBack.style.display = 'none';
                 break;
             case 'tela-turma-detalhe':

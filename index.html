@@ -22,7 +22,7 @@
         href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
 
     <!-- Styles -->
-    <link rel="stylesheet" href="css/styles.css?v=3">
+    <link rel="stylesheet" href="css/styles.css?v=4">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -98,6 +98,10 @@
             </button>
             <div class="header-logo">
                 <img src="assets/logo1024.svg" alt="Chamada PRO" class="logo-img">
+                <div class="header-wordmark">
+                    <span class="wordmark-top">Chamada</span>
+                    <span class="wordmark-bottom">Fácil</span>
+                </div>
             </div>
             <h1 id="header-title">Minhas Turmas</h1>
             <button class="btn-icon btn-menu" id="btn-menu">
@@ -110,45 +114,55 @@
             <div class="turmas-header">
                 <div class="stats-row">
                     <div class="stat-card">
+                        <div class="stat-icon stat-icon--turmas">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
+                        </div>
                         <div class="stat-value" id="total-turmas">0</div>
-                        <div class="stat-label">Turmas</div>
+                        <div class="stat-label stat-label--turmas">Turmas</div>
                     </div>
                     <div class="stat-card">
+                        <div class="stat-icon stat-icon--alunos">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                        </div>
                         <div class="stat-value" id="total-alunos">0</div>
-                        <div class="stat-label">Alunos</div>
+                        <div class="stat-label stat-label--alunos">Alunos</div>
                     </div>
                     <div class="stat-card">
+                        <div class="stat-icon stat-icon--chamadas">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                        </div>
                         <div class="stat-value" id="total-chamadas">0</div>
-                        <div class="stat-label">Chamadas</div>
+                        <div class="stat-label stat-label--chamadas">Chamadas</div>
                     </div>
                 </div>
             </div>
-
-            <!-- MULTI ESCOLA -->
-            <div id="filter-escola-container" class="filter-container multi-escola-only hidden" style="display: none;">
-                <label for="filter-escola">🏫 Filtrar por Escola:</label>
-                <select id="filter-escola">
-                    <option value="">Todas as Escolas</option>
-                </select>
-            </div>
-            <!-- MULTI ESCOLA -->
 
             <div class="search-controls">
-                <div class="search-box">
-                    <input type="text" id="search-turmas" placeholder="🔍 Buscar turma..." />
-                </div>
+                <!-- Linha 1: toggle Várias escolas + Gerenciar Escolas -->
                 <div class="multi-escola-toggle-wrapper">
-                    <label class="multi-escola-toggle">
+                    <label class="multi-escola-toggle" for="config-multi-escola">
                         <input type="checkbox" id="config-multi-escola">
                         <span>Várias escolas</span>
                     </label>
-                    <button class="btn btn-primary btn-sm btn-adicionar-turma" onclick="turmas.mostrarModalNovaTurma()">
-                        + Adicionar turma
-                    </button>
+                    <div id="btn-gerenciar-escolas-container" class="multi-escola-only hidden" style="display:none;">
+                        <button class="btn btn-secondary btn-sm" onclick="escolas.mostrarModalGerenciar()">
+                            🏫 Gerenciar Escolas
+                        </button>
+                    </div>
                 </div>
-                <div id="btn-gerenciar-escolas-container" class="multi-escola-only hidden" style="display:none;">
-                    <button class="btn btn-secondary btn-sm" onclick="escolas.mostrarModalGerenciar()">
-                        🏫 Gerenciar Escolas
+
+                <!-- Linha 2: filtro por escola (multi-escola only) -->
+                <div id="filter-escola-container" class="filter-container multi-escola-only hidden" style="display: none;">
+                    <label for="filter-escola">🏫 Filtrar por Escola:</label>
+                    <select id="filter-escola">
+                        <option value="">Todas as Escolas</option>
+                    </select>
+                </div>
+
+                <!-- Linha 3: botão Adicionar turma centralizado -->
+                <div class="adicionar-turma-wrapper">
+                    <button class="btn-adicionar-turma" onclick="turmas.mostrarModalNovaTurma()">
+                        Adicionar turma
                     </button>
                 </div>
             </div>
@@ -837,18 +851,18 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- Scripts -->
-    <script src="js/utils.js?v=3"></script>
-    <script src="js/db.js?v=3"></script>
-    <script src="js/config-defaults.js?v=3"></script>
-    <script src="js/escolas.js?v=3"></script>
-    <script src="js/turmas.js?v=3"></script>
-    <script src="js/alunos.js?v=3"></script>
-    <script src="js/chamadas.js?v=3"></script>
-    <script src="js/scanner.js?v=3"></script>
-    <script src="js/export.js?v=3"></script>
-    <script src="js/qrgen.js?v=3"></script>
+    <script src="js/utils.js?v=4"></script>
+    <script src="js/db.js?v=4"></script>
+    <script src="js/config-defaults.js?v=4"></script>
+    <script src="js/escolas.js?v=4"></script>
+    <script src="js/turmas.js?v=4"></script>
+    <script src="js/alunos.js?v=4"></script>
+    <script src="js/chamadas.js?v=4"></script>
+    <script src="js/scanner.js?v=4"></script>
+    <script src="js/export.js?v=4"></script>
+    <script src="js/qrgen.js?v=4"></script>
 
-    <script src="js/app.js?v=3"></script>
+    <script src="js/app.js?v=4"></script>
 
 </body>
 
