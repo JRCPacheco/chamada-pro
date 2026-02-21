@@ -1,5 +1,5 @@
-﻿// ===== CHAMADAS MODULE =====
-// Gerenciamento de chamadas e histÃ³rico
+// ===== CHAMADAS MODULE =====
+// Gerenciamento de chamadas e histórico
 // Migrado para IndexedDB
 
 const chamadas = {
@@ -7,7 +7,8 @@ const chamadas = {
     chamadaResumo: null,
     relatorioMensalAtual: null,
     relatorioMensalInicializado: false,
-    alunosCache: {}, // Cache temporÃ¡rio de alunos para visualizaÃ§Ã£o
+    tabelaMensalVisivel: false,
+    alunosCache: {}, // Cache temporário de alunos para visualização
     historicoSelecaoAtiva: false,
     chamadasSelecionadas: new Set(),
 
@@ -135,7 +136,7 @@ const chamadas = {
         await this.listarHistorico();
     },
 
-    // Listar histÃ³rico de chamadas
+    // Listar histórico de chamadas
     async listarHistorico() {
         if (!turmas.turmaAtual) return;
 
@@ -146,7 +147,7 @@ const chamadas = {
 
             // Buscar dados
             let chamadasArray = await db.getByIndex('chamadas', 'turmaId', turmas.turmaAtual.id);
-            // Ordenar por inÃ­cio da sessÃ£o (decrescente), fallback para data legacy
+            // Ordenar por início da sessão (decrescente), fallback para data legacy
             const toMs = (chamada) => {
                 const ref = chamada.iniciadoEm || chamada.criadoEm || chamada.data;
                 const ms = new Date(ref).getTime();
@@ -154,7 +155,7 @@ const chamadas = {
             };
             chamadasArray.sort((a, b) => toMs(b) - toMs(a));
 
-            // Buscar total de alunos da turma para cÃ¡lculo de %
+            // Buscar total de alunos da turma para cálculo de %
             const alunosTurma = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
             const totalAlunos = alunosTurma.length;
 
@@ -170,24 +171,21 @@ const chamadas = {
 
             this.atualizarControlesSelecaoHistorico(chamadasArray.length);
 
-            const relatorioContainer = document.getElementById('relatorio-mensal-container');
-            if (relatorioContainer && relatorioContainer.style.display !== 'none') {
-                await this.atualizarRelatorioMensal();
-            }
+            await this.atualizarRelatorioMensal();
         } catch (error) {
-            console.error("Erro ao listar histÃ³rico:", error);
-            utils.mostrarToast("Erro ao carregar histÃ³rico", "error");
+            console.error("Erro ao listar histórico:", error);
+            utils.mostrarToast("Erro ao carregar histórico", "error");
         }
     },
 
-    // Renderizar histÃ³rico
+    // Renderizar histórico
     renderizarHistorico(chamadasArray, totalAlunos) {
         const container = document.getElementById('lista-historico');
         const selecaoAtiva = this.historicoSelecaoAtiva;
 
         container.innerHTML = chamadasArray.map(chamada => {
             // Contar presentes (P)
-            // Suporte hÃ­brido: 'registros' (novo) vs 'presencas' (legacy array)
+            // Suporte híbrido: 'registros' (novo) vs 'presencas' (legacy array)
             let presentes = 0;
 
             if (chamada.registros) {
@@ -197,7 +195,7 @@ const chamadas = {
             }
 
             const percentual = utils.calcularPercentual(presentes, totalAlunos);
-            const dataExibicao = chamada.data; // JÃ¡ Ã© YYYY-MM-DD ou ISO
+            const dataExibicao = chamada.data; // Já é YYYY-MM-DD ou ISO
             const horaRef = chamada.iniciadoEm || chamada.criadoEm || '';
             const horaExibicao = horaRef ? utils.formatarHora(new Date(horaRef)) : '--:--';
             const marcada = this.chamadasSelecionadas.has(chamada.id);
@@ -270,7 +268,7 @@ const chamadas = {
                 const alunosTurma = await db.getByIndex('alunos', 'turmaId', chamada.turmaId);
                 const turma = await db.get('turmas', chamada.turmaId);
 
-                // Mapear alunos para acesso rÃ¡pido
+                // Mapear alunos para acesso rápido
                 this.alunosCache = {};
                 alunosTurma.forEach(a => this.alunosCache[a.id] = a);
 
@@ -291,10 +289,10 @@ const chamadas = {
         let presentes = 0;
         let faltas = 0;
 
-        // Normalizar registros para array processÃ¡vel
+        // Normalizar registros para array processável
         let registrosProcessados = [];
 
-        // FunÃ§Ã£o helper para obter nome
+        // Função helper para obter nome
         const getNome = (aluno) => aluno.nome;
 
         todosAlunos.forEach(aluno => {
@@ -319,7 +317,7 @@ const chamadas = {
 
             if (status === 'P') presentes++;
             else {
-                status = 'F'; // ForÃ§a 'F' para contagem
+                status = 'F'; // Força 'F' para contagem
                 faltas++;
             }
 
@@ -332,7 +330,7 @@ const chamadas = {
 
         const percentual = utils.calcularPercentual(presentes, totalAlunos);
 
-        // Atualizar informaÃ§Ãµes
+        // Atualizar informações
         const horaRef = chamada.iniciadoEm || chamada.criadoEm || '';
         const horaExibicao = horaRef ? utils.formatarHora(new Date(horaRef)) : '--:--';
         document.getElementById('resumo-info').textContent =
@@ -349,20 +347,20 @@ const chamadas = {
             .sort((a, b) => a.nome.localeCompare(b.nome))
             .map(r => `
                 <div class="resumo-lista-item">
-                    ✓ ${utils.escapeHtml(r.nome)} <small>(${r.horaFormatada})</small>
+                    ? ${utils.escapeHtml(r.nome)} <small>(${r.horaFormatada})</small>
                 </div>
             `).join('');
 
         listaPresentes.innerHTML = listaPresentesHtml || '<p class="text-muted">Nenhum aluno presente</p>';
 
-        // Lista de ausentes (faltas nÃ£o justificadas)
+        // Lista de ausentes (faltas não justificadas)
         const listaAusentes = document.getElementById('resumo-lista-ausentes');
         const listaAusentesHtml = registrosProcessados
             .filter(r => r.status === 'F')
             .sort((a, b) => a.nome.localeCompare(b.nome))
             .map(r => `
                 <div class="resumo-lista-item">
-                    ✗ ${utils.escapeHtml(r.nome)}
+                    ? ${utils.escapeHtml(r.nome)}
                 </div>
             `).join('');
 
@@ -476,22 +474,22 @@ const chamadas = {
 
             const percentual = utils.calcularPercentual(presentes, totalAlunos);
 
-            let texto = `📋 Chamada - ${turma.nome}\n`;
-            texto += `📄 ${utils.formatarData(chamada.data)}\n\n`;
-            texto += `✅ Presentes: ${presentes} de ${totalAlunos} (${percentual}%)\n`;
-            if (faltas > 0) texto += `❌ Faltas: ${faltas}\n`;
+            let texto = `?? Chamada - ${turma.nome}\n`;
+            texto += `?? ${utils.formatarData(chamada.data)}\n\n`;
+            texto += `? Presentes: ${presentes} de ${totalAlunos} (${percentual}%)\n`;
+            if (faltas > 0) texto += `? Faltas: ${faltas}\n`;
             texto += '\n';
 
             const sortNome = (a, b) => a.localeCompare(b);
 
             if (listaPresentes.length > 0) {
                 texto += '--- PRESENTES ---\n';
-                listaPresentes.sort(sortNome).forEach(nome => texto += `✓ ${nome}\n`);
+                listaPresentes.sort(sortNome).forEach(nome => texto += `? ${nome}\n`);
             }
 
             if (listaAusentes.length > 0) {
                 texto += '\n--- AUSENTES ---\n';
-                listaAusentes.sort(sortNome).forEach(nome => texto += `✗ ${nome}\n`);
+                listaAusentes.sort(sortNome).forEach(nome => texto += `? ${nome}\n`);
             }
 
             const compartilhado = await utils.compartilhar({
@@ -508,7 +506,7 @@ const chamadas = {
         }
     },
 
-    // Exportar histÃ³rico completo
+    // Exportar histórico completo
     async exportarHistorico() {
         if (!turmas.turmaAtual) return;
 
@@ -631,10 +629,12 @@ const chamadas = {
             return;
         }
 
-        this.relatorioMensalInicializado = false;
         app.abrirModal('modal-relatorios');
+        // Garante que o relatório está carregado (caso o usuário não tenha visitado o Diário de Classe ainda)
         this.inicializarRelatorioMensalUI();
-        await this.atualizarRelatorioMensal();
+        if (!this.relatorioMensalAtual) {
+            await this.atualizarRelatorioMensal();
+        }
         await this.atualizarPreviewPontos();
     },
 
@@ -740,7 +740,7 @@ const chamadas = {
 
             doc.setFontSize(13);
             doc.setFont(undefined, 'bold');
-            doc.text(`Pontos Extras — ${turma.nome}`, pageW - 10, y + 5, { align: 'right' });
+            doc.text(`Pontos Extras • ${turma.nome}`, pageW - 10, y + 5, { align: 'right' });
             doc.setFontSize(10);
             doc.setFont(undefined, 'normal');
             doc.text(`Mês: ${nomeMes}`, pageW - 10, y + 11, { align: 'right' });
@@ -846,6 +846,57 @@ const chamadas = {
         }
     },
 
+    toggleTabelaMensal() {
+        this.tabelaMensalVisivel = !this.tabelaMensalVisivel;
+        const wrap = document.getElementById('relatorio-mensal-tabela-wrap');
+        const btn = document.getElementById('btn-ver-tabela');
+        if (wrap) wrap.style.display = this.tabelaMensalVisivel ? 'block' : 'none';
+        if (btn) btn.textContent = this.tabelaMensalVisivel ? 'Ocultar tabela' : 'Ver tabela completa';
+    },
+
+    renderizarResumoCards(relatorio) {
+        const container = document.getElementById('diario-resumo-cards');
+        if (!container) return;
+
+        const { alunosOrdenados, matrizHorario1, matrizHorario2, segundoHorarioAtivo, diasDoMes } = relatorio;
+
+        if (!alunosOrdenados || alunosOrdenados.length === 0) {
+            container.innerHTML = '<p class="text-muted" style="padding: 12px 0;">Nenhum aluno cadastrado.</p>';
+            return;
+        }
+
+        const hasChamadas = diasDoMes.some(d =>
+            alunosOrdenados.some(a => (matrizHorario1[a.id]?.dias[d] || '') !== '')
+        );
+
+        if (!hasChamadas) {
+            container.innerHTML = '<p class="text-muted" style="padding: 12px 0;">Nenhuma chamada registrada neste mês.</p>';
+            return;
+        }
+
+        container.innerHTML = alunosOrdenados.map(aluno => {
+            const l1 = matrizHorario1[aluno.id];
+            const l2 = segundoHorarioAtivo ? matrizHorario2[aluno.id] : null;
+            const p = l1.totalP + (l2 ? l2.totalP : 0);
+            const f = l1.totalF + (l2 ? l2.totalF : 0);
+            const total = p + f;
+            const pct = total > 0 ? Math.round((p / total) * 100) : null;
+            const pctClass = pct === null ? '' : pct >= 75 ? 'freq-ok' : 'freq-low';
+            const pctText = pct !== null ? `${pct}%` : '—';
+
+            return `
+                <div class="diario-resumo-card">
+                    <div class="diario-resumo-card-nome" title="${utils.escapeHtml(aluno.nome)}">${utils.escapeHtml(aluno.nome)}</div>
+                    <div class="diario-resumo-card-stats">
+                        <span class="stat-p">P: ${p}</span>
+                        <span class="stat-f">F: ${f}</span>
+                        <span class="stat-pct ${pctClass}">${pctText}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
     async atualizarRelatorioMensal() {
         if (!turmas.turmaAtual) return;
 
@@ -859,6 +910,7 @@ const chamadas = {
         try {
             const relatorio = await this.gerarRelatorioMensal(turmas.turmaAtual.id, ano, mes);
             this.relatorioMensalAtual = relatorio;
+            this.renderizarResumoCards(relatorio);
             this.renderizarRelatorioMensal(relatorio);
         } catch (error) {
             console.error('Erro ao atualizar relatorio mensal:', error);

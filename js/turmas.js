@@ -6,6 +6,11 @@ const turmas = {
 
     turmaAtual: null,
     listaTurmasListenerBound: false,
+    listaTurmasDeleteHoldBound: false,
+    _deleteHoldTimers: new Map(),
+    _deleteHoldTriggered: new Set(),
+    gerenciarSelecaoAtiva: false,
+    gerenciarSelecionadas: new Set(),
     _atualizarControleSegundoHorarioDetalhe() {
         const input = document.getElementById('input-detalhe-segundo-horario');
         const status = document.getElementById('segundo-horario-status-detalhe');
@@ -121,7 +126,12 @@ const turmas = {
             return `
                 <div class="turma-card" data-turma-id="${turma.id}">
                     ${escolaBadge}
-                    <h3>${utils.escapeHtml(turma.nome)}</h3>
+                    <div class="turma-card-header">
+                        <h3>${utils.escapeHtml(turma.nome)}</h3>
+                        <button type="button" class="turma-delete-btn" data-turma-id="${turma.id}" aria-label="Excluir turma" title="Segure por 1s para excluir">
+                            🗑️
+                        </button>
+                    </div>
                     <p>${turma.descricao ? utils.escapeHtml(turma.descricao) : 'Sem descrição'}</p>
                     <div class="turma-meta">
                         <span>👥 ${totalAlunos} aluno${totalAlunos !== 1 ? 's' : ''}</span>
@@ -135,6 +145,9 @@ const turmas = {
 
         if (container && !this.listaTurmasListenerBound) {
             container.addEventListener('click', (e) => {
+                const btnDelete = e.target.closest('.turma-delete-btn');
+                if (btnDelete && container.contains(btnDelete)) return;
+
                 const card = e.target.closest('.turma-card');
                 if (!card || !container.contains(card)) return;
                 const turmaId = card.dataset.turmaId;
@@ -142,6 +155,65 @@ const turmas = {
                 this.abrirDetalhes(turmaId);
             });
             this.listaTurmasListenerBound = true;
+        }
+
+        if (container && !this.listaTurmasDeleteHoldBound) {
+            const clearHold = (btn, pointerId = null) => {
+                const key = pointerId !== null ? `${btn.dataset.turmaId}:${pointerId}` : btn.dataset.turmaId;
+                const timer = this._deleteHoldTimers.get(key);
+                if (timer) {
+                    clearTimeout(timer);
+                    this._deleteHoldTimers.delete(key);
+                }
+                btn.classList.remove('holding');
+            };
+
+            container.addEventListener('pointerdown', (e) => {
+                const btn = e.target.closest('.turma-delete-btn');
+                if (!btn || !container.contains(btn)) return;
+                e.preventDefault();
+                e.stopPropagation();
+
+                const turmaId = btn.dataset.turmaId;
+                if (!turmaId) return;
+
+                const key = `${turmaId}:${e.pointerId}`;
+                btn.classList.add('holding');
+
+                const timer = setTimeout(() => {
+                    this._deleteHoldTriggered.add(key);
+                    btn.classList.remove('holding');
+                    utils.vibrar([40]);
+                    this.excluirTurma(turmaId);
+                    this._deleteHoldTimers.delete(key);
+                }, 1000);
+
+                this._deleteHoldTimers.set(key, timer);
+            });
+
+            const endHold = (e) => {
+                const btn = e.target.closest('.turma-delete-btn');
+                if (!btn || !container.contains(btn)) return;
+
+                const turmaId = btn.dataset.turmaId;
+                if (!turmaId) return;
+
+                const key = `${turmaId}:${e.pointerId}`;
+                const holdCompleted = this._deleteHoldTriggered.has(key);
+                if (holdCompleted) {
+                    this._deleteHoldTriggered.delete(key);
+                    clearHold(btn, e.pointerId);
+                    return;
+                }
+
+                clearHold(btn, e.pointerId);
+                utils.mostrarToast('Segure por 1 segundo para excluir a turma', 'warning');
+            };
+
+            container.addEventListener('pointerup', endHold);
+            container.addEventListener('pointercancel', endHold);
+            container.addEventListener('pointerleave', endHold);
+            this.listaTurmasDeleteHoldBound = true;
         }
     },
 
@@ -248,14 +320,14 @@ const turmas = {
             this.turmaAtual = await db.get('turmas', turmaId);
 
             if (!this.turmaAtual) {
-                utils.mostrarToast('Turma não encontrada', 'error');
+                utils.mostrarToast('Turma nÃ£o encontrada', 'error');
                 return;
             }
 
             // Atualizar informaÃ§Ãµes da turma UI
             document.getElementById('turma-nome-detalhe').textContent = this.turmaAtual.nome;
             document.getElementById('turma-descricao-detalhe').textContent =
-                this.turmaAtual.descricao || 'Sem descrição';
+                this.turmaAtual.descricao || 'Sem descriÃ§Ã£o';
             this._atualizarControleSegundoHorarioDetalhe();
 
             // Counts async
@@ -306,13 +378,13 @@ const turmas = {
 
     async definirSegundoHorario(turmaId, novoValor) {
         if (!turmaId) {
-            utils.mostrarToast('Turma não encontrada', 'error');
+            utils.mostrarToast('Turma nÃ£o encontrada', 'error');
             return false;
         }
 
         const turma = await db.get('turmas', turmaId);
         if (!turma) {
-            utils.mostrarToast('Turma não encontrada', 'error');
+            utils.mostrarToast('Turma nÃ£o encontrada', 'error');
             return false;
         }
 
@@ -328,9 +400,9 @@ const turmas = {
         if (!novoValor) {
             const chamadasDaTurma = await db.getByIndex('chamadas', 'turmaId', turmaId);
             const possuiRegistrosSegundoHorario = chamadasDaTurma.some(c => c.slot === 2);
-            let mensagem = 'Deseja desativar o 2º horário desta turma?';
+            let mensagem = 'Deseja desativar o 2Âº horÃ¡rio desta turma?';
             if (possuiRegistrosSegundoHorario) {
-                mensagem += '\n\nEsta turma já tem registros no 2º horário. Eles não serão apagados, mas podem deixar de aparecer em alguns relatórios enquanto a opção estiver desativada.';
+                mensagem += '\n\nEsta turma jÃ¡ tem registros no 2Âº horÃ¡rio. Eles nÃ£o serÃ£o apagados, mas podem deixar de aparecer em alguns relatÃ³rios enquanto a opÃ§Ã£o estiver desativada.';
             }
             if (!confirm(mensagem)) return false;
         }
@@ -348,7 +420,7 @@ const turmas = {
         }
 
         utils.mostrarToast(
-            novoValor ? '2º horário ativado para a turma' : '2º horário desativado para a turma',
+            novoValor ? '2Âº horÃ¡rio ativado para a turma' : '2Âº horÃ¡rio desativado para a turma',
             'success'
         );
         return true;
@@ -362,7 +434,7 @@ const turmas = {
         }
 
         if (typeof exportModule === 'undefined' || typeof exportModule.exportarTurmaJSON !== 'function') {
-            utils.mostrarToast('Módulo de exportação indisponível', 'error');
+            utils.mostrarToast('MÃ³dulo de exportaÃ§Ã£o indisponÃ­vel', 'error');
             return;
         }
 
@@ -376,7 +448,7 @@ const turmas = {
 
     async recuperarBackupTurmaAtual() {
         if (typeof exportModule === 'undefined' || typeof exportModule.importarTurmaJSON !== 'function') {
-            utils.mostrarToast('Módulo de recuperação indisponível', 'error');
+            utils.mostrarToast('MÃ³dulo de recuperaÃ§Ã£o indisponÃ­vel', 'error');
             return;
         }
 
@@ -384,7 +456,7 @@ const turmas = {
             const novaTurmaId = await exportModule.importarTurmaJSON();
             if (!novaTurmaId) return;
 
-            // Atualizar dropdowns de escola após recuperação (caso backup traga escola nova)
+            // Atualizar dropdowns de escola apÃ³s recuperaÃ§Ã£o (caso backup traga escola nova)
             if (typeof escolas?.renderizarDropdown === 'function') {
                 await escolas.renderizarDropdown('filter-escola');
                 await escolas.renderizarDropdown('input-turma-escola');
@@ -399,6 +471,222 @@ const turmas = {
         }
     },
 
+    async abrirModalGerenciarTurmas() {
+        this.gerenciarSelecaoAtiva = false;
+        this.gerenciarSelecionadas.clear();
+        await this.renderizarModalGerenciarTurmas();
+        app.abrirModal('modal-gerenciar-turmas');
+    },
+
+    async renderizarModalGerenciarTurmas() {
+        const listaEl = document.getElementById('lista-gerenciar-turmas');
+        const emptyEl = document.getElementById('empty-gerenciar-turmas');
+        if (!listaEl || !emptyEl) return;
+
+        const [turmasAll, alunosAll, chamadasAll, escolasAll] = await Promise.all([
+            db.getAll('turmas'),
+            db.getAll('alunos'),
+            db.getAll('chamadas'),
+            db.getAll('escolas')
+        ]);
+
+        if (!turmasAll.length) {
+            listaEl.innerHTML = '';
+            emptyEl.style.display = '';
+            this.atualizarControlesSelecaoGerenciarTurmas(0);
+            return;
+        }
+
+        const escolasMap = {};
+        escolasAll.forEach((e) => { escolasMap[e.id] = e.nome; });
+
+        const countAlunos = {};
+        alunosAll.forEach((a) => {
+            if (!a.turmaId) return;
+            countAlunos[a.turmaId] = (countAlunos[a.turmaId] || 0) + 1;
+        });
+
+        const countChamadas = {};
+        chamadasAll.forEach((c) => {
+            if (!c.turmaId) return;
+            countChamadas[c.turmaId] = (countChamadas[c.turmaId] || 0) + 1;
+        });
+
+        const cards = turmasAll
+            .sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR'))
+            .map((turma) => {
+                const escolaNome = escolasMap[turma.escolaId] || 'Sem escola';
+                const selecionada = this.gerenciarSelecionadas.has(turma.id);
+                const alunosQtd = countAlunos[turma.id] || 0;
+                const chamadasQtd = countChamadas[turma.id] || 0;
+                const selectHtml = this.gerenciarSelecaoAtiva
+                    ? `<label class="gerenciar-turma-select"><input type="checkbox" data-action="turmas-toggle-item-selecao-gerenciar" data-turma-id="${turma.id}" ${selecionada ? 'checked' : ''}> Selecionar</label>`
+                    : '';
+
+                return `
+                    <div class="gerenciar-turma-card ${this.gerenciarSelecaoAtiva ? 'gerenciar-turma-card-select' : ''}" data-turma-id="${turma.id}">
+                        <div class="gerenciar-turma-card-head">
+                            <div>
+                                <strong>${utils.escapeHtml(turma.nome || 'Turma')}</strong>
+                                <small>🏫 ${utils.escapeHtml(escolaNome)}</small>
+                            </div>
+                            ${selectHtml}
+                        </div>
+                        <div class="gerenciar-turma-meta">👥 ${alunosQtd} alunos • 📄 ${chamadasQtd} chamadas</div>
+                        <div class="gerenciar-turma-actions">
+                            <button class="btn btn-secondary btn-sm" data-action="turmas-abrir-item-gerenciar" data-turma-id="${turma.id}">Abrir</button>
+                            <button class="btn btn-secondary btn-sm" data-action="turmas-editar-item-gerenciar" data-turma-id="${turma.id}">Editar</button>
+                            <button class="btn btn-secondary btn-sm" data-action="turmas-exportar-item-gerenciar" data-turma-id="${turma.id}">Backup</button>
+                            <button class="btn btn-danger btn-sm" data-action="turmas-excluir-item-gerenciar" data-turma-id="${turma.id}">Excluir</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+        emptyEl.style.display = 'none';
+        listaEl.innerHTML = cards.join('');
+        this.atualizarControlesSelecaoGerenciarTurmas(turmasAll.length);
+    },
+
+    atualizarControlesSelecaoGerenciarTurmas(total) {
+        const btnSelTodas = document.getElementById('btn-gerenciar-turmas-selecionar-todas');
+        const btnExcluirSel = document.getElementById('btn-gerenciar-turmas-excluir-selecionadas');
+        const btnCancelar = document.getElementById('btn-gerenciar-turmas-cancelar-selecao');
+        if (!btnSelTodas || !btnExcluirSel || !btnCancelar) return;
+
+        const ativo = this.gerenciarSelecaoAtiva && total > 0;
+        btnSelTodas.style.display = ativo ? '' : 'none';
+        btnExcluirSel.style.display = ativo ? '' : 'none';
+        btnCancelar.style.display = ativo ? '' : 'none';
+        btnExcluirSel.textContent = this.gerenciarSelecionadas.size > 0
+            ? `Excluir Selecionadas (${this.gerenciarSelecionadas.size})`
+            : 'Excluir Selecionadas';
+        btnSelTodas.textContent = (this.gerenciarSelecionadas.size > 0 && this.gerenciarSelecionadas.size >= total)
+            ? 'Desmarcar Todas'
+            : 'Selecionar Todas';
+    },
+
+    async alternarSelecaoGerenciarTurmas() {
+        this.gerenciarSelecaoAtiva = !this.gerenciarSelecaoAtiva;
+        if (!this.gerenciarSelecaoAtiva) this.gerenciarSelecionadas.clear();
+        await this.renderizarModalGerenciarTurmas();
+    },
+
+    async alternarSelecaoItemGerenciarTurmas(turmaId) {
+        if (!turmaId) return;
+        if (this.gerenciarSelecionadas.has(turmaId)) this.gerenciarSelecionadas.delete(turmaId);
+        else this.gerenciarSelecionadas.add(turmaId);
+        await this.renderizarModalGerenciarTurmas();
+    },
+
+    async alternarSelecionarTodasGerenciarTurmas() {
+        const turmasAll = await db.getAll('turmas');
+        if (!turmasAll.length) return;
+        if (this.gerenciarSelecionadas.size >= turmasAll.length) this.gerenciarSelecionadas.clear();
+        else {
+            this.gerenciarSelecionadas.clear();
+            turmasAll.forEach((t) => this.gerenciarSelecionadas.add(t.id));
+        }
+        await this.renderizarModalGerenciarTurmas();
+    },
+
+    async cancelarSelecaoGerenciarTurmas() {
+        this.gerenciarSelecaoAtiva = false;
+        this.gerenciarSelecionadas.clear();
+        await this.renderizarModalGerenciarTurmas();
+    },
+
+    async recuperarBackupTurmaGlobal() {
+        if (typeof exportModule === 'undefined' || typeof exportModule.importarTurmaJSON !== 'function') {
+            utils.mostrarToast('MÃ³dulo de recuperaÃ§Ã£o indisponÃ­vel', 'error');
+            return;
+        }
+
+        try {
+            const novaTurmaId = await exportModule.importarTurmaJSON();
+            if (!novaTurmaId) return;
+            if (typeof escolas?.renderizarDropdown === 'function') {
+                await escolas.renderizarDropdown('filter-escola');
+                await escolas.renderizarDropdown('input-turma-escola');
+                await escolas.renderizarDropdown('input-editar-turma-escola');
+            }
+            await this.listar();
+            await this.renderizarModalGerenciarTurmas();
+        } catch (error) {
+            console.error('Erro ao recuperar turma:', error);
+            utils.mostrarToast('Erro ao recuperar backup da turma', 'error');
+        }
+    },
+
+    async excluirSelecionadasGerenciarTurmas() {
+        const ids = Array.from(this.gerenciarSelecionadas);
+        if (!ids.length) {
+            utils.mostrarToast('Selecione ao menos uma turma', 'warning');
+            return;
+        }
+
+        const confirmar = utils.confirmar(`Excluir ${ids.length} turma(s) selecionada(s)? Esta aÃ§Ã£o nÃ£o pode ser desfeita.`);
+        if (!confirmar) return;
+
+        try {
+            for (const turmaId of ids) {
+                const [alunosDaTurma, chamadasDaTurma] = await Promise.all([
+                    db.getByIndex('alunos', 'turmaId', turmaId),
+                    db.getByIndex('chamadas', 'turmaId', turmaId)
+                ]);
+                await Promise.all([
+                    db.delete('turmas', turmaId),
+                    ...alunosDaTurma.map(a => db.delete('alunos', a.id)),
+                    ...chamadasDaTurma.map(c => db.delete('chamadas', c.id))
+                ]);
+            }
+
+            if (this.turmaAtual && ids.includes(this.turmaAtual.id)) {
+                this.turmaAtual = null;
+                app.mostrarTela('tela-turmas');
+                document.getElementById('header-title').textContent = 'Turmas';
+                document.getElementById('btn-back').style.display = 'none';
+            }
+
+            this.gerenciarSelecionadas.clear();
+            this.gerenciarSelecaoAtiva = false;
+            await this.listar();
+            await this.renderizarModalGerenciarTurmas();
+            utils.mostrarToast('Turmas excluÃ­das com sucesso', 'success');
+        } catch (error) {
+            console.error('Erro ao excluir turmas selecionadas:', error);
+            utils.mostrarToast('Erro ao excluir turmas selecionadas', 'error');
+        }
+    },
+
+    async abrirItemGerenciarTurmas(turmaId) {
+        if (!turmaId) return;
+        app.fecharModal('modal-gerenciar-turmas');
+        await this.abrirDetalhes(turmaId);
+    },
+
+    async editarItemGerenciarTurmas(turmaId) {
+        if (!turmaId) return;
+        app.fecharModal('modal-gerenciar-turmas');
+        await this.mostrarModalEditarTurma(turmaId);
+    },
+
+    async exportarItemGerenciarTurmas(turmaId) {
+        if (!turmaId) return;
+        if (typeof exportModule === 'undefined' || typeof exportModule.exportarTurmaJSON !== 'function') {
+            utils.mostrarToast('MÃ³dulo de exportaÃ§Ã£o indisponÃ­vel', 'error');
+            return;
+        }
+        await exportModule.exportarTurmaJSON(turmaId);
+    },
+
+    async excluirItemGerenciarTurmas(turmaId) {
+        if (!turmaId) return;
+        this.gerenciarSelecionadas.clear();
+        this.gerenciarSelecionadas.add(turmaId);
+        await this.excluirSelecionadasGerenciarTurmas();
+    },
+
     // Editar turma
     async editarTurma(id) {
         await this.mostrarModalEditarTurma(id);
@@ -407,7 +695,7 @@ const turmas = {
     async mostrarModalEditarTurma(id) {
         const turma = await db.get('turmas', id);
         if (!turma) {
-            utils.mostrarToast('Turma não encontrada', 'error');
+            utils.mostrarToast('Turma nÃ£o encontrada', 'error');
             return;
         }
 
@@ -434,13 +722,13 @@ const turmas = {
     async salvarEdicaoTurma() {
         const turmaId = document.getElementById('input-editar-turma-id')?.value;
         if (!turmaId) {
-            utils.mostrarToast('Turma não encontrada', 'error');
+            utils.mostrarToast('Turma nÃ£o encontrada', 'error');
             return;
         }
 
         const turma = await db.get('turmas', turmaId);
         if (!turma) {
-            utils.mostrarToast('Turma não encontrada', 'error');
+            utils.mostrarToast('Turma nÃ£o encontrada', 'error');
             return;
         }
 
@@ -514,7 +802,7 @@ const turmas = {
         if (!this.turmaAtual || this.turmaAtual.id !== turmaId) {
             this.turmaAtual = await db.get('turmas', turmaId);
             if (!this.turmaAtual) {
-                utils.mostrarToast('Turma não encontrada', 'error');
+                utils.mostrarToast('Turma nÃ£o encontrada', 'error');
                 return;
             }
         }
@@ -533,13 +821,13 @@ const turmas = {
         const alunosDaTurma = await db.getByIndex('alunos', 'turmaId', this.turmaAtual.id);
         const chamadasDaTurma = await db.getByIndex('chamadas', 'turmaId', this.turmaAtual.id);
 
-        const mensagem = `⚠️ **EXCLUSÃO IRREVERSÍVEL** ⚠️\n\n` +
+        const mensagem = `âš ï¸ **EXCLUSÃƒO IRREVERSÃVEL** âš ï¸\n\n` +
             `Tem certeza que deseja excluir a turma "${this.turmaAtual.nome}"?\n\n` +
-            `📊 **Serão excluídos permanentemente:**\n` +
-            `• ${alunosDaTurma.length} aluno(s) cadastrado(s)\n` +
-            `• ${chamadasDaTurma.length} registro(s) de chamada\n` +
-            `• Todos os dados associados\n\n` +
-            `Esta ação NÃO pode ser desfeita!`;
+            `ðŸ“Œ **SerÃ£o excluÃ­dos permanentemente:**\n` +
+            `â€¢ ${alunosDaTurma.length} aluno(s) cadastrado(s)\n` +
+            `â€¢ ${chamadasDaTurma.length} registro(s) de chamada\n` +
+            `â€¢ Todos os dados associados\n\n` +
+            `Esta aÃ§Ã£o NÃƒO pode ser desfeita!`;
 
         if (confirm(mensagem)) {
             await this.excluirTurmaCompleta(this.turmaAtual.id);
@@ -567,7 +855,7 @@ const turmas = {
 
             await Promise.all(deletePromises);
 
-            utils.mostrarToast('Turma e todos os dados associados foram excluídos', 'success');
+            utils.mostrarToast('Turma e todos os dados associados foram excluÃ­dos', 'success');
 
             // Limpar estado atual
             this.turmaAtual = null;
@@ -598,10 +886,11 @@ const turmas = {
 
     // MULTI ESCOLA: Filtrar turmas por escola
     async filtrarPorEscola(escolaId) {
-        console.log('🏫 Filtrando por escola:', escolaId);
+        console.log('?? Filtrando por escola:', escolaId);
         await this.listar();
     }
 };
+
 
 
 

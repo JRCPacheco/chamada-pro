@@ -1,5 +1,5 @@
-// Bump this value on every release that changes cached assets.
-const SW_VERSION = 'v3';
+﻿// Bump this value on every release that changes cached assets.
+const SW_VERSION = 'v12';
 const STATIC_CACHE = `static-${SW_VERSION}`;
 const RUNTIME_CACHE = `runtime-${SW_VERSION}`;
 const APP_SHELL_KEY = new Request('./index.html');
@@ -151,3 +151,5 @@ self.addEventListener('fetch', (event) => {
         })()
     );
 });
+
+

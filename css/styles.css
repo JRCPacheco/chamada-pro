@@ -2,6 +2,7 @@
 
     /* Paleta Chamada Fácil */
     --primary: #212F52;
+    --primary-gradient: linear-gradient(135deg, #2D4A8A 0%, #212F52 100%);
     --primary-dark: #182442;
     --primary-light: #2D4A8A;
     --secondary: #6ABF57;
@@ -234,7 +235,7 @@ body {
 }
 
 .app-header {
-    background: #212F52;
+    background: var(--primary-gradient);
     padding: 14px 20px;
     display: flex;
     align-items: center;
@@ -391,6 +392,15 @@ body {
     box-shadow: var(--shadow-sm);
     border: 1px solid #e5e7eb;
     transition: var(--transition);
+}
+
+.stat-card[data-action] {
+    cursor: pointer;
+}
+
+.stat-card[data-action]:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 /* stat-cards são apenas informativos, sem aparência de clicável */
@@ -558,7 +568,7 @@ body {
     top: 0;
     bottom: 0;
     width: 4px;
-    background: var(--primary);
+    background: var(--primary-gradient);
 }
 
 .turma-card:active {
@@ -569,6 +579,44 @@ body {
     font-size: 18px;
     color: var(--dark);
     margin-bottom: 8px;
+}
+
+.turma-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.turma-card-header h3 {
+    margin-bottom: 8px;
+}
+
+.turma-delete-btn {
+    border: 1px solid #fecaca;
+    background: #fff1f2;
+    color: #b91c1c;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    flex: 0 0 auto;
+    transition: var(--transition);
+}
+
+.turma-delete-btn:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+}
+
+.turma-delete-btn.holding {
+    background: #fecaca;
+    border-color: #ef4444;
+    transform: scale(0.94);
 }
 
 .turma-card p {
@@ -678,7 +726,7 @@ body {
     height: 60px;
     border-radius: 20px;
     /* Squircle moderno */
-    background: var(--primary);
+    background: var(--primary-gradient);
     color: white;
     font-size: 28px;
     border: none;
@@ -729,7 +777,7 @@ body {
 
 /* ===== TURMA DETALHE ===== */
 .turma-info-card {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background: var(--primary-gradient);
     color: white;
     padding: 30px 20px;
     margin-bottom: 20px;
@@ -871,7 +919,7 @@ body {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: var(--primary);
+    background: var(--primary-gradient);
     color: white;
     display: flex;
     align-items: center;
@@ -1089,6 +1137,7 @@ body {
 
 .relatorio-mensal-tabela-wrap {
     overflow: auto;
+    max-height: 55vh;
     background: #fff;
     border: 1px solid var(--gray-200);
     border-radius: var(--border-radius-sm);
@@ -1159,6 +1208,110 @@ body {
     text-align: center;
 }
 
+/* ===== DIÁRIO DE CLASSE ===== */
+.diario-classe-section {
+    border-bottom: 1px solid var(--gray-200);
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+}
+
+.diario-historico-header {
+    margin-top: 10px;
+    padding-top: 10px;
+    padding-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.diario-historico-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.diario-historico-actions .btn {
+    width: 100%;
+    justify-content: center;
+}
+
+.diario-historico-header h3 {
+    margin: 0;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .diario-historico-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.diario-resumo-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+    padding: 0 20px 8px;
+}
+
+.diario-resumo-card {
+    background: var(--gray-50, #f9fafb);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius-sm);
+    padding: 8px 10px;
+}
+
+.diario-resumo-card-nome {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.diario-resumo-card-stats {
+    display: flex;
+    gap: 5px;
+    font-size: 11px;
+    flex-wrap: wrap;
+}
+
+.diario-resumo-card-stats .stat-p {
+    color: #1e4620;
+    background: #dff5e3;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.diario-resumo-card-stats .stat-f {
+    color: #611a15;
+    background: #fde2e1;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.diario-resumo-card-stats .stat-pct {
+    font-weight: 700;
+    color: var(--dark);
+}
+
+.diario-resumo-card-stats .stat-pct.freq-ok {
+    color: #1e6620;
+}
+
+.diario-resumo-card-stats .stat-pct.freq-low {
+    color: #b91c1c;
+}
+
+.diario-tabela-toggle {
+    padding: 4px 20px 10px;
+}
+
 /* ===== SCANNER ===== */
 .scanner-info {
     padding: 20px;
@@ -1185,7 +1338,7 @@ body {
 }
 
 .presencas-counter {
-    background: var(--primary);
+    background: var(--primary-gradient);
     color: white;
     padding: 12px 24px;
     border-radius: var(--border-radius-sm);
@@ -1954,7 +2107,7 @@ body {
 /* Badge de Escola nos Cards de Turma */
 .escola-badge {
     display: inline-block;
-    background: linear-gradient(135deg, #2D4A8A 0%, #212F52 100%);
+    background: var(--primary-gradient);
     color: white;
     padding: 6px 14px;
     border-radius: 12px;
@@ -2030,12 +2183,17 @@ body {
     border-radius: var(--border-radius-sm);
     transition: var(--transition);
     border: 1px solid var(--gray-200);
+    cursor: pointer;
 }
 
 .escola-item:hover {
     background: white;
     border-color: var(--primary-light);
     box-shadow: var(--shadow-sm);
+}
+
+.escola-item:active {
+    transform: scale(0.995);
 }
 
 .escola-item-info {
@@ -2163,6 +2321,73 @@ body {
 /* ===== MODAL RELATÓRIOS ===== */
 .modal-relatorios-content {
     max-width: 800px;
+}
+
+.modal-gerenciar-turmas-content {
+    max-width: 760px;
+}
+
+.gerenciar-turmas-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.gerenciar-turmas-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 52vh;
+    overflow-y: auto;
+}
+
+.gerenciar-turma-card {
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius-sm);
+    background: #fff;
+    padding: 12px;
+}
+
+.gerenciar-turma-card-select {
+    border-color: var(--primary-light);
+}
+
+.gerenciar-turma-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.gerenciar-turma-card-head strong {
+    display: block;
+    color: var(--dark);
+}
+
+.gerenciar-turma-card-head small {
+    color: var(--gray-600);
+}
+
+.gerenciar-turma-select {
+    font-size: 13px;
+    color: var(--gray-700);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.gerenciar-turma-meta {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--gray-700);
+}
+
+.gerenciar-turma-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .relatorio-secao {
@@ -2323,3 +2548,6 @@ body {
     margin-left: 4px;
     opacity: 0.75;
 }
+
+
+

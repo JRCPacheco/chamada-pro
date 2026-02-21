@@ -25,7 +25,7 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="css/inter-local.css?v=1">
-    <link rel="stylesheet" href="css/styles.css?v=4">
+    <link rel="stylesheet" href="css/styles.css?v=5">
 
     <!-- Libs -->
     <script src="libs/html5-qrcode.min.js"></script>
@@ -117,7 +117,7 @@
         <div id="tela-turmas" class="screen active">
             <div class="turmas-header">
                 <div class="stats-row">
-                    <div class="stat-card">
+                    <div class="stat-card" role="button" tabindex="0" data-action="turmas-abrir-gerenciar" title="Gerenciar turmas">
                         <div class="stat-icon stat-icon--turmas">
                             <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
                         </div>
@@ -210,15 +210,6 @@
                         <button class="btn btn-secondary btn-sm turma-action-btn" data-action="turmas-editar-atual">
                             Editar Turma
                         </button>
-                        <button class="btn btn-secondary btn-sm turma-action-btn" data-action="turmas-exportar-backup-atual">
-                            Backup da Turma
-                        </button>
-                        <button class="btn btn-secondary btn-sm turma-action-btn" data-action="turmas-recuperar-backup-atual">
-                            Recuperar Turma
-                        </button>
-                        <button class="btn btn-danger btn-sm turma-action-btn" data-action="turmas-excluir-atual">
-                            Excluir Turma
-                        </button>
                     </div>
                 </div>
             </div>
@@ -270,9 +261,28 @@
 
             <!-- Tab Histórico -->
             <div id="tab-historico" class="tab-content">
-                <div class="section-header">
-                    <h3>Histórico de Chamadas</h3>
-                    <div class="action-buttons">
+
+                <!-- Seção: Diário de Classe -->
+                <div class="diario-classe-section">
+                    <div class="section-header">
+                        <h3>Diário de Classe</h3>
+                        <div class="relatorio-mensal-controls">
+                            <label for="relatorio-mensal-mes">Mês:</label>
+                            <input type="month" id="relatorio-mensal-mes" />
+                        </div>
+                    </div>
+                    <div id="diario-resumo-cards" class="diario-resumo-cards"></div>
+                    <div class="diario-tabela-toggle">
+                        <button class="btn btn-outline btn-sm" id="btn-ver-tabela" data-action="chamadas-toggle-tabela">
+                            Ver tabela completa
+                        </button>
+                    </div>
+                    <div id="relatorio-mensal-tabela-wrap" class="relatorio-mensal-tabela-wrap" style="display: none;"></div>
+                </div>
+
+                                <!-- Seção: Histórico de Chamadas -->
+                <div class="section-header diario-historico-header">
+                    <div class="action-buttons diario-historico-actions">
                         <button class="btn btn-secondary btn-sm" data-action="chamadas-exportar-historico">
                             Exportar Tudo
                         </button>
@@ -296,6 +306,7 @@
                             📊 Relatórios
                         </button>
                     </div>
+                    <h3>Histórico de Chamadas</h3>
                 </div>
 
                 <div id="lista-historico" class="historico-list">
@@ -562,6 +573,42 @@
         </div>
     </div>
 
+    <!-- Modal: Gerenciar Turmas -->
+    <div id="modal-gerenciar-turmas" class="modal">
+        <div class="modal-content modal-gerenciar-turmas-content">
+            <div class="modal-header">
+                <h3>Gerenciar Turmas</h3>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-gerenciar-turmas">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="gerenciar-turmas-actions">
+                    <button class="btn btn-secondary btn-sm" data-action="turmas-recuperar-backup-global">
+                        Recuperar turma
+                    </button>
+                    <button class="btn btn-secondary btn-sm" data-action="turmas-toggle-selecao-gerenciar">
+                        Selecionar
+                    </button>
+                    <button class="btn btn-secondary btn-sm" id="btn-gerenciar-turmas-selecionar-todas"
+                        data-action="turmas-selecionar-todas-gerenciar" style="display: none;">
+                        Selecionar Todas
+                    </button>
+                    <button class="btn btn-danger btn-sm" id="btn-gerenciar-turmas-excluir-selecionadas"
+                        data-action="turmas-excluir-selecionadas-gerenciar" style="display: none;">
+                        Excluir Selecionadas
+                    </button>
+                    <button class="btn btn-secondary btn-sm" id="btn-gerenciar-turmas-cancelar-selecao"
+                        data-action="turmas-cancelar-selecao-gerenciar" style="display: none;">
+                        Cancelar
+                    </button>
+                </div>
+                <div id="lista-gerenciar-turmas" class="gerenciar-turmas-list"></div>
+                <div id="empty-gerenciar-turmas" class="empty-state" style="display:none; padding: 20px;">
+                    <h3>Nenhuma turma cadastrada</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal: Novo Aluno -->
     <div id="modal-novo-aluno" class="modal">
         <div class="modal-content">
@@ -702,7 +749,7 @@
             <div class="modal-body">
                 <button class="menu-item" data-action="menu-ir-turmas">
                     <span class="menu-icon">🏠</span>
-                    <span>Minhas Turmas</span>
+                    <span>Home</span>
                 </button>
                 <button class="menu-item" data-action="menu-ir-config">
                     <span class="menu-icon">⚙️</span>
@@ -850,15 +897,10 @@
                 <button class="btn-close" data-action="close-modal" data-modal-id="modal-relatorios">×</button>
             </div>
             <div class="modal-body">
-                <div class="relatorio-mensal-controls" style="margin-bottom: 16px;">
-                    <label for="relatorio-mensal-mes" style="font-weight: 600; margin-right: 8px;">Mês:</label>
-                    <input type="month" id="relatorio-mensal-mes" />
-                </div>
-
                 <div class="relatorio-secao">
                     <h4 class="relatorio-secao-titulo">📅 Relatório Mensal de Chamadas</h4>
                     <p class="text-muted" style="font-size: 13px; margin-bottom: 10px;">
-                        Tabela de presença e falta por aluno no mês selecionado.
+                        Exporta a tabela de presença/falta do mês selecionado no Diário de Classe.
                     </p>
                     <div class="relatorio-secao-acoes">
                         <button class="btn btn-secondary btn-sm" data-action="chamadas-exportar-relatorio-csv">
@@ -868,7 +910,6 @@
                             🖨️ Exportar PDF
                         </button>
                     </div>
-                    <div id="relatorio-mensal-tabela-wrap" class="relatorio-mensal-tabela-wrap" style="margin-top: 12px;"></div>
                 </div>
 
                 <hr style="margin: 20px 0; border-color: var(--border);">
@@ -876,7 +917,7 @@
                 <div class="relatorio-secao">
                     <h4 class="relatorio-secao-titulo">⭐ Pontuação</h4>
                     <p class="text-muted" style="font-size: 13px; margin-bottom: 10px;">
-                        Totalização da pontuação por aluno no mês selecionado.
+                        Totalização da pontuação por aluno no mês selecionado no Diário de Classe.
                     </p>
                     <div class="relatorio-secao-acoes">
                         <button class="btn btn-secondary btn-sm" data-action="chamadas-gerar-pontos-pdf">
@@ -910,13 +951,15 @@
     <script src="js/escolas.js?v=4"></script>
     <script src="js/turmas.js?v=4"></script>
     <script src="js/alunos.js?v=4"></script>
-    <script src="js/chamadas.js?v=4"></script>
+    <script src="js/chamadas.js?v=5"></script>
     <script src="js/scanner.js?v=4"></script>
-    <script src="js/export.js?v=4"></script>
+    <script src="js/export.js?v=5"></script>
     <script src="js/qrgen.js?v=4"></script>
 
-    <script src="js/app.js?v=4"></script>
+    <script src="js/app.js?v=5"></script>
 
 </body>
 
 </html>
+
+

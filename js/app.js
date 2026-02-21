@@ -5,7 +5,7 @@ const app = {
 
     telaAtual: null,
 
-    // Flag de inicilização
+    // Flag de inicialização
     _initRunning: false,
     _configCache: null, // Cache de configuração
     _declarativeEventsBound: false,
@@ -47,9 +47,20 @@ const app = {
             case 'menu-exportar-backup': this.exportarBackup(); return this.fecharModal('modal-menu');
             case 'menu-abrir-ajuda': this.mostrarAjuda(); return this.fecharModal('modal-menu');
             case 'turmas-mostrar-nova': return turmas.mostrarModalNovaTurma();
+            case 'turmas-abrir-gerenciar': return turmas.abrirModalGerenciarTurmas();
             case 'turmas-editar-atual': return turmas.editarTurma(turmas.turmaAtual?.id);
             case 'turmas-exportar-backup-atual': return turmas.exportarBackupTurmaAtual();
             case 'turmas-recuperar-backup-atual': return turmas.recuperarBackupTurmaAtual();
+            case 'turmas-recuperar-backup-global': return turmas.recuperarBackupTurmaGlobal();
+            case 'turmas-toggle-selecao-gerenciar': return turmas.alternarSelecaoGerenciarTurmas();
+            case 'turmas-toggle-item-selecao-gerenciar': return turmas.alternarSelecaoItemGerenciarTurmas(el.dataset.turmaId);
+            case 'turmas-selecionar-todas-gerenciar': return turmas.alternarSelecionarTodasGerenciarTurmas();
+            case 'turmas-excluir-selecionadas-gerenciar': return turmas.excluirSelecionadasGerenciarTurmas();
+            case 'turmas-cancelar-selecao-gerenciar': return turmas.cancelarSelecaoGerenciarTurmas();
+            case 'turmas-abrir-item-gerenciar': return turmas.abrirItemGerenciarTurmas(el.dataset.turmaId);
+            case 'turmas-editar-item-gerenciar': return turmas.editarItemGerenciarTurmas(el.dataset.turmaId);
+            case 'turmas-exportar-item-gerenciar': return turmas.exportarItemGerenciarTurmas(el.dataset.turmaId);
+            case 'turmas-excluir-item-gerenciar': return turmas.excluirItemGerenciarTurmas(el.dataset.turmaId);
             case 'turmas-excluir-atual': return turmas.excluirTurma(turmas.turmaAtual?.id);
             case 'turmas-salvar-nova': return turmas.salvarNovaTurma();
             case 'turmas-salvar-edicao': return turmas.salvarEdicaoTurma();
@@ -82,6 +93,7 @@ const app = {
             case 'chamadas-excluir-selecionadas': return chamadas.excluirChamadasSelecionadas();
             case 'chamadas-cancelar-selecao': return chamadas.cancelarModoSelecaoHistorico();
             case 'chamadas-abrir-relatorios': return chamadas.abrirModalRelatorios();
+            case 'chamadas-toggle-tabela': return chamadas.toggleTabelaMensal();
             case 'chamadas-compartilhar': return chamadas.compartilhar();
             case 'chamadas-exportar-csv': return chamadas.exportarCSV();
             case 'chamadas-exportar-relatorio-csv': return chamadas.exportarRelatorioMensalCSV();
@@ -116,6 +128,14 @@ const app = {
 
             const target = event.target.closest('[data-action]');
             if (!target) return;
+            this._handleDeclarativeAction(target.dataset.action, target, event);
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            const target = event.target.closest('[data-action][role="button"]');
+            if (!target) return;
+            event.preventDefault();
             this._handleDeclarativeAction(target.dataset.action, target, event);
         });
 
@@ -552,7 +572,7 @@ const app = {
     async aplicarConfiguracoesInterface() {
         const { multi_escola } = await this._getAppConfig();
 
-        console.log('🔄 UI: Atualizando interface Multi-Escola:', multi_escola);
+        console.log('?? UI: Atualizando interface Multi-Escola:', multi_escola);
 
         // Elementos exclusivos multi-escola
         const multiEscolaElements = document.querySelectorAll('.multi-escola-only');
@@ -668,7 +688,7 @@ const app = {
                     <h4>📷 Fazer Chamada</h4>
                     <p>Clique no botão da câmera para iniciar. Escaneie os QR Codes dos alunos presentes.</p>
                     
-                    <h4>📊 Exportar Dados</h4>
+                    <h4>📤 Exportar Dados</h4>
                     <p>Após finalizar a chamada, você pode exportar como CSV ou compartilhar via WhatsApp.</p>
                     
                     <h4>💾 Backup</h4>

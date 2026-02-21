@@ -294,7 +294,7 @@ const exportModule = {
         }
 
         if (raw.backupType !== 'turma') {
-            throw new Error('Este arquivo não é um backup de turma');
+            throw new Error('Este arquivo não • um backup de turma');
         }
 
         if (!raw.data || !raw.data.turma || !Array.isArray(raw.data.alunos) || !Array.isArray(raw.data.chamadas)) {
@@ -353,38 +353,103 @@ const exportModule = {
 
                         const novaTurmaId = await db.add('turmas', novaTurma);
                         const mapaAlunoId = {};
+                        const qrIdsUsadosImport = new Set();
+                        const alunosCriados = [];
+                        const chamadasCriadas = [];
 
-                        for (const alunoOriginal of alunosOriginais) {
-                            const antigoId = alunoOriginal.id;
-                            const novoAluno = {
-                                ...alunoOriginal,
-                                id: undefined,
-                                turmaId: novaTurmaId
-                            };
-                            delete novoAluno.id;
-                            const novoId = await db.add('alunos', novoAluno);
-                            if (antigoId) mapaAlunoId[antigoId] = novoId;
-                        }
+                        // Limpa dados parciais criados se o import falhar
+                        const limparImporteParcial = async () => {
+                            for (const id of chamadasCriadas) {
+                                await db.delete('chamadas', id).catch(() => {});
+                            }
+                            for (const id of alunosCriados) {
+                                await db.delete('alunos', id).catch(() => {});
+                            }
+                            await db.delete('turmas', novaTurmaId).catch(() => {});
+                        };
 
-                        for (const chamadaOriginal of chamadasOriginais) {
-                            const novaChamada = {
-                                ...chamadaOriginal,
-                                id: undefined,
-                                turmaId: novaTurmaId,
-                                turmaNome: novaTurma.nome
-                            };
-                            delete novaChamada.id;
+                        const resolverQrIdUnico = async (qrIdOriginal) => {
+                            let qrId = String(qrIdOriginal || '').trim();
+                            let tentativas = 0;
 
-                            if (novaChamada.registros && typeof novaChamada.registros === 'object') {
-                                const novosRegistros = {};
-                                Object.entries(novaChamada.registros).forEach(([alunoIdAntigo, reg]) => {
-                                    const alunoIdNovo = mapaAlunoId[alunoIdAntigo];
-                                    if (alunoIdNovo) novosRegistros[alunoIdNovo] = reg;
-                                });
-                                novaChamada.registros = novosRegistros;
+                            while (!qrId || qrIdsUsadosImport.has(qrId)) {
+                                qrId = utils.gerarQrId();
+                                tentativas++;
+                                if (tentativas > 20) break;
                             }
 
-                            await db.add('chamadas', novaChamada);
+                            let existentes = await db.getByIndex('alunos', 'qrId', qrId);
+                            while ((existentes && existentes.length > 0) || qrIdsUsadosImport.has(qrId)) {
+                                qrId = utils.gerarQrId();
+                                existentes = await db.getByIndex('alunos', 'qrId', qrId);
+                                tentativas++;
+                                if (tentativas > 40) {
+                                    throw new Error('Não foi possível gerar qrId único para aluno importado');
+                                }
+                            }
+
+                            qrIdsUsadosImport.add(qrId);
+                            return qrId;
+                        };
+
+                        try {
+                            for (const alunoOriginal of alunosOriginais) {
+                                const antigoId = alunoOriginal.id;
+                                let qrIdSeguro = await resolverQrIdUnico(alunoOriginal.qrId);
+
+                                let novoId = null;
+                                let tentativasInsert = 0;
+                                while (!novoId) {
+                                    const novoAluno = {
+                                        ...alunoOriginal,
+                                        id: undefined,
+                                        qrId: qrIdSeguro,
+                                        turmaId: novaTurmaId
+                                    };
+                                    delete novoAluno.id;
+                                    try {
+                                        novoId = await db.add('alunos', novoAluno);
+                                    } catch (eInsert) {
+                                        if (eInsert?.name === 'ConstraintError' && tentativasInsert < 3) {
+                                            // Colisão de qrId • gera um novo completamente aleatório
+                                            tentativasInsert++;
+                                            qrIdSeguro = utils.gerarQrId();
+                                            qrIdsUsadosImport.add(qrIdSeguro);
+                                        } else {
+                                            throw eInsert;
+                                        }
+                                    }
+                                }
+
+                                alunosCriados.push(novoId);
+                                if (antigoId) mapaAlunoId[antigoId] = novoId;
+                            }
+
+                            for (const chamadaOriginal of chamadasOriginais) {
+                                const novaChamada = {
+                                    ...chamadaOriginal,
+                                    id: undefined,
+                                    turmaId: novaTurmaId,
+                                    turmaNome: novaTurma.nome
+                                };
+                                delete novaChamada.id;
+
+                                if (novaChamada.registros && typeof novaChamada.registros === 'object') {
+                                    const novosRegistros = {};
+                                    Object.entries(novaChamada.registros).forEach(([alunoIdAntigo, reg]) => {
+                                        const alunoIdNovo = mapaAlunoId[alunoIdAntigo];
+                                        if (alunoIdNovo) novosRegistros[alunoIdNovo] = reg;
+                                    });
+                                    novaChamada.registros = novosRegistros;
+                                }
+
+                                const chamadaId = await db.add('chamadas', novaChamada);
+                                chamadasCriadas.push(chamadaId);
+                            }
+                        } catch (eImport) {
+                            // Remove tudo que foi criado para não deixar dados órfãos
+                            await limparImporteParcial();
+                            throw eImport;
                         }
 
                         if (escolaResolvida.escolaImportadaNome) {
@@ -395,8 +460,13 @@ const exportModule = {
                         resolve(novaTurmaId);
                     } catch (error) {
                         console.error('Erro ao importar backup de turma:', error);
+                        const msg = String(error?.message || '');
+                        const ehErroConstraint = error?.name === 'ConstraintError' || /constraint/i.test(msg);
+                        const mensagem = ehErroConstraint
+                            ? 'Erro de dados no backup: conflito de identificadores únicos (ex.: QR).'
+                            : (error.message || 'Erro ao recuperar backup da turma');
                         utils.mostrarToast(
-                            error.message || 'Erro ao recuperar backup da turma',
+                            mensagem,
                             'error'
                         );
                         resolve(null);

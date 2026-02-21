@@ -1,4 +1,4 @@
-// ===== ESCOLAS MODULE =====
+﻿// ===== ESCOLAS MODULE =====
 // Gerenciamento de escolas (Multi-School Support)
 // Migrado para IndexedDB
 
@@ -27,10 +27,10 @@ const escolas = {
             const temTurmas = turmasDaEscola.length > 0;
             const logoHtml = escola.foto
                 ? `<img src="${escola.foto}" class="escola-item-logo" alt="Logo">`
-                : `<div class="escola-foto-preview-mini" style="width:36px;height:36px;font-size:18px;cursor:default;pointer-events:none;"><span>🏫</span></div>`;
+                : `<div class="escola-foto-preview-mini" style="width:36px;height:36px;font-size:18px;cursor:default;pointer-events:none;"><span>&#127979;</span></div>`;
 
             return `
-                <div class="escola-item" data-escola-id="${escola.id}">
+                <div class="escola-item" data-action="escolas-abrir-editar-item" data-escola-id="${escola.id}" role="button" tabindex="0" title="Editar escola">
                     ${logoHtml}
                     <div class="escola-item-info">
                         <strong>${utils.escapeHtml(escola.nome)}</strong>
@@ -41,11 +41,8 @@ const escolas = {
                     </div>
                     <div class="escola-item-actions">
                         ${!isDefault ? `
-                            <button class="btn-icon btn-sm" data-action="escolas-abrir-editar-item" data-escola-id="${escola.id}" title="Editar">
-                                ✏️
-                            </button>
                             <button class="btn-icon btn-sm" data-action="escolas-excluir-item" data-escola-id="${escola.id}" title="Excluir">
-                                🗑️
+                                &#128465;&#65039;
                             </button>
                         ` : ''}
                     </div>
@@ -65,13 +62,13 @@ const escolas = {
             return;
         }
 
-        // Validar nome único (case-insensitive)
+        // Validar nome Ãºnico (case-insensitive)
         const escolasArray = await db.getAll('escolas');
         const nomeNormalizado = nome.toLowerCase();
         const jaExiste = escolasArray.some(e => e.nome.toLowerCase() === nomeNormalizado);
 
         if (jaExiste) {
-            utils.mostrarToast('Já existe uma escola com este nome', 'warning');
+            utils.mostrarToast('JÃ¡ existe uma escola com este nome', 'warning');
             input.focus();
             return;
         }
@@ -119,14 +116,14 @@ const escolas = {
 
     resetarFotoNova() {
         const preview = document.getElementById('escola-foto-preview-nova');
-        if (preview) preview.innerHTML = '<span>🏫</span>';
+        if (preview) preview.innerHTML = '<span>&#127979;</span>';
         const btnRemover = document.getElementById('btn-remover-foto-nova-escola');
         if (btnRemover) btnRemover.style.display = 'none';
         const input = document.getElementById('input-escola-foto-nova');
         if (input) input.value = '';
     },
 
-    // Processar foto para edição de escola
+    // Processar foto para ediÃ§Ã£o de escola
     processarFotoEditar(file) {
         this._processarFoto(file, (base64) => {
             this.fotoEditarTemp = base64;
@@ -142,7 +139,7 @@ const escolas = {
     removerFotoEditar() {
         this.fotoEditarTemp = null;
         const preview = document.getElementById('escola-foto-preview-editar');
-        if (preview) preview.innerHTML = '<span>🏫</span>';
+        if (preview) preview.innerHTML = '<span>&#127979;</span>';
         const btnRemover = document.getElementById('btn-remover-foto-editar-escola');
         if (btnRemover) btnRemover.style.display = 'none';
         const input = document.getElementById('input-escola-foto-editar');
@@ -176,12 +173,12 @@ const escolas = {
         reader.readAsDataURL(file);
     },
 
-    // Abrir modal de edição (com suporte a foto)
+    // Abrir modal de ediÃ§Ã£o (com suporte a foto)
     async abrirModalEditar(id) {
         try {
             const escola = await db.get('escolas', id);
             if (!escola) {
-                utils.mostrarToast('Escola não encontrada', 'error');
+                utils.mostrarToast('Escola nÃ£o encontrada', 'error');
                 return;
             }
 
@@ -196,18 +193,18 @@ const escolas = {
                 preview.innerHTML = `<img src="${escola.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">`;
                 if (btnRemover) btnRemover.style.display = '';
             } else {
-                if (preview) preview.innerHTML = '<span>🏫</span>';
+                if (preview) preview.innerHTML = '<span>&#127979;</span>';
                 if (btnRemover) btnRemover.style.display = 'none';
             }
 
             app.abrirModal('modal-editar-escola');
         } catch (e) {
             console.error(e);
-            utils.mostrarToast('Erro ao abrir edição', 'error');
+            utils.mostrarToast('Erro ao abrir ediÃ§Ã£o', 'error');
         }
     },
 
-    // Salvar edição de escola (com foto)
+    // Salvar ediÃ§Ã£o de escola (com foto)
     async salvarEdicaoEscola() {
         const id = document.getElementById('input-editar-escola-id').value;
         const novoNome = (document.getElementById('input-editar-escola-nome').value || '').trim();
@@ -220,14 +217,14 @@ const escolas = {
         try {
             const escola = await db.get('escolas', id);
             if (!escola) {
-                utils.mostrarToast('Escola não encontrada', 'error');
+                utils.mostrarToast('Escola nÃ£o encontrada', 'error');
                 return;
             }
 
             const escolasArray = await db.getAll('escolas');
             const jaExiste = escolasArray.some(e => e.id !== id && e.nome.toLowerCase() === novoNome.toLowerCase());
             if (jaExiste) {
-                utils.mostrarToast('Já existe uma escola com este nome', 'warning');
+                utils.mostrarToast('JÃ¡ existe uma escola com este nome', 'warning');
                 return;
             }
 
@@ -248,19 +245,19 @@ const escolas = {
 
     // Excluir escola
     async excluirEscola(id) {
-        // Bloquear exclusão da escola padrão
+        // Bloquear exclusÃ£o da escola padrÃ£o
         if (id === 'default') {
-            utils.mostrarToast('A escola padrão não pode ser excluída', 'warning');
+            utils.mostrarToast('A escola padrÃ£o nÃ£o pode ser excluÃ­da', 'warning');
             return;
         }
 
         try {
-            // Verificar se há turmas vinculadas usando INDEX
+            // Verificar se hÃ¡ turmas vinculadas usando INDEX
             const turmasVinculadas = await db.getByIndex('turmas', 'escolaId', id);
 
             if (turmasVinculadas.length > 0) {
                 utils.mostrarToast(
-                    `Não é possível excluir: existem ${turmasVinculadas.length} turma${turmasVinculadas.length !== 1 ? 's' : ''} vinculada${turmasVinculadas.length !== 1 ? 's' : ''} a esta escola`,
+                    `NÃ£o Ã© possÃ­vel excluir: existem ${turmasVinculadas.length} turma${turmasVinculadas.length !== 1 ? 's' : ''} vinculada${turmasVinculadas.length !== 1 ? 's' : ''} a esta escola`,
                     'warning'
                 );
                 return;
@@ -269,7 +266,7 @@ const escolas = {
             // Excluir escola
             await db.delete('escolas', id);
 
-            utils.mostrarToast('Escola excluída', 'success');
+            utils.mostrarToast('Escola excluÃ­da', 'success');
             await this.listarEscolas();
             await this.atualizarTodosDropdowns();
         } catch (e) {
@@ -284,7 +281,7 @@ const escolas = {
         if (!select) return;
 
         const escolasArray = await db.getAll('escolas');
-        const selectedValue = select.value; // Preservar seleção atual
+        const selectedValue = select.value; // Preservar seleÃ§Ã£o atual
 
         // Popular options
         const options = escolasArray.map(escola => {
@@ -292,14 +289,14 @@ const escolas = {
             return `<option value="${escola.id}">${utils.escapeHtml(escola.nome)}${sufixoAtual}</option>`;
         }).join('');
 
-        // Se for filtro, adicionar opção "Todas"
+        // Se for filtro, adicionar opÃ§Ã£o "Todas"
         if (selectId === 'filter-escola') {
             select.innerHTML = `<option value="">Todas as Escolas</option>${options}`;
         } else {
             select.innerHTML = `<option value="">Selecione uma escola...</option>${options}`;
         }
 
-        // Restaurar seleção se possível
+        // Restaurar seleÃ§Ã£o se possÃ­vel
         if (selectedValue) {
             select.value = selectedValue;
         }
@@ -336,3 +333,5 @@ const escolas = {
         this.resetarFotoNova();
     }
 };
+
+
