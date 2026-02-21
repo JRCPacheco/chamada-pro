@@ -532,28 +532,19 @@ const app = {
         };
     },
 
-    // Prevenir zoom em inputs no iOS
+    // Evitar zoom automático no iOS sem bloquear acessibilidade de zoom global
     preventZoomOnInputs() {
         const inputs = document.querySelectorAll('input, textarea, select');
         inputs.forEach(input => {
-            input.addEventListener('focus', () => {
-                const viewport = document.querySelector('meta[name="viewport"]');
-                if (viewport) {
-                    viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
-                }
-            });
-
-            input.addEventListener('blur', () => {
-                const viewport = document.querySelector('meta[name="viewport"]');
-                if (viewport) {
-                    viewport.content = 'width=device-width, initial-scale=1.0';
-                }
-            });
+            const tamanhoFonte = Number.parseFloat(window.getComputedStyle(input).fontSize) || 0;
+            if (tamanhoFonte < 16) {
+                input.style.fontSize = '16px';
+            }
         });
     },
 
     abrirLanding() {
-        window.open('https://www.chamadafacil.net.br', '_blank');
+        window.open('https://www.chamadafacil.net.br', '_blank', 'noopener,noreferrer');
     },
 
 };

@@ -11,6 +11,20 @@ const chamadas = {
     historicoSelecaoAtiva: false,
     chamadasSelecionadas: new Set(),
 
+    _parseAnoMes(valor) {
+        const match = String(valor || '').trim().match(/^(\d{4})-(\d{2})$/);
+        if (!match) return null;
+
+        const ano = Number(match[1]);
+        const mes = Number(match[2]);
+
+        if (!Number.isInteger(ano) || !Number.isInteger(mes) || ano < 2000 || ano > 2100 || mes < 1 || mes > 12) {
+            return null;
+        }
+
+        return { ano, mes, valorNormalizado: `${match[1]}-${match[2]}` };
+    },
+
     atualizarControlesSelecaoHistorico(totalChamadas = 0) {
         const btnSelecionar = document.getElementById('btn-historico-selecionar');
         const btnSelecionarTodas = document.getElementById('btn-historico-selecionar-todas');
@@ -582,11 +596,28 @@ const chamadas = {
         const inputMes = document.getElementById('relatorio-mensal-mes');
         if (!inputMes) return;
 
+        const detector = document.createElement('input');
+        detector.setAttribute('type', 'month');
+        const suporteMonth = detector.type === 'month';
+        if (!suporteMonth) {
+            inputMes.type = 'text';
+            inputMes.inputMode = 'numeric';
+            inputMes.pattern = '\\d{4}-\\d{2}';
+            inputMes.placeholder = 'AAAA-MM';
+            inputMes.setAttribute('aria-label', 'Mês no formato AAAA-MM');
+        }
+
         const agora = new Date();
         const mesAtual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`;
         inputMes.value = inputMes.value || mesAtual;
 
         inputMes.addEventListener('change', async () => {
+            const parsed = this._parseAnoMes(inputMes.value);
+            if (!parsed) {
+                utils.mostrarToast('Informe o mês no formato AAAA-MM', 'warning');
+                return;
+            }
+            inputMes.value = parsed.valorNormalizado;
             await this.atualizarRelatorioMensal();
             await this.atualizarPreviewPontos();
         });
@@ -614,10 +645,9 @@ const chamadas = {
         const preview = document.getElementById('relatorio-pontos-preview');
         if (!inputMes || !preview) return;
 
-        const [anoStr, mesStr] = (inputMes.value || '').split('-');
-        const ano = Number(anoStr);
-        const mes = Number(mesStr);
-        if (!ano || !mes) return;
+        const parsed = this._parseAnoMes(inputMes.value);
+        if (!parsed) return;
+        const { ano, mes } = parsed;
 
         try {
             const alunos = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
@@ -660,13 +690,13 @@ const chamadas = {
             return;
         }
 
-        const [anoStr, mesStr] = inputMes.value.split('-');
-        const ano = Number(anoStr);
-        const mes = Number(mesStr);
-        if (!ano || !mes) {
+        const parsed = this._parseAnoMes(inputMes.value);
+        if (!parsed) {
             utils.mostrarToast('Mês inválido', 'warning');
             return;
         }
+        const { ano, mes, valorNormalizado } = parsed;
+        inputMes.value = valorNormalizado;
 
         try {
             utils.mostrarToast('Gerando PDF de pontos...', 'info');
@@ -822,11 +852,9 @@ const chamadas = {
         const inputMes = document.getElementById('relatorio-mensal-mes');
         if (!inputMes) return;
 
-        const [anoStr, mesStr] = (inputMes.value || '').split('-');
-        const ano = Number(anoStr);
-        const mes = Number(mesStr);
-
-        if (!ano || !mes) return;
+        const parsed = this._parseAnoMes(inputMes.value);
+        if (!parsed) return;
+        const { ano, mes } = parsed;
 
         try {
             const relatorio = await this.gerarRelatorioMensal(turmas.turmaAtual.id, ano, mes);
@@ -1245,5 +1273,4 @@ const chamadas = {
         }
     }
 };
-
 

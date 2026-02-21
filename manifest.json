@@ -2,23 +2,25 @@
   "name": "Chamada PRO - Scanner de Presença",
   "short_name": "Chamada PRO",
   "description": "Sistema inteligente de controle de presença via QR Code para professores",
-  "start_url": "/",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#4A90E2",
   "theme_color": "#4A90E2",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%234A90E2' width='192' height='192' rx='48'/><text x='96' y='140' font-size='100' text-anchor='middle' fill='white'>📋</text></svg>",
-      "sizes": "192x192",
+      "src": "assets/logo1024.svg",
+      "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%234A90E2' width='512' height='512' rx='128'/><text x='256' y='380' font-size='280' text-anchor='middle' fill='white'>📋</text></svg>",
-      "sizes": "512x512",
+      "src": "assets/logo1024.svg",
+      "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ],
   "categories": ["education", "productivity", "utilities"],
@@ -28,7 +30,7 @@
       "name": "Nova Chamada",
       "short_name": "Chamada",
       "description": "Iniciar uma nova chamada",
-      "url": "/?action=nova-chamada",
+      "url": "./?action=nova-chamada",
       "icons": [
         {
           "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><text y='.9em' font-size='90'>📷</text></svg>",
@@ -40,7 +42,7 @@
       "name": "Minhas Turmas",
       "short_name": "Turmas",
       "description": "Ver minhas turmas",
-      "url": "/?action=turmas",
+      "url": "./?action=turmas",
       "icons": [
         {
           "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><text y='.9em' font-size='90'>📚</text></svg>",
