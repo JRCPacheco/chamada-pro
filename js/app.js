@@ -219,7 +219,7 @@ const app = {
     restaurarEstado() {
         const ultimaTurmaId = sessionStorage.getItem('chamada_pro_ultima_turma');
         if (ultimaTurmaId && this.telaAtual === 'tela-turmas') {
-            console.log('[LAPIDAÃ‡ÃƒO] Restaurando Ãºltima turma aberta:', ultimaTurmaId);
+            console.log('[LAPIDACAO] Restaurando ultima turma aberta:', ultimaTurmaId);
             setTimeout(() => {
                 turmas.abrirDetalhes(ultimaTurmaId);
             }, 100);
@@ -349,7 +349,7 @@ const app = {
                 btnBack.style.display = 'block';
                 break;
             case 'tela-config':
-                headerTitle.textContent = 'Configurações';
+                headerTitle.textContent = 'ConfiguraÃ§Ãµes';
                 btnBack.style.display = 'block';
                 break;
         }
@@ -535,7 +535,7 @@ const app = {
 
         await db.put('config', cfg);
         this._configCache = cfg;
-        utils.mostrarToast('Configurações salvas', 'success');
+        utils.mostrarToast('ConfiguraÃ§Ãµes salvas', 'success');
     },
 
     async salvarNomeProfessor() {
@@ -644,13 +644,13 @@ const app = {
     // Limpar todos os dados
     limparTodosDados() {
         if (!utils.confirmar(
-            'ATENÇÃO: Esta ação irá APAGAR TODOS OS DADOS permanentemente. Deseja continuar?'
+            'ATENÃ‡ÃƒO: Esta aÃ§Ã£o irÃ¡ APAGAR TODOS OS DADOS permanentemente. Deseja continuar?'
         )) {
             return;
         }
 
         if (!utils.confirmar(
-            'Tem CERTEZA ABSOLUTA? Esta ação NÃO PODE ser desfeita!'
+            'Tem CERTEZA ABSOLUTA? Esta aÃ§Ã£o NÃƒO PODE ser desfeita!'
         )) {
             return;
         }
@@ -676,32 +676,32 @@ const app = {
                 </div>
                 <div class=\"modal-body\">
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M4 19.5A2.5 2.5 0 0 1 6.5 17H20\"/><path d=\"M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z\"/></svg></span>Criar Turma</h4>
-                    <p>Clique em \"Adicionar turma\" para criar uma nova turma. Informe nome, descrição e escola (quando multi-escola estiver ativo).</p>
+                    <p>Clique em \"Adicionar turma\" para criar uma nova turma. Informe nome, descriÃ§Ã£o e escola (quando multi-escola estiver ativo).</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M3 10.5 12 4l9 6.5\"/><path d=\"M5 10v9h14v-9\"/><path d=\"M9 19v-5h6v5\"/><path d=\"M9 10h.01\"/><path d=\"M15 10h.01\"/></svg></span>Gerenciar Escolas</h4>
                     <p>No Menu, use \"Gerenciar Escolas\" para cadastrar ou editar escolas e definir logo. As turmas podem ser vinculadas a uma escola.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"3\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a3 3 0 0 1 0 5.75\"/></svg></span>Adicionar Alunos</h4>
-                    <p>Entre na turma e adicione alunos manualmente ou importe uma planilha CSV. Use também \"Baixar modelo de planilha\" para evitar erros.</p>
-                    <p><strong>Formato CSV:</strong><br>Matrícula;Nome;Email (opcional)</p>
+                    <p>Entre na turma e adicione alunos manualmente ou importe uma planilha CSV. Use tambÃ©m \"Baixar modelo de planilha\" para evitar erros.</p>
+                    <p><strong>Formato CSV:</strong><br>MatrÃ­cula;Nome;Email (opcional)</p>
 
-                    <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M8 2h8\"/><path d=\"M9 2v2\"/><path d=\"M15 2v2\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\"/><path d=\"M8 11h8\"/><path d=\"M8 15h5\"/></svg></span>Diário de Classe</h4>
-                    <p>Na aba \"Diário de Classe\", acompanhe o histórico mensal de chamadas da turma. Você pode abrir detalhes, exportar histórico e gerenciar registros.</p>
+                    <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M8 2h8\"/><path d=\"M9 2v2\"/><path d=\"M15 2v2\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\"/><path d=\"M8 11h8\"/><path d=\"M8 15h5\"/></svg></span>DiÃ¡rio de Classe</h4>
+                    <p>Na aba \"DiÃ¡rio de Classe\", acompanhe o histÃ³rico mensal de chamadas da turma. VocÃª pode abrir detalhes, exportar histÃ³rico e gerenciar registros.</p>
 
-                    <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M12 6v6l4 2\"/><circle cx=\"12\" cy=\"12\" r=\"9\"/></svg></span>Segundo Horário</h4>
-                    <p>Ative \"Segundo horário\" na turma para permitir até 2 chamadas no mesmo dia.</p>
+                    <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M12 6v6l4 2\"/><circle cx=\"12\" cy=\"12\" r=\"9\"/></svg></span>Segundo HorÃ¡rio</h4>
+                    <p>Ative \"Segundo horÃ¡rio\" na turma para permitir atÃ© 2 chamadas no mesmo dia.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M4 4h6v6H4z\"/><path d=\"M14 4h6v6h-6z\"/><path d=\"M4 14h6v6H4z\"/><path d=\"M14 14h2\"/><path d=\"M18 14h2\"/><path d=\"M14 18h2\"/><path d=\"M18 18h2\"/></svg></span>Gerar QR Codes</h4>
-                    <p>Na aba \"Alunos\", clique em \"Gerar QR Codes\" para criar um PDF com os códigos dos alunos.</p>
+                    <p>Na aba \"Alunos\", clique em \"Gerar QR Codes\" para criar um PDF com os cÃ³digos dos alunos.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M4 4h6v6H4z\"/><path d=\"M14 4h6v6h-6z\"/><path d=\"M4 14h6v6H4z\"/><path d=\"M14 14h2\"/><path d=\"M18 14h2\"/><path d=\"M14 18h2\"/><path d=\"M18 18h2\"/></svg></span>Fazer Chamada</h4>
-                    <p>Use o botão \"Chamada\" no canto superior direito da turma. Escaneie os QR Codes dos alunos presentes e finalize ao concluir.</p>
+                    <p>Use o botÃ£o \"Chamada\" no canto superior direito da turma. Escaneie os QR Codes dos alunos presentes e finalize ao concluir.</p>
 
-                    <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M3 3v18h18\"/><rect x=\"7\" y=\"10\" width=\"3\" height=\"6\"/><rect x=\"12\" y=\"7\" width=\"3\" height=\"9\"/><rect x=\"17\" y=\"5\" width=\"3\" height=\"11\"/></svg></span>Exportações e Relatórios</h4>
-                    <p>Após finalizar, você pode compartilhar, exportar CSV e gerar relatórios (CSV/PDF).</p>
+                    <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M3 3v18h18\"/><rect x=\"7\" y=\"10\" width=\"3\" height=\"6\"/><rect x=\"12\" y=\"7\" width=\"3\" height=\"9\"/><rect x=\"17\" y=\"5\" width=\"3\" height=\"11\"/></svg></span>ExportaÃ§Ãµes e RelatÃ³rios</h4>
+                    <p>ApÃ³s finalizar, vocÃª pode compartilhar, exportar CSV e gerar relatÃ³rios (CSV/PDF).</p>
 
-                    <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z\"/><path d=\"M3 8.5V16l9 4 9-4V8.5\"/><path d=\"M12 13v7\"/></svg></span>Backup e Recuperação</h4>
-                    <p>Em Configurações, exporte backup completo da base. Também é possível recuperar backup para restaurar dados.</p>
+                    <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z\"/><path d=\"M3 8.5V16l9 4 9-4V8.5\"/><path d=\"M12 13v7\"/></svg></span>Backup e RecuperaÃ§Ã£o</h4>
+                    <p>Em ConfiguraÃ§Ãµes, exporte backup completo da base. TambÃ©m Ã© possÃ­vel recuperar backup para restaurar dados.</p>
                 </div>
                 <div class=\"modal-footer\">
                     <button class=\"btn btn-primary\" data-action=\"close-nearest-modal\">Entendi</button>
@@ -743,7 +743,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             await app.init();
         } catch (e) {
             console.error("[bootstrap] erro fatal", e);
-            alert("Erro crítico ao iniciar o app: " + e.message);
+            alert("Erro crÃ­tico ao iniciar o app: " + e.message);
         }
     }, 1000);
 });
@@ -807,5 +807,7 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
+
+
 
 
