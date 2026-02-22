@@ -70,13 +70,13 @@ const escolas = {
             return;
         }
 
-        // Validar nome Ãºnico (case-insensitive)
+        // Validar nome único (case-insensitive)
         const escolasArray = await db.getAll('escolas');
         const nomeNormalizado = nome.toLowerCase();
         const jaExiste = escolasArray.some(e => e.nome.toLowerCase() === nomeNormalizado);
 
         if (jaExiste) {
-            utils.mostrarToast('JÃ¡ existe uma escola com este nome', 'warning');
+            utils.mostrarToast('Já existe uma escola com este nome', 'warning');
             input.focus();
             return;
         }
@@ -131,7 +131,7 @@ const escolas = {
         if (input) input.value = '';
     },
 
-    // Processar foto para ediÃ§Ã£o de escola
+    // Processar foto para edição de escola
     processarFotoEditar(file) {
         this._processarFoto(file, (base64) => {
             this.fotoEditarTemp = base64;
@@ -181,12 +181,12 @@ const escolas = {
         reader.readAsDataURL(file);
     },
 
-    // Abrir modal de ediÃ§Ã£o (com suporte a foto)
+    // Abrir modal de edição (com suporte a foto)
     async abrirModalEditar(id) {
         try {
             const escola = await db.get('escolas', id);
             if (!escola) {
-                utils.mostrarToast('Escola nÃ£o encontrada', 'error');
+                utils.mostrarToast('Escola não encontrada', 'error');
                 return;
             }
 
@@ -208,11 +208,11 @@ const escolas = {
             app.abrirModal('modal-editar-escola');
         } catch (e) {
             console.error(e);
-            utils.mostrarToast('Erro ao abrir ediÃ§Ã£o', 'error');
+            utils.mostrarToast('Erro ao abrir edição', 'error');
         }
     },
 
-    // Salvar ediÃ§Ã£o de escola (com foto)
+    // Salvar edição de escola (com foto)
     async salvarEdicaoEscola() {
         const id = document.getElementById('input-editar-escola-id').value;
         const novoNome = (document.getElementById('input-editar-escola-nome').value || '').trim();
@@ -225,14 +225,14 @@ const escolas = {
         try {
             const escola = await db.get('escolas', id);
             if (!escola) {
-                utils.mostrarToast('Escola nÃ£o encontrada', 'error');
+                utils.mostrarToast('Escola não encontrada', 'error');
                 return;
             }
 
             const escolasArray = await db.getAll('escolas');
             const jaExiste = escolasArray.some(e => e.id !== id && e.nome.toLowerCase() === novoNome.toLowerCase());
             if (jaExiste) {
-                utils.mostrarToast('JÃ¡ existe uma escola com este nome', 'warning');
+                utils.mostrarToast('Já existe uma escola com este nome', 'warning');
                 return;
             }
 
@@ -253,19 +253,19 @@ const escolas = {
 
     // Excluir escola
     async excluirEscola(id) {
-        // Bloquear exclusÃ£o da escola padrÃ£o
+        // Bloquear exclusão da escola padrão
         if (id === 'default') {
-            utils.mostrarToast('A escola padrÃ£o nÃ£o pode ser excluÃ­da', 'warning');
+            utils.mostrarToast('A escola padrão não pode ser excluída', 'warning');
             return;
         }
 
         try {
-            // Verificar se hÃ¡ turmas vinculadas usando INDEX
+            // Verificar se há turmas vinculadas usando INDEX
             const turmasVinculadas = await db.getByIndex('turmas', 'escolaId', id);
 
             if (turmasVinculadas.length > 0) {
                 utils.mostrarToast(
-                    `NÃ£o Ã© possÃ­vel excluir: existem ${turmasVinculadas.length} turma${turmasVinculadas.length !== 1 ? 's' : ''} vinculada${turmasVinculadas.length !== 1 ? 's' : ''} a esta escola`,
+                    `Não é possível excluir: existem ${turmasVinculadas.length} turma${turmasVinculadas.length !== 1 ? 's' : ''} vinculada${turmasVinculadas.length !== 1 ? 's' : ''} a esta escola`,
                     'warning'
                 );
                 return;
@@ -274,7 +274,7 @@ const escolas = {
             // Excluir escola
             await db.delete('escolas', id);
 
-            utils.mostrarToast('Escola excluÃ­da', 'success');
+            utils.mostrarToast('Escola excluída', 'success');
             await this.listarEscolas();
             await this.atualizarTodosDropdowns();
         } catch (e) {
@@ -289,7 +289,7 @@ const escolas = {
         if (!select) return;
 
         const escolasArray = await db.getAll('escolas');
-        const selectedValue = select.value; // Preservar seleÃ§Ã£o atual
+        const selectedValue = select.value; // Preservar seleção atual
 
         // Popular options
         const options = escolasArray.map(escola => {
@@ -297,14 +297,14 @@ const escolas = {
             return `<option value="${escola.id}">${utils.escapeHtml(escola.nome)}${sufixoAtual}</option>`;
         }).join('');
 
-        // Se for filtro, adicionar opÃ§Ã£o "Todas"
+        // Se for filtro, adicionar opção "Todas"
         if (selectId === 'filter-escola') {
             select.innerHTML = `<option value="">Todas as Escolas</option>${options}`;
         } else {
             select.innerHTML = `<option value="">Selecione uma escola...</option>${options}`;
         }
 
-        // Restaurar seleÃ§Ã£o se possÃ­vel
+        // Restaurar seleção se possível
         if (selectedValue) {
             select.value = selectedValue;
         }

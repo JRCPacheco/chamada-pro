@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; manifest-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' blob:; worker-src 'self' blob:">
+        content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; manifest-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' blob:; worker-src 'self' blob:">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Chamada Fácil - Scanner de Presença</title>
 
@@ -58,15 +58,15 @@
             <div class="onboarding-steps">
                 <div class="step">
                     <div class="step-icon"><svg class="icon-svg icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
-                    <h3>Crie suas turmas</h3>
+                    <h3>Cadastre suas escolas e turmas</h3>
                 </div>
                 <div class="step">
                     <div class="step-icon"><svg class="icon-svg icon-20" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div>
-                    <h3>Escaneie QR Codes</h3>
+                    <h3>Escaneie QR Codes dos alunos</h3>
                 </div>
                 <div class="step">
                     <div class="step-icon"><svg class="icon-svg icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="6"/><rect x="12" y="7" width="3" height="9"/><rect x="17" y="5" width="3" height="11"/></svg></div>
-                    <h3>Exporte relatórios</h3>
+                    <h3>Exporte relatórios e arquivos</h3>
                 </div>
             </div>
 
@@ -188,6 +188,12 @@
         <!-- Tela 2: Detalhes da Turma -->
         <div id="tela-turma-detalhe" class="screen">
             <div class="turma-info-card">
+                <div class="turma-top-row">
+                    <p id="turma-escola-detalhe" class="turma-escola-detalhe"></p>
+                    <button class="btn-turma-chamada" data-action="scanner-iniciar">
+                        <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M4 4h6v6H4z"/><path d="M14 4h6v6h-6z"/><path d="M4 14h6v6H4z"/><path d="M14 14h2"/><path d="M18 14h2"/><path d="M14 18h2"/><path d="M18 18h2"/></svg></span>Chamada
+                    </button>
+                </div>
                 <h2 id="turma-nome-detalhe"></h2>
                 <p id="turma-descricao-detalhe"></p>
                 <div class="turma-stats">
@@ -231,7 +237,7 @@
                             <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg></span>Importar planilha
                         </button>
                         <button class="btn btn-secondary btn-sm" data-action="alunos-gerar-qr-pdf">
-                            <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg></span>Gerar QR Codes
+                            <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M4 4h6v6H4z"/><path d="M14 4h6v6h-6z"/><path d="M4 14h6v6H4z"/><path d="M14 14h2"/><path d="M18 14h2"/><path d="M14 18h2"/><path d="M18 18h2"/></svg></span>QRCodes
                         </button>
                     </div>
                     <div class="csv-modelo-download">
@@ -320,9 +326,6 @@
                 </div>
             </div>
 
-            <button class="btn-fab" data-action="scanner-iniciar">
-                <svg class="icon-svg icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3V4"/><path d="M20 7h-3V4"/><path d="M4 17h3v3"/><path d="M20 17h-3v3"/><rect x="6" y="7" width="12" height="10" rx="2"/></svg>
-            </button>
         </div>
 
         <!-- Tela 3: Scanner de QR Code -->

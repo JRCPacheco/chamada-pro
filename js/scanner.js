@@ -1,4 +1,4 @@
-// ===== SCANNER MODULE =====
+﻿// ===== SCANNER MODULE =====
 // Gerenciamento do scanner de QR Code
 // Migrado para IndexedDB
 
@@ -15,9 +15,35 @@ const scanner = {
     // Cache de alunos da turma atual para performance
     alunosCache: {},
 
-    // Lock de concorrência para processamento de scan
+    // Lock de concorrÃªncia para processamento de scan
     scanLock: false,
     feedbackTimeoutId: null,
+
+    getActiveVideoTrack() {
+        const videoEl = document.querySelector('#reader video');
+        const stream = videoEl?.srcObject;
+        if (!stream || typeof stream.getVideoTracks !== 'function') return null;
+        const tracks = stream.getVideoTracks();
+        return tracks && tracks.length ? tracks[0] : null;
+    },
+
+    cameraSuportaLanterna() {
+        const track = this.getActiveVideoTrack();
+        if (!track || typeof track.getCapabilities !== 'function') return false;
+        const caps = track.getCapabilities() || {};
+        return !!caps.torch;
+    },
+
+    atualizarDisponibilidadeLanterna() {
+        const btnTorch = document.getElementById('btn-torch');
+        if (!btnTorch) return;
+
+        const suportado = this.scanning && this.cameraSuportaLanterna();
+        btnTorch.style.display = suportado ? '' : 'none';
+        btnTorch.disabled = !suportado;
+
+        if (!suportado) this.torchEnabled = false;
+    },
 
     // Parse QR Code no formato novo (CF1|ARRAY) ou antigo (CF1|OBJECT)
     parseQrAluno(texto) {
@@ -36,7 +62,7 @@ const scanner = {
             }
 
             // FORMATO ANTIGO: Objeto {id, m, n}
-            // Mapeando para formato padrão do app
+            // Mapeando para formato padrÃ£o do app
             return {
                 id: data.id,
                 matricula: data.m || data.matricula, // suporte a variantes se houver
@@ -48,7 +74,7 @@ const scanner = {
         }
     },
 
-    // Iniciar nova chamada (DECOUPLED: recebe turmaId como parâmetro)
+    // Iniciar nova chamada (DECOUPLED: recebe turmaId como parÃ¢metro)
     async iniciarChamada(turmaId) {
         if (!turmaId) {
             utils.mostrarToast('Nenhuma turma selecionada', 'error');
@@ -59,7 +85,7 @@ const scanner = {
             const turma = await db.get('turmas', turmaId);
 
             if (!turma) {
-                utils.mostrarToast('Turma não encontrada', 'error');
+                utils.mostrarToast('Turma nÃ£o encontrada', 'error');
                 return;
             }
 
@@ -75,10 +101,10 @@ const scanner = {
             this.alunosCache = {};
             alunos.forEach(a => {
                 this.alunosCache[a.id] = a;
-                if (a.matricula) this.alunosCache['MAT_' + a.matricula] = a; // Index secundário
+                if (a.matricula) this.alunosCache['MAT_' + a.matricula] = a; // Index secundÃ¡rio
             });
 
-            // Definir Data ISO e validar limite diário por turma
+            // Definir Data ISO e validar limite diÃ¡rio por turma
             const dataISO = new Date().toISOString().slice(0, 10);
             const chamadasTurma = await db.getByIndex('chamadas', 'turmaId', turmaId);
             const chamadasHoje = chamadasTurma
@@ -92,7 +118,7 @@ const scanner = {
             const segundoHorarioAtivo = !!turma.segundoHorarioAtivo;
             const limiteChamadasDia = segundoHorarioAtivo ? 2 : 1;
             if (chamadasHoje.length >= limiteChamadasDia) {
-                utils.mostrarToast('Número de chamadas por dia esgotado para esta turma', 'warning');
+                utils.mostrarToast('NÃºmero de chamadas por dia esgotado para esta turma', 'warning');
                 return;
             }
 
@@ -109,14 +135,14 @@ const scanner = {
 
             const slot = !slotsUsados.has(1) ? 1 : 2;
             if (slot > limiteChamadasDia) {
-                utils.mostrarToast('Número de chamadas por dia esgotado para esta turma', 'warning');
+                utils.mostrarToast('NÃºmero de chamadas por dia esgotado para esta turma', 'warning');
                 return;
             }
 
             const startedAt = new Date().toISOString();
             const chamadaId = `chamada_${turmaId}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
-            // Criar nova sessão de chamada
+            // Criar nova sessÃ£o de chamada
             const chamada = {
                 id: chamadaId,
                 turmaId: turmaId,
@@ -127,17 +153,17 @@ const scanner = {
                 criadoEm: startedAt,
                 registros: {} // { alunoId: { status: 'P', ts: number } }
             };
-            // Salvar imediatamente para garantir existência
+            // Salvar imediatamente para garantir existÃªncia
             await db.put('chamadas', chamada);
 
             this.chamadaAtual = chamada;
 
             // Atualizar UI
             document.getElementById('scanner-turma-nome').textContent = turma.nome;
-            const rotuloHorario = slot === 2 ? '2º horário' : '1º horário';
-            document.getElementById('scanner-data-hora').textContent = `${utils.formatarData(dataISO)} • ${rotuloHorario}`;
+            const rotuloHorario = slot === 2 ? '2Âº horÃ¡rio' : '1Âº horÃ¡rio';
+            document.getElementById('scanner-data-hora').textContent = `${utils.formatarData(dataISO)} â€¢ ${rotuloHorario}`;
 
-            // Contar presenças iniciais
+            // Contar presenÃ§as iniciais
             const totalPresentes = Object.values(this.chamadaAtual.registros || {}).filter(r => r.status === 'P').length;
             document.getElementById('contador-presencas').textContent = totalPresentes;
 
@@ -145,7 +171,7 @@ const scanner = {
             document.getElementById('feedback').textContent = '';
             document.getElementById('feedback').className = 'feedback';
 
-            // Se já tiver presenças, mostrar últimas 5 (opcional, mas bom UX)
+            // Se jÃ¡ tiver presenÃ§as, mostrar Ãºltimas 5 (opcional, mas bom UX)
             this.atualizarListaPresencas();
 
             // Mostrar tela de scanner
@@ -172,9 +198,7 @@ const scanner = {
 
         try {
             const config = await app._getAppConfig();
-            const constraints = this.torchEnabled
-                ? { facingMode: this.currentFacingMode, advanced: [{ torch: true }] }
-                : { facingMode: this.currentFacingMode };
+            const constraints = { facingMode: this.currentFacingMode };
 
             await this.html5QrCode.start(
                 constraints,
@@ -185,23 +209,25 @@ const scanner = {
                 },
                 (decodedText) => this.onScanSuccess(decodedText),
                 (errorMessage) => {
-                    // Ignorar erros de scan contínuos
+                    // Ignorar erros de scan contÃ­nuos
                 }
             );
 
             this.scanning = true;
             this.atualizarStatusCamera();
+            this.atualizarDisponibilidadeLanterna();
 
             // Wake Lock
             if (config.wakeLock) {
                 this.requestWakeLock();
             }
 
-            utils.mostrarToast('Câmera ativada! Escaneie os QR Codes', 'success');
+            utils.mostrarToast('CÃ¢mera ativada! Escaneie os QR Codes', 'success');
 
         } catch (error) {
-            console.error('Erro ao iniciar câmera:', error);
-            utils.mostrarToast('Erro ao iniciar câmera. Verifique as permissões.', 'error');
+            console.error('Erro ao iniciar cÃ¢mera:', error);
+            utils.mostrarToast('Erro ao iniciar cÃ¢mera. Verifique as permissÃµes.', 'error');
+            this.atualizarDisponibilidadeLanterna();
         }
     },
 
@@ -215,7 +241,9 @@ const scanner = {
             console.error('Erro ao parar scanner:', error);
         } finally {
             this.scanning = false;
+            this.torchEnabled = false;
             this.atualizarStatusCamera();
+            this.atualizarDisponibilidadeLanterna();
             this.releaseWakeLock();
         }
     },
@@ -227,7 +255,7 @@ const scanner = {
         if (agora - this.ultimaLeitura < 1500) return;
         this.ultimaLeitura = agora;
 
-        // LOCK de concorrência: evitar processamento simultâneo
+        // LOCK de concorrÃªncia: evitar processamento simultÃ¢neo
         if (this.scanLock) {
             console.warn('[scanner] scan locked, aguardando processamento anterior');
             return;
@@ -251,10 +279,10 @@ const scanner = {
                 }
             } else {
                 // 2. Fallback: formato antigo (matricula direta?)
-                // O app antigo salvava matrícula no QR.
-                // Tenta achar aluno na turma atual pela matrícula.
-                // (Isso é arriscado se matricula repetir em turmas diferentes, mas o scanner valida turmaId abaixo)
-                // Na verdade o fallback do código antigo buscava `turma.alunos[matricula]`.
+                // O app antigo salvava matrÃ­cula no QR.
+                // Tenta achar aluno na turma atual pela matrÃ­cula.
+                // (Isso Ã© arriscado se matricula repetir em turmas diferentes, mas o scanner valida turmaId abaixo)
+                // Na verdade o fallback do cÃ³digo antigo buscava `turma.alunos[matricula]`.
                 // Aqui podemos buscar no cache da turma.
                 const matricula = decodedText;
                 aluno = this.alunosCache['MAT_' + matricula];
@@ -262,7 +290,7 @@ const scanner = {
 
             // VALIDAR ALUNO
             if (!aluno) {
-                this.mostrarFeedback('Aluno não encontrado no banco', 'error', {
+                this.mostrarFeedback('Aluno nÃ£o encontrado no banco', 'error', {
                     nome: 'Desconhecido',
                     estadoAvatar: 'error'
                 });
@@ -270,7 +298,7 @@ const scanner = {
                 return;
             }
 
-            // VALIDAR TURMA (CRÍTICO)
+            // VALIDAR TURMA (CRÃTICO)
             if (aluno.turmaId !== this.chamadaAtual.turmaId) {
                 this.mostrarFeedback('Aluno de outra turma!', 'error', {
                     aluno,
@@ -280,18 +308,18 @@ const scanner = {
                 return;
             }
 
-            // Verificar duplicidade DESTE SCAN (evitar spam de 'já registrado')
-            // Se já está marcado como P recentemente (nos ultimos 5 segundos?), avisa.
-            // Mas o requisito diz "se alunoId já existe em chamada.registros → atualizar".
-            // Então vamos atualizar o timestamp e dar feedback de sucesso (ou 'já lido').
-            // UX: Se já leu, avisa que já foi lido para usuário não ficar tentando.
+            // Verificar duplicidade DESTE SCAN (evitar spam de 'jÃ¡ registrado')
+            // Se jÃ¡ estÃ¡ marcado como P recentemente (nos ultimos 5 segundos?), avisa.
+            // Mas o requisito diz "se alunoId jÃ¡ existe em chamada.registros â†’ atualizar".
+            // EntÃ£o vamos atualizar o timestamp e dar feedback de sucesso (ou 'jÃ¡ lido').
+            // UX: Se jÃ¡ leu, avisa que jÃ¡ foi lido para usuÃ¡rio nÃ£o ficar tentando.
 
             const registroExistente = this.chamadaAtual.registros[aluno.id];
 
             if (registroExistente && registroExistente.status === 'P') {
                 // Opcional: Permitir atualizar timestamp?
-                // Vamos só avisar.
-                this.mostrarFeedback(`Já registrado: ${aluno.nome}`, 'warning', {
+                // Vamos sÃ³ avisar.
+                this.mostrarFeedback(`JÃ¡ registrado: ${aluno.nome}`, 'warning', {
                     aluno,
                     duracao: 5000,
                     estadoAvatar: 'success'
@@ -300,7 +328,7 @@ const scanner = {
                 return;
             }
 
-            // REGISTRAR PRESENÇA (PUT)
+            // REGISTRAR PRESENÃ‡A (PUT)
             this.chamadaAtual.registros[aluno.id] = {
                 status: 'P',
                 ts: Date.now()
@@ -310,7 +338,7 @@ const scanner = {
             await db.put('chamadas', this.chamadaAtual);
 
             // FEEDBACK
-            this.mostrarFeedback(`✓ ${aluno.nome}`, 'success', {
+            this.mostrarFeedback(`âœ“ ${aluno.nome}`, 'success', {
                 aluno,
                 duracao: 5000,
                 estadoAvatar: 'success'
@@ -371,7 +399,7 @@ const scanner = {
         }, duracao);
     },
 
-    // Atualizar lista de presenças em tempo real
+    // Atualizar lista de presenÃ§as em tempo real
     atualizarListaPresencas() {
         const container = document.getElementById('lista-presencas-live');
         const contador = document.getElementById('contador-presencas');
@@ -391,11 +419,11 @@ const scanner = {
                 };
             })
             .filter(r => r.status === 'P')
-            .sort((a, b) => b.ts - a.ts); // Ordem Cronológica Inversa (Mais recentes topo)
+            .sort((a, b) => b.ts - a.ts); // Ordem CronolÃ³gica Inversa (Mais recentes topo)
 
         contador.textContent = registros.length;
 
-        // Mostrar últimas 5 presenças
+        // Mostrar Ãºltimas 5 presenÃ§as
         const ultimas = registros.slice(0, 5);
 
         container.innerHTML = ultimas.map(p => {
@@ -417,44 +445,60 @@ const scanner = {
         }).join('');
     },
 
-    // Atualizar status da câmera
+    // Atualizar status da cÃ¢mera
     atualizarStatusCamera() {
         const status = document.getElementById('camera-status');
         const modo = this.currentFacingMode === 'environment' ? 'Traseira' : 'Frontal';
         const estado = this.scanning ? 'Ativa' : 'Inativa';
         const lanterna = this.torchEnabled ? 'On' : 'Off';
 
-        status.textContent = `Câmera: ${estado} | Modo: ${modo} | Lanterna: ${lanterna}`;
+        status.textContent = `CÃ¢mera: ${estado} | Modo: ${modo} | Lanterna: ${lanterna}`;
     },
 
-    // Alternar câmera
+    // Alternar cÃ¢mera
     async alternarCamera() {
         this.currentFacingMode = this.currentFacingMode === 'environment' ? 'user' : 'environment';
+        this.torchEnabled = false;
 
         if (this.scanning) {
             await this.pararScanner();
             await this.iniciarScanner();
         } else {
             this.atualizarStatusCamera();
+            this.atualizarDisponibilidadeLanterna();
         }
     },
 
     // Alternar lanterna
     async alternarLanterna() {
-        const supports = !!(navigator.mediaDevices?.getSupportedConstraints()?.torch);
-
-        if (!supports) {
-            utils.mostrarToast('Lanterna não suportada neste dispositivo', 'warning');
+        if (!this.scanning) {
+            utils.mostrarToast('Abra a cÃ¢mera antes de usar a lanterna', 'warning');
             return;
         }
 
-        this.torchEnabled = !this.torchEnabled;
+        const track = this.getActiveVideoTrack();
+        if (!track || typeof track.applyConstraints !== 'function') {
+            utils.mostrarToast('Lanterna nÃ£o disponÃ­vel nesta cÃ¢mera', 'warning');
+            this.atualizarDisponibilidadeLanterna();
+            return;
+        }
 
-        if (this.scanning) {
-            await this.pararScanner();
-            await this.iniciarScanner();
-        } else {
+        if (!this.cameraSuportaLanterna()) {
+            utils.mostrarToast('Lanterna nÃ£o suportada nesta cÃ¢mera', 'warning');
+            this.atualizarDisponibilidadeLanterna();
+            return;
+        }
+
+        const novoEstado = !this.torchEnabled;
+        try {
+            await track.applyConstraints({ advanced: [{ torch: novoEstado }] });
+            this.torchEnabled = novoEstado;
             this.atualizarStatusCamera();
+        } catch (error) {
+            console.error('Erro ao alternar lanterna:', error);
+            this.torchEnabled = false;
+            this.atualizarStatusCamera();
+            utils.mostrarToast('NÃ£o foi possÃ­vel ativar a lanterna nesta cÃ¢mera', 'warning');
         }
     },
 
@@ -480,7 +524,7 @@ const scanner = {
                 });
             }
         } catch (err) {
-            console.error('Wake Lock não suportado:', err);
+            console.error('Wake Lock nÃ£o suportado:', err);
         }
     },
 
@@ -491,13 +535,13 @@ const scanner = {
         }
     },
 
-    // Ler QR Code para cadastro (não marca presença)
+    // Ler QR Code para cadastro (nÃ£o marca presenÃ§a)
     lerQrParaCadastro(callback) {
         // Mostrar overlay (Fix Android)
         const overlay = document.getElementById('qr-scan-overlay');
         if (overlay) overlay.style.display = 'flex';
 
-        // Criar nova instância temporária
+        // Criar nova instÃ¢ncia temporÃ¡ria
         const readerTemp = new Html5Qrcode('reader-temp');
         let lido = false;
 
@@ -518,18 +562,18 @@ const scanner = {
                         utils.mostrarToast('QR Code lido com sucesso!', 'success');
                         callback(dados);
                     } else if (rawText) {
-                        // Fallback para texto plano (matrícula antiga)
+                        // Fallback para texto plano (matrÃ­cula antiga)
                         // Mas o `scanner.js` espera objeto. Vamos retornar objeto simulado?
-                        // "CF1|JSON" é o padrão novo. Se for antigo, retornamos null ou tentamos?
+                        // "CF1|JSON" Ã© o padrÃ£o novo. Se for antigo, retornamos null ou tentamos?
                         // O chamador em `alunos.js` vai tratar.
-                        // Se não parseou e não é CF1, assumimos que é matricula direta?
+                        // Se nÃ£o parseou e nÃ£o Ã© CF1, assumimos que Ã© matricula direta?
                         // Melhor retornar um objeto { id: null, raw: rawText } se for o caso.
-                        // Mas `lerQrParaCadastro` é chamado por alunos.js para PREENCHER O QR.
+                        // Mas `lerQrParaCadastro` Ã© chamado por alunos.js para PREENCHER O QR.
                         // Se eu li um texto qualquer, posso usar como QR ID? 
-                        // O sistema gera QR. O cadastro lê para ASSOCIAR.
-                        // Se for um QR gerado pelo sistema, é CF1.
+                        // O sistema gera QR. O cadastro lÃª para ASSOCIAR.
+                        // Se for um QR gerado pelo sistema, Ã© CF1.
 
-                        utils.mostrarToast('QR Code inválido ou formato antigo', 'warning');
+                        utils.mostrarToast('QR Code invÃ¡lido ou formato antigo', 'warning');
                         callback(null);
                     } else {
                         callback(null);
@@ -542,7 +586,7 @@ const scanner = {
                 });
         };
 
-        // Iniciar scanner temporário
+        // Iniciar scanner temporÃ¡rio
         readerTemp.start(
             { facingMode: 'environment' },
             {
@@ -550,11 +594,11 @@ const scanner = {
                 qrbox: { width: 250, height: 250 }
             },
             onSuccess,
-            () => { } // Ignorar erros contínuos
+            () => { } // Ignorar erros contÃ­nuos
         ).catch(err => {
             if (overlay) overlay.style.display = 'none';
-            console.error('Erro ao iniciar câmera:', err);
-            utils.mostrarToast('Erro ao acessar câmera', 'error');
+            console.error('Erro ao iniciar cÃ¢mera:', err);
+            utils.mostrarToast('Erro ao acessar cÃ¢mera', 'error');
             callback(null);
         });
     },
@@ -575,13 +619,13 @@ const scanner = {
 
     // Finalizar chamada
     async finalizarChamada() {
-        // Como estamos salvando em tempo real, "finalizar" é apenas sair e mostrar resumo.
-        // Verificamos se tem presenças.
+        // Como estamos salvando em tempo real, "finalizar" Ã© apenas sair e mostrar resumo.
+        // Verificamos se tem presenÃ§as.
 
         const presencasCount = Object.values(this.chamadaAtual.registros || {}).filter(r => r.status === 'P').length;
 
         if (presencasCount === 0) {
-            if (!utils.confirmar('Nenhuma presença foi registrada. Deseja finalizar mesmo assim?')) {
+            if (!utils.confirmar('Nenhuma presenÃ§a foi registrada. Deseja finalizar mesmo assim?')) {
                 return;
             }
         }
@@ -592,7 +636,7 @@ const scanner = {
         utils.mostrarToast('Chamada finalizada!', 'success');
 
         // Mostrar resumo (precisa dos dados populados)
-        // O `verDetalhes` busca do banco. Como já salvamos com `put` no scan, está lá.
+        // O `verDetalhes` busca do banco. Como jÃ¡ salvamos com `put` no scan, estÃ¡ lÃ¡.
         // Usamos chamada.verDetalhes passando o ID.
         chamadas.verDetalhes(this.chamadaAtual.id);
     }
@@ -616,6 +660,8 @@ document.addEventListener('DOMContentLoaded', () => {
         btnFinalizar.onclick = () => scanner.finalizarChamada();
     }
 
+    scanner.atualizarDisponibilidadeLanterna();
+
     // Parar scanner ao sair da tela
     document.addEventListener('visibilitychange', () => {
         if (document.hidden && scanner.scanning) {
@@ -623,3 +669,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+

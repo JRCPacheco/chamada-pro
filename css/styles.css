@@ -718,36 +718,6 @@ body {
     margin-bottom: 12px;
 }
 
-.btn-fab {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    width: 60px;
-    height: 60px;
-    border-radius: 20px;
-    /* Squircle moderno */
-    background: var(--primary-gradient);
-    color: white;
-    font-size: 28px;
-    border: none;
-    box-shadow: 0 8px 16px rgba(33, 47, 82, 0.4);
-    cursor: pointer;
-    transition: var(--transition);
-    z-index: 90;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-fab:hover {
-    transform: scale(1.1);
-    box-shadow: var(--shadow-xl);
-}
-
-.btn-fab:active {
-    transform: scale(0.95);
-}
-
 /* ===== EMPTY STATE ===== */
 .empty-state {
     text-align: center;
@@ -783,14 +753,77 @@ body {
     margin-bottom: 20px;
 }
 
+.turma-top-row {
+    position: relative;
+    min-height: 0;
+    padding-right: 184px;
+    margin: 0 0 8px;
+}
+
+.btn-turma-chamada {
+    --btn-chamada-scale: 1.05;
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(38px * var(--btn-chamada-scale));
+    padding: calc(8px * var(--btn-chamada-scale)) calc(14px * var(--btn-chamada-scale));
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    background: #ffffff;
+    color: var(--primary);
+    font-size: calc(14px * var(--btn-chamada-scale));
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25);
+}
+
+.btn-turma-chamada .icon-16 {
+    font-size: calc(16px * var(--btn-chamada-scale));
+}
+
+.btn-turma-chamada:hover {
+    background: #f8fbff;
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.28);
+    transform: translateY(-1px);
+}
+
+.btn-turma-chamada:active {
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.22);
+    transform: translateY(0);
+}
+
+.turma-escola-detalhe {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: 0.02em;
+    color: rgba(255, 255, 255, 0.86);
+    opacity: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .turma-info-card h2 {
     font-size: 24px;
-    margin-bottom: 8px;
+    line-height: 1.15;
+    margin: 0 0 8px;
 }
 
 .turma-info-card p {
     opacity: 0.9;
-    margin-bottom: 16px;
+    margin: 0 0 10px;
+}
+
+#turma-descricao-detalhe {
+    line-height: 1.25;
+    margin-bottom: 8px;
 }
 
 .turma-stats {
@@ -2080,6 +2113,15 @@ body {
     .modal-content {
         margin: 0;
         border-radius: var(--border-radius);
+    }
+
+    .btn-turma-chamada {
+        position: absolute;
+        top: 0;
+        right: 0;
+        min-height: calc(36px * var(--btn-chamada-scale));
+        padding: calc(8px * var(--btn-chamada-scale)) calc(12px * var(--btn-chamada-scale));
+        font-size: calc(13px * var(--btn-chamada-scale));
     }
 
     .turma-footer-row {
