@@ -1,0 +1,18 @@
+name: Mojibake Check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  mojibake:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run mojibake check
+        shell: pwsh
+        run: ./scripts/check-mojibake.ps1 -All
