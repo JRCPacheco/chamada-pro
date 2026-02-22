@@ -1,13 +1,13 @@
-﻿// ===== APP MODULE =====
-// Controle principal da aplicaÃ§Ã£o
+// ===== APP MODULE =====
+// Controle principal da aplicação
 
 const app = {
 
     telaAtual: null,
 
-    // Flag de inicializaÃ§Ã£o
+    // Flag de inicialização
     _initRunning: false,
-    _configCache: null, // Cache de configuraÃ§Ã£o
+    _configCache: null, // Cache de configuração
     _declarativeEventsBound: false,
 
     _getAppVersionLabel() {
@@ -158,7 +158,7 @@ const app = {
             this._configCache = cfg;
             console.log("[config] default criado");
         } else {
-            // MigraÃ§Ã£o leve para incluir novas chaves sem quebrar configs antigas
+            // Migração leve para incluir novas chaves sem quebrar configs antigas
             let changed = false;
             Object.keys(CONFIG_DEFAULTS.app).forEach((k) => {
                 if (cfg[k] === undefined) {
@@ -175,10 +175,10 @@ const app = {
         return cfg;
     },
 
-    // Inicializar aplicaÃ§Ã£o
+    // Inicializar aplicação
     async init() {
         if (this._initRunning) {
-            console.warn("[app] init jÃ¡ em execuÃ§Ã£o");
+            console.warn("[app] init já em execução");
             return;
         }
         this._initRunning = true;
@@ -294,7 +294,7 @@ const app = {
         await this.iniciarApp();
     },
 
-    // Mostrar tela especÃ­fica
+    // Mostrar tela específica
     mostrarTela(telaId) {
         // Esconder todas as telas
         document.querySelectorAll('.screen').forEach(screen => {
@@ -310,9 +310,9 @@ const app = {
             // Atualizar header
             this.atualizarHeader(telaId);
 
-            // Garante dados mais recentes ao abrir ConfiguraÃ§Ãµes
+            // Garante dados mais recentes ao abrir Configurações
             if (telaId === 'tela-config') {
-                this.carregarConfig().catch((e) => console.error('Erro ao carregar configuraÃ§Ãµes:', e));
+                this.carregarConfig().catch((e) => console.error('Erro ao carregar configurações:', e));
             }
 
             // Scroll para o topo
@@ -337,7 +337,7 @@ const app = {
                 btnBack.style.display = 'none';
                 break;
             case 'tela-turma-detalhe':
-                // TÃ­tulo jÃ¡ foi definido ao abrir detalhes
+                // Título já foi definido ao abrir detalhes
                 btnBack.style.display = 'block';
                 break;
             case 'tela-scanner':
@@ -349,7 +349,7 @@ const app = {
                 btnBack.style.display = 'block';
                 break;
             case 'tela-config':
-                headerTitle.textContent = 'ConfiguraÃ§Ãµes';
+                headerTitle.textContent = 'Configurações';
                 btnBack.style.display = 'block';
                 break;
         }
@@ -373,7 +373,7 @@ const app = {
         }
     },
 
-    // Voltar para turma apÃ³s finalizar chamada
+    // Voltar para turma após finalizar chamada
     voltarParaTurma() {
         if (turmas.turmaAtual) {
             turmas.abrirDetalhes(turmas.turmaAtual.id);
@@ -387,13 +387,13 @@ const app = {
     async setupEventListeners() {
         this.setupDeclarativeEvents();
 
-        // BotÃ£o voltar
+        // Botão voltar
         const btnBack = document.getElementById('btn-back');
         if (btnBack) {
             btnBack.onclick = () => this.voltar();
         }
 
-        // BotÃ£o menu
+        // Botão menu
         const btnMenu = document.getElementById('btn-menu');
         if (btnMenu) {
             btnMenu.onclick = () => this.mostrarMenu();
@@ -407,7 +407,7 @@ const app = {
             };
         });
 
-        // ConfiguraÃ§Ãµes
+        // Configurações
         await this.setupConfigListeners();
 
         // Prevenir zoom em inputs
@@ -421,7 +421,7 @@ const app = {
 
     // Mudar tab
     mudarTab(tabName) {
-        // Atualizar botÃµes
+        // Atualizar botões
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('active');
             if (btn.dataset.tab === tabName) {
@@ -429,7 +429,7 @@ const app = {
             }
         });
 
-        // Atualizar conteÃºdo
+        // Atualizar conteúdo
         document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.remove('active');
         });
@@ -468,7 +468,7 @@ const app = {
         this.abrirModal('modal-sobre');
     },
 
-    // Setup de listeners de configuraÃ§Ãµes
+    // Setup de listeners de configurações
     async setupConfigListeners() {
         const configSom = document.getElementById('config-som');
         const configVibracao = document.getElementById('config-vibracao');
@@ -501,11 +501,11 @@ const app = {
             });
         }
 
-        // Carregar configuraÃ§Ãµes
+        // Carregar configurações
         await this.carregarConfig();
     },
 
-    // Carregar configuraÃ§Ãµes
+    // Carregar configurações
     async carregarConfig() {
         const config = await this._getAppConfig();
 
@@ -524,7 +524,7 @@ const app = {
         if (configProfessorNome) configProfessorNome.value = config.professor_nome || '';
     },
 
-    // Salvar configuraÃ§Ãµes
+    // Salvar configurações
     async salvarConfig() {
         const cfg = await this._getAppConfig();
 
@@ -535,7 +535,7 @@ const app = {
 
         await db.put('config', cfg);
         this._configCache = cfg;
-        utils.mostrarToast('ConfiguraÃ§Ãµes salvas', 'success');
+        utils.mostrarToast('Configurações salvas', 'success');
     },
 
     async salvarNomeProfessor() {
@@ -568,7 +568,7 @@ const app = {
     },
 
 
-    // Aplicar configuraÃ§Ãµes de Interface (Multi Escola)
+    // Aplicar configurações de Interface (Multi Escola)
     async aplicarConfiguracoesInterface() {
         const { multi_escola } = await this._getAppConfig();
 
@@ -594,7 +594,7 @@ const app = {
         // Toggle lista de elementos
         multiEscolaElements.forEach(el => updateVisibility(el));
 
-        // Toggle elemento Ãºnico
+        // Toggle elemento único
         updateVisibility(escolaFilter);
 
         // MULTI ESCOLA: Popularizar filtro e setup listener
@@ -608,14 +608,14 @@ const app = {
                     filterSelect.value = escolaPreferencialId;
                 }
 
-                // Remover listener antigo se existir para evitar duplicaÃ§Ã£o ou conflitos
+                // Remover listener antigo se existir para evitar duplicação ou conflitos
                 filterSelect.onchange = null;
 
                 filterSelect.onchange = () => {
                     turmas.filtrarPorEscola(filterSelect.value);
                 };
 
-                // Menos cliques: ao ativar multi-escola, inicia filtrando pela escola padrÃ£o.
+                // Menos cliques: ao ativar multi-escola, inicia filtrando pela escola padrão.
                 await turmas.filtrarPorEscola(filterSelect.value || escolaPreferencialId || '');
             }
         } else {
@@ -624,7 +624,7 @@ const app = {
                 filterSelect.value = '';
                 filterSelect.onchange = null;
             }
-            // Atualizar lista de turmas para mostrar tudo (sem o badge que o renderizarTurmas jÃ¡ trata)
+            // Atualizar lista de turmas para mostrar tudo (sem o badge que o renderizarTurmas já trata)
             if (this.telaAtual === 'tela-turmas') {
                 turmas.listar();
             }
@@ -644,13 +644,13 @@ const app = {
     // Limpar todos os dados
     limparTodosDados() {
         if (!utils.confirmar(
-            'ATENÃ‡ÃƒO: Esta aÃ§Ã£o irÃ¡ APAGAR TODOS OS DADOS permanentemente. Deseja continuar?'
+            'ATENÇÃO: Esta ação irá APAGAR TODOS OS DADOS permanentemente. Deseja continuar?'
         )) {
             return;
         }
 
         if (!utils.confirmar(
-            'Tem CERTEZA ABSOLUTA? Esta aÃ§Ã£o NÃƒO PODE ser desfeita!'
+            'Tem CERTEZA ABSOLUTA? Esta ação NÃO PODE ser desfeita!'
         )) {
             return;
         }
@@ -676,32 +676,32 @@ const app = {
                 </div>
                 <div class=\"modal-body\">
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M4 19.5A2.5 2.5 0 0 1 6.5 17H20\"/><path d=\"M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z\"/></svg></span>Criar Turma</h4>
-                    <p>Clique em \"Adicionar turma\" para criar uma nova turma. Informe nome, descriÃ§Ã£o e escola (quando multi-escola estiver ativo).</p>
+                    <p>Clique em \"Adicionar turma\" para criar uma nova turma. Informe nome, descrição e escola (quando multi-escola estiver ativo).</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M3 10.5 12 4l9 6.5\"/><path d=\"M5 10v9h14v-9\"/><path d=\"M9 19v-5h6v5\"/><path d=\"M9 10h.01\"/><path d=\"M15 10h.01\"/></svg></span>Gerenciar Escolas</h4>
                     <p>No Menu, use \"Gerenciar Escolas\" para cadastrar ou editar escolas e definir logo. As turmas podem ser vinculadas a uma escola.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"3\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a3 3 0 0 1 0 5.75\"/></svg></span>Adicionar Alunos</h4>
-                    <p>Entre na turma e adicione alunos manualmente ou importe uma planilha CSV. Use tambÃ©m \"Baixar modelo de planilha\" para evitar erros.</p>
-                    <p><strong>Formato CSV:</strong><br>MatrÃ­cula;Nome;Email (opcional)</p>
+                    <p>Entre na turma e adicione alunos manualmente ou importe uma planilha CSV. Use também \"Baixar modelo de planilha\" para evitar erros.</p>
+                    <p><strong>Formato CSV:</strong><br>Matrícula;Nome;Email (opcional)</p>
 
-                    <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M8 2h8\"/><path d=\"M9 2v2\"/><path d=\"M15 2v2\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\"/><path d=\"M8 11h8\"/><path d=\"M8 15h5\"/></svg></span>DiÃ¡rio de Classe</h4>
-                    <p>Na aba \"DiÃ¡rio de Classe\", acompanhe o histÃ³rico mensal de chamadas da turma. VocÃª pode abrir detalhes, exportar histÃ³rico e gerenciar registros.</p>
+                    <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M8 2h8\"/><path d=\"M9 2v2\"/><path d=\"M15 2v2\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\"/><path d=\"M8 11h8\"/><path d=\"M8 15h5\"/></svg></span>Diário de Classe</h4>
+                    <p>Na aba \"Diário de Classe\", acompanhe o histórico mensal de chamadas da turma. Você pode abrir detalhes, exportar histórico e gerenciar registros.</p>
 
-                    <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M12 6v6l4 2\"/><circle cx=\"12\" cy=\"12\" r=\"9\"/></svg></span>Segundo HorÃ¡rio</h4>
-                    <p>Ative \"Segundo horÃ¡rio\" na turma para permitir atÃ© 2 chamadas no mesmo dia.</p>
+                    <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M12 6v6l4 2\"/><circle cx=\"12\" cy=\"12\" r=\"9\"/></svg></span>Segundo Horário</h4>
+                    <p>Ative \"Segundo horário\" na turma para permitir até 2 chamadas no mesmo dia.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M4 4h6v6H4z\"/><path d=\"M14 4h6v6h-6z\"/><path d=\"M4 14h6v6H4z\"/><path d=\"M14 14h2\"/><path d=\"M18 14h2\"/><path d=\"M14 18h2\"/><path d=\"M18 18h2\"/></svg></span>Gerar QR Codes</h4>
-                    <p>Na aba \"Alunos\", clique em \"Gerar QR Codes\" para criar um PDF com os cÃ³digos dos alunos.</p>
+                    <p>Na aba \"Alunos\", clique em \"Gerar QR Codes\" para criar um PDF com os códigos dos alunos.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M4 4h6v6H4z\"/><path d=\"M14 4h6v6h-6z\"/><path d=\"M4 14h6v6H4z\"/><path d=\"M14 14h2\"/><path d=\"M18 14h2\"/><path d=\"M14 18h2\"/><path d=\"M18 18h2\"/></svg></span>Fazer Chamada</h4>
-                    <p>Use o botÃ£o \"Chamada\" no canto superior direito da turma. Escaneie os QR Codes dos alunos presentes e finalize ao concluir.</p>
+                    <p>Use o botão \"Chamada\" no canto superior direito da turma. Escaneie os QR Codes dos alunos presentes e finalize ao concluir.</p>
 
-                    <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M3 3v18h18\"/><rect x=\"7\" y=\"10\" width=\"3\" height=\"6\"/><rect x=\"12\" y=\"7\" width=\"3\" height=\"9\"/><rect x=\"17\" y=\"5\" width=\"3\" height=\"11\"/></svg></span>ExportaÃ§Ãµes e RelatÃ³rios</h4>
-                    <p>ApÃ³s finalizar, vocÃª pode compartilhar, exportar CSV e gerar relatÃ³rios (CSV/PDF).</p>
+                    <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M3 3v18h18\"/><rect x=\"7\" y=\"10\" width=\"3\" height=\"6\"/><rect x=\"12\" y=\"7\" width=\"3\" height=\"9\"/><rect x=\"17\" y=\"5\" width=\"3\" height=\"11\"/></svg></span>Exportações e Relatórios</h4>
+                    <p>Após finalizar, você pode compartilhar, exportar CSV e gerar relatórios (CSV/PDF).</p>
 
-                    <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z\"/><path d=\"M3 8.5V16l9 4 9-4V8.5\"/><path d=\"M12 13v7\"/></svg></span>Backup e RecuperaÃ§Ã£o</h4>
-                    <p>Em ConfiguraÃ§Ãµes, exporte backup completo da base. TambÃ©m Ã© possÃ­vel recuperar backup para restaurar dados.</p>
+                    <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z\"/><path d=\"M3 8.5V16l9 4 9-4V8.5\"/><path d=\"M12 13v7\"/></svg></span>Backup e Recuperação</h4>
+                    <p>Em Configurações, exporte backup completo da base. Também é possível recuperar backup para restaurar dados.</p>
                 </div>
                 <div class=\"modal-footer\">
                     <button class=\"btn btn-primary\" data-action=\"close-nearest-modal\">Entendi</button>
@@ -718,7 +718,7 @@ const app = {
             }
         };
     },
-    // Evitar zoom automÃ¡tico no iOS sem bloquear acessibilidade de zoom global
+    // Evitar zoom automático no iOS sem bloquear acessibilidade de zoom global
     preventZoomOnInputs() {
         const inputs = document.querySelectorAll('input, textarea, select');
         inputs.forEach(input => {
@@ -737,13 +737,13 @@ const app = {
 
 // Inicializar app quando DOM estiver pronto
 document.addEventListener('DOMContentLoaded', async () => {
-    // Delay para animaÃ§Ã£o de loading (mantido comportamento visual)
+    // Delay para animação de loading (mantido comportamento visual)
     setTimeout(async () => {
         try {
             await app.init();
         } catch (e) {
             console.error("[bootstrap] erro fatal", e);
-            alert("Erro crÃ­tico ao iniciar o app: " + e.message);
+            alert("Erro crítico ao iniciar o app: " + e.message);
         }
     }, 1000);
 });
@@ -791,7 +791,7 @@ if ('serviceWorker' in navigator) {
                     });
                 });
 
-                // Busca atualizaÃ§Ã£o apÃ³s registrar, sem interromper usuÃ¡rio.
+                // Busca atualização após registrar, sem interromper usuário.
                 registration.update().catch(() => { });
 
                 setInterval(() => {
