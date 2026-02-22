@@ -347,7 +347,8 @@ const chamadas = {
             .sort((a, b) => a.nome.localeCompare(b.nome))
             .map(r => `
                 <div class="resumo-lista-item">
-                    ? ${utils.escapeHtml(r.nome)} <small>(${r.horaFormatada})</small>
+                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+                    ${utils.escapeHtml(r.nome)} <small>(${r.horaFormatada})</small>
                 </div>
             `).join('');
 
@@ -360,7 +361,8 @@ const chamadas = {
             .sort((a, b) => a.nome.localeCompare(b.nome))
             .map(r => `
                 <div class="resumo-lista-item">
-                    ? ${utils.escapeHtml(r.nome)}
+                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span>
+                    ${utils.escapeHtml(r.nome)}
                 </div>
             `).join('');
 
@@ -474,22 +476,22 @@ const chamadas = {
 
             const percentual = utils.calcularPercentual(presentes, totalAlunos);
 
-            let texto = `?? Chamada - ${turma.nome}\n`;
-            texto += `?? ${utils.formatarData(chamada.data)}\n\n`;
-            texto += `? Presentes: ${presentes} de ${totalAlunos} (${percentual}%)\n`;
-            if (faltas > 0) texto += `? Faltas: ${faltas}\n`;
+            let texto = `Chamada - ${turma.nome}\n`;
+            texto += `Data: ${utils.formatarData(chamada.data)}\n\n`;
+            texto += `Presentes: ${presentes} de ${totalAlunos} (${percentual}%)\n`;
+            if (faltas > 0) texto += `Faltas: ${faltas}\n`;
             texto += '\n';
 
             const sortNome = (a, b) => a.localeCompare(b);
 
             if (listaPresentes.length > 0) {
                 texto += '--- PRESENTES ---\n';
-                listaPresentes.sort(sortNome).forEach(nome => texto += `? ${nome}\n`);
+                listaPresentes.sort(sortNome).forEach(nome => texto += `- ${nome}\n`);
             }
 
             if (listaAusentes.length > 0) {
                 texto += '\n--- AUSENTES ---\n';
-                listaAusentes.sort(sortNome).forEach(nome => texto += `? ${nome}\n`);
+                listaAusentes.sort(sortNome).forEach(nome => texto += `- ${nome}\n`);
             }
 
             const compartilhado = await utils.compartilhar({
@@ -1325,4 +1327,3 @@ const chamadas = {
         }
     }
 };
-

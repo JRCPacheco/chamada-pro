@@ -4,14 +4,12 @@
 
 $ErrorActionPreference = 'Stop'
 
-$tokens = @(
-    'Ã',
-    'ðŸ',
-    'â€”',
-    'â€“',
-    'â€œ',
-    'â€',
-    'ï¿½'
+$patterns = @(
+    '\u00C3[\u0080-\u00BF]',       # Ã + continuation bytes (ex: Ã£, Ã§)
+    '\u00C2[\u00A0-\u00BF]',       # Â + punctuation/symbol ranges (ex: Âº, Â°)
+    '\u00E2\u0080[\u0090-\u00BF]', # â + smart punctuation mojibake
+    '\u00F0\u009F',                # ðŸ... emoji sequence mojibake
+    '\u00EF\u00BF\u00BD'           # replacement char sequence (ï¿½)
 )
 
 $extensions = @('.html', '.css', '.js', '.json', '.md', '.txt')
@@ -24,12 +22,13 @@ function Test-Line {
         [string]$Text
     )
 
-    foreach ($token in $tokens) {
-        if ($Text.Contains($token)) {
+    foreach ($pattern in $patterns) {
+        $match = [regex]::Match($Text, $pattern)
+        if ($match.Success) {
             return [PSCustomObject]@{
                 File  = $File
                 Line  = $Line
-                Token = $token
+                Token = $match.Value
                 Text  = $Text.Trim()
             }
         }
