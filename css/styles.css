@@ -997,6 +997,12 @@ body {
     background: var(--gray-300);
 }
 
+.btn-deletar-aluno.holding {
+    background: #fecaca;
+    color: #b91c1c;
+    transform: scale(0.94);
+}
+
 .aluno-pontos-section {
     margin-top: 8px;
     padding-top: 12px;
@@ -2322,6 +2328,12 @@ body {
 .escola-item-actions .btn-icon:hover {
     background: var(--gray-200);
     transform: scale(1.05);
+}
+
+.escola-item-actions .btn-icon.holding {
+    background: #fecaca;
+    color: #b91c1c;
+    transform: scale(0.94);
 }
 
 .csv-modelo-download {

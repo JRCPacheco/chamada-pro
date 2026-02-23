@@ -133,7 +133,7 @@ const turmas = {
                     ${escolaBadge}
                     <div class="turma-card-header">
                         <h3>${utils.escapeHtml(turma.nome)}</h3>
-                        <button type="button" class="turma-delete-btn" data-turma-id="${turma.id}" aria-label="Excluir turma" title="Segure por 1s para excluir">
+                        <button type="button" class="turma-delete-btn" data-turma-id="${turma.id}" aria-label="Excluir turma" title="Segure por 1 segundo para excluir">
                             ${iconTrash}
                         </button>
                     </div>
@@ -478,6 +478,7 @@ const turmas = {
                 await escolas.renderizarDropdown('input-editar-turma-escola');
             }
 
+            await this.sincronizarFiltroComTurmaImportada(novaTurmaId);
             await this.listar();
             await this.abrirDetalhes(novaTurmaId);
         } catch (error) {
@@ -628,11 +629,26 @@ const turmas = {
                 await escolas.renderizarDropdown('input-turma-escola');
                 await escolas.renderizarDropdown('input-editar-turma-escola');
             }
+            await this.sincronizarFiltroComTurmaImportada(novaTurmaId);
             await this.listar();
             await this.renderizarModalGerenciarTurmas();
         } catch (error) {
             console.error('Erro ao recuperar turma:', error);
             utils.mostrarToast('Erro ao recuperar backup da turma', 'error');
+        }
+    },
+
+    async sincronizarFiltroComTurmaImportada(turmaId) {
+        if (!turmaId) return;
+
+        const filterEscola = document.getElementById('filter-escola');
+        if (!filterEscola) return;
+
+        const turma = await db.get('turmas', turmaId);
+        if (!turma?.escolaId) return;
+
+        if (filterEscola.value && filterEscola.value !== turma.escolaId) {
+            filterEscola.value = turma.escolaId;
         }
     },
 

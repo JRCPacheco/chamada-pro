@@ -6,6 +6,9 @@ const escolas = {
 
     fotoNovaTemp: null,
     fotoEditarTemp: null,
+    _deleteHoldTimers: new Map(),
+    _deleteHoldTriggered: new Set(),
+    _listaEscolasDeleteHoldBound: false,
     _iconSchoolSvg(sizeClass = 'icon-16') {
         return `<svg class="icon-svg ${sizeClass}" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg>`;
     },
@@ -49,7 +52,7 @@ const escolas = {
                     </div>
                     <div class="escola-item-actions">
                         ${!isDefault ? `
-                            <button class="btn-icon btn-sm" data-action="escolas-excluir-item" data-escola-id="${escola.id}" title="Excluir">
+                            <button type="button" class="btn-icon btn-sm btn-excluir-escola" data-escola-id="${escola.id}" title="Segure por 1 segundo para excluir">
                                 ${iconTrash}
                             </button>
                         ` : ''}
@@ -57,6 +60,78 @@ const escolas = {
                 </div>
             `;
         }).join('');
+
+        this._bindExcluirEscolaComHold();
+    },
+
+    _bindExcluirEscolaComHold() {
+        const container = document.getElementById('lista-escolas-gerenciar');
+        if (!container || this._listaEscolasDeleteHoldBound) return;
+
+        const clearHold = (btn, pointerId = null) => {
+            const key = pointerId !== null ? `${btn.dataset.escolaId}:${pointerId}` : btn.dataset.escolaId;
+            const timer = this._deleteHoldTimers.get(key);
+            if (timer) {
+                clearTimeout(timer);
+                this._deleteHoldTimers.delete(key);
+            }
+            btn.classList.remove('holding');
+        };
+
+        container.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn-excluir-escola');
+            if (!btn || !container.contains(btn)) return;
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        container.addEventListener('pointerdown', (e) => {
+            const btn = e.target.closest('.btn-excluir-escola');
+            if (!btn || !container.contains(btn)) return;
+            e.preventDefault();
+            e.stopPropagation();
+
+            const escolaId = btn.dataset.escolaId;
+            if (!escolaId) return;
+
+            const key = `${escolaId}:${e.pointerId}`;
+            btn.classList.add('holding');
+
+            const timer = setTimeout(() => {
+                this._deleteHoldTriggered.add(key);
+                btn.classList.remove('holding');
+                utils.vibrar([40]);
+                this.excluirEscola(escolaId);
+                this._deleteHoldTimers.delete(key);
+            }, 1000);
+
+            this._deleteHoldTimers.set(key, timer);
+        });
+
+        const endHold = (e) => {
+            const btn = e.target.closest('.btn-excluir-escola');
+            if (!btn || !container.contains(btn)) return;
+            e.stopPropagation();
+
+            const escolaId = btn.dataset.escolaId;
+            if (!escolaId) return;
+
+            const key = `${escolaId}:${e.pointerId}`;
+            const holdCompleted = this._deleteHoldTriggered.has(key);
+            if (holdCompleted) {
+                this._deleteHoldTriggered.delete(key);
+                clearHold(btn, e.pointerId);
+                return;
+            }
+
+            clearHold(btn, e.pointerId);
+            utils.mostrarToast('Segure por 1 segundo para excluir a escola', 'warning');
+        };
+
+        container.addEventListener('pointerup', endHold);
+        container.addEventListener('pointercancel', endHold);
+        container.addEventListener('pointerleave', endHold);
+        this._listaEscolasDeleteHoldBound = true;
     },
 
     // Adicionar nova escola

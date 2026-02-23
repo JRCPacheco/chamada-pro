@@ -9,6 +9,8 @@ const alunos = {
     qrImportado: null,
     eventoPontoEmEdicao: null,
     obsOcultaAtual: false,
+    _deleteHoldTimers: new Map(),
+    _deleteHoldTriggered: new Set(),
 
     // Listar alunos da turma atual
     async listar() {
@@ -81,7 +83,7 @@ const alunos = {
                         <p>Matrícula: ${utils.escapeHtml(aluno.matricula)}</p>
                     </div>
                     <div class="aluno-actions">
-                        <button class="btn-icon-sm btn-deletar-aluno" data-id="${aluno.id}" title="Excluir">
+                        <button class="btn-icon-sm btn-deletar-aluno" data-id="${aluno.id}" title="Segure por 1 segundo para excluir">
                             🗑️
                         </button>
                     </div>
@@ -98,11 +100,64 @@ const alunos = {
             });
         });
 
-        document.querySelectorAll('.btn-deletar-aluno').forEach(btn => {
-            btn.addEventListener('click', function (event) {
+        const clearHold = (btn, pointerId = null) => {
+            const key = pointerId !== null ? `${btn.dataset.id}:${pointerId}` : btn.dataset.id;
+            const timer = this._deleteHoldTimers.get(key);
+            if (timer) {
+                clearTimeout(timer);
+                this._deleteHoldTimers.delete(key);
+            }
+            btn.classList.remove('holding');
+        };
+
+        document.querySelectorAll('.btn-deletar-aluno').forEach((btn) => {
+            btn.addEventListener('click', (event) => {
+                event.preventDefault();
                 event.stopPropagation();
-                alunos.deletar(this.dataset.id);
             });
+
+            btn.addEventListener('pointerdown', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const alunoId = btn.dataset.id;
+                if (!alunoId) return;
+
+                const key = `${alunoId}:${event.pointerId}`;
+                btn.classList.add('holding');
+
+                const timer = setTimeout(() => {
+                    this._deleteHoldTriggered.add(key);
+                    btn.classList.remove('holding');
+                    utils.vibrar([40]);
+                    this.deletar(alunoId);
+                    this._deleteHoldTimers.delete(key);
+                }, 1000);
+
+                this._deleteHoldTimers.set(key, timer);
+            });
+
+            const endHold = (event) => {
+                event.stopPropagation();
+
+                const alunoId = btn.dataset.id;
+                if (!alunoId) return;
+
+                const key = `${alunoId}:${event.pointerId}`;
+                const holdCompleted = this._deleteHoldTriggered.has(key);
+                if (holdCompleted) {
+                    this._deleteHoldTriggered.delete(key);
+                    clearHold(btn, event.pointerId);
+                    return;
+                }
+
+                clearHold(btn, event.pointerId);
+                utils.mostrarToast('Segure por 1 segundo para excluir o aluno', 'warning');
+            };
+
+            btn.addEventListener('pointerup', endHold);
+            btn.addEventListener('pointercancel', endHold);
+            btn.addEventListener('pointerleave', endHold);
         });
     },
 
