@@ -466,14 +466,14 @@
             </div>
 
             <div class="config-section">
-                <h3>Dados</h3>
+                <h3>Backup do aplicativo</h3>
 
                 <button class="btn btn-secondary btn-block" data-action="app-exportar-backup">
-                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z"/><path d="M3 8.5V16l9 4 9-4V8.5"/><path d="M12 13v7"/></svg></span>Exportar Backup
+                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z"/><path d="M3 8.5V16l9 4 9-4V8.5"/><path d="M12 13v7"/></svg></span>Exportar Backup do aplicativo
                 </button>
 
                 <button class="btn btn-secondary btn-block" data-action="app-importar-backup">
-                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 21V9"/><path d="m17 14-5-5-5 5"/><path d="M4 3h16"/></svg></span>Importar Backup
+                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 21V9"/><path d="m17 14-5-5-5 5"/><path d="M4 3h16"/></svg></span>Importar Backup do aplicativo
                 </button>
 
                 <button class="btn btn-danger btn-block" data-action="app-limpar-dados">
@@ -605,6 +605,15 @@
                     <button class="btn btn-secondary btn-sm" id="btn-gerenciar-turmas-cancelar-selecao"
                         data-action="turmas-cancelar-selecao-gerenciar" style="display: none;">
                         Cancelar
+                    </button>
+                </div>
+                <div class="gerenciar-qrcodes-card">
+                    <div class="gerenciar-qrcodes-head">
+                        <h4>Compartilhamento de QRCodes</h4>
+                        <p>Use para compartilhar os alunos de uma turma com outro professor, mantendo os mesmos QRCodes.</p>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" data-action="turmas-importar-migracao-global">
+                        Receber QRCodes
                     </button>
                 </div>
                 <div id="lista-gerenciar-turmas" class="gerenciar-turmas-list"></div>
@@ -762,12 +771,6 @@
                         <svg class="icon-svg icon-20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.08V21a2 2 0 0 1-4 0v-.09a1.7 1.7 0 0 0-.4-1.08 1.7 1.7 0 0 0-1-.6 1.7 1.7 0 0 0-1.82.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.08-.4H2.9a2 2 0 0 1 0-4H3a1.7 1.7 0 0 0 1.08-.4 1.7 1.7 0 0 0 .6-1 1.7 1.7 0 0 0-.34-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6A1.7 1.7 0 0 0 10.4 2.9V2.9a2 2 0 0 1 4 0V3a1.7 1.7 0 0 0 .4 1.08 1.7 1.7 0 0 0 1 .6 1.7 1.7 0 0 0 1.82-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c0 .38.14.74.4 1a1.7 1.7 0 0 0 1.08.4h.09a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.08.4 1.7 1.7 0 0 0-.4 1Z"/></svg>
                     </span>
                     <span>Configurações</span>
-                </button>
-                <button class="menu-item" data-action="menu-exportar-backup">
-                    <span class="menu-icon" aria-hidden="true">
-                        <svg class="icon-svg icon-20" viewBox="0 0 24 24"><path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z"/><path d="M3 8.5V16l9 4 9-4V8.5"/><path d="M12 13v7"/></svg>
-                    </span>
-                    <span>Exportar Backup</span>
                 </button>
                 <button class="menu-item" data-action="app-abrir-sobre">
                     <span class="menu-icon" aria-hidden="true">
@@ -975,6 +978,7 @@
 </body>
 
 </html>
+
 
 
 

@@ -44,7 +44,6 @@ const app = {
             case 'app-abrir-sobre': return this.abrirSobre();
             case 'menu-ir-turmas': this.mostrarTela('tela-turmas'); return this.fecharModal('modal-menu');
             case 'menu-ir-config': this.mostrarTela('tela-config'); return this.fecharModal('modal-menu');
-            case 'menu-exportar-backup': this.exportarBackup(); return this.fecharModal('modal-menu');
             case 'menu-abrir-ajuda': this.mostrarAjuda(); return this.fecharModal('modal-menu');
             case 'turmas-mostrar-nova': return turmas.mostrarModalNovaTurma();
             case 'turmas-abrir-gerenciar': return turmas.abrirModalGerenciarTurmas();
@@ -52,6 +51,7 @@ const app = {
             case 'turmas-exportar-backup-atual': return turmas.exportarBackupTurmaAtual();
             case 'turmas-recuperar-backup-atual': return turmas.recuperarBackupTurmaAtual();
             case 'turmas-recuperar-backup-global': return turmas.recuperarBackupTurmaGlobal();
+            case 'turmas-importar-migracao-global': return turmas.importarMigracaoTurmaGlobal();
             case 'turmas-toggle-selecao-gerenciar': return turmas.alternarSelecaoGerenciarTurmas();
             case 'turmas-toggle-item-selecao-gerenciar': return turmas.alternarSelecaoItemGerenciarTurmas(el.dataset.turmaId);
             case 'turmas-selecionar-todas-gerenciar': return turmas.alternarSelecionarTodasGerenciarTurmas();
@@ -60,6 +60,7 @@ const app = {
             case 'turmas-abrir-item-gerenciar': return turmas.abrirItemGerenciarTurmas(el.dataset.turmaId);
             case 'turmas-editar-item-gerenciar': return turmas.editarItemGerenciarTurmas(el.dataset.turmaId);
             case 'turmas-exportar-item-gerenciar': return turmas.exportarItemGerenciarTurmas(el.dataset.turmaId);
+            case 'turmas-exportar-migracao-item-gerenciar': return turmas.exportarMigracaoItemGerenciarTurmas(el.dataset.turmaId);
             case 'turmas-excluir-item-gerenciar': return turmas.excluirItemGerenciarTurmas(el.dataset.turmaId);
             case 'turmas-excluir-atual': return turmas.excluirTurma(turmas.turmaAtual?.id);
             case 'turmas-salvar-nova': return turmas.salvarNovaTurma();

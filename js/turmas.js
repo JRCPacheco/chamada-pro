@@ -556,6 +556,7 @@ const turmas = {
                             <button class="btn btn-secondary btn-sm" data-action="turmas-abrir-item-gerenciar" data-turma-id="${turma.id}">Abrir</button>
                             <button class="btn btn-secondary btn-sm" data-action="turmas-editar-item-gerenciar" data-turma-id="${turma.id}">Editar</button>
                             <button class="btn btn-secondary btn-sm" data-action="turmas-exportar-item-gerenciar" data-turma-id="${turma.id}">Backup</button>
+                            <button class="btn btn-secondary btn-sm" data-action="turmas-exportar-migracao-item-gerenciar" data-turma-id="${turma.id}">Enviar QRCodes</button>
                             <button class="btn btn-danger btn-sm" data-action="turmas-excluir-item-gerenciar" data-turma-id="${turma.id}">Excluir</button>
                         </div>
                     </div>
@@ -638,6 +639,32 @@ const turmas = {
         }
     },
 
+    async importarMigracaoTurmaGlobal() {
+        if (typeof exportModule === 'undefined' || typeof exportModule.importarTurmaProfessorJSON !== 'function') {
+            utils.mostrarToast('Módulo de compartilhamento de QRCodes indisponível', 'error');
+            return;
+        }
+
+        try {
+            const resultado = await exportModule.importarTurmaProfessorJSON();
+            const novaTurmaId = resultado?.novaTurmaId;
+            if (!novaTurmaId) return;
+
+            if (typeof escolas?.renderizarDropdown === 'function') {
+                await escolas.renderizarDropdown('filter-escola');
+                await escolas.renderizarDropdown('input-turma-escola');
+                await escolas.renderizarDropdown('input-editar-turma-escola');
+            }
+
+            await this.sincronizarFiltroComTurmaImportada(novaTurmaId);
+            await this.listar();
+            await this.renderizarModalGerenciarTurmas();
+        } catch (error) {
+            console.error('Erro ao receber QRCodes da turma:', error);
+            utils.mostrarToast('Erro ao receber QRCodes da turma', 'error');
+        }
+    },
+
     async sincronizarFiltroComTurmaImportada(turmaId) {
         if (!turmaId) return;
 
@@ -712,6 +739,15 @@ const turmas = {
             return;
         }
         await exportModule.exportarTurmaJSON(turmaId);
+    },
+
+    async exportarMigracaoItemGerenciarTurmas(turmaId) {
+        if (!turmaId) return;
+        if (typeof exportModule === 'undefined' || typeof exportModule.exportarTurmaProfessorJSON !== 'function') {
+            utils.mostrarToast('Módulo de compartilhamento de QRCodes indisponível', 'error');
+            return;
+        }
+        await exportModule.exportarTurmaProfessorJSON(turmaId);
     },
 
     async excluirItemGerenciarTurmas(turmaId) {

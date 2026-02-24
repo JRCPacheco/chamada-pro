@@ -112,7 +112,7 @@ const exportModule = {
             const backup = {
                 schemaVersion: 1,
                 backupType: 'completo',
-                appVersion: '0.3.5-beta',
+                appVersion: '0.9.2-beta',
                 exportedAt: new Date().toISOString(),
                 data: {
                     config: await db.getAll('config'),
@@ -125,7 +125,7 @@ const exportModule = {
             };
 
             const json = JSON.stringify(backup, null, 2);
-            const filename = `bkp${this._formatarStampArquivo()}.json`;
+            const filename = `bkp${this._formatarStampArquivo()}.chf`;
 
             utils.downloadFile(filename, json, 'application/json');
             utils.mostrarToast('Backup exportado com sucesso!', 'success');
@@ -167,7 +167,7 @@ const exportModule = {
     importarBackup() {
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = '.json';
+        input.accept = '.chf,.json';
 
         input.onchange = (e) => {
             const file = e.target.files[0];
@@ -247,7 +247,7 @@ const exportModule = {
             const dados = {
                 schemaVersion: 1,
                 backupType: 'turma',
-                appVersion: '0.3.5-beta',
+                appVersion: '0.9.2-beta',
                 exportedAt: new Date().toISOString(),
                 data: {
                     turma: turma,
@@ -259,7 +259,7 @@ const exportModule = {
 
             const json = JSON.stringify(dados, null, 2);
             const turmaSlug = this._slug(turma.nome || 'turma');
-            const filename = `bkp_turma_${turmaSlug}_${this._formatarStampArquivo()}.json`;
+            const filename = `bkp_turma_${turmaSlug}_${this._formatarStampArquivo()}.chf`;
 
             utils.downloadFile(filename, json, 'application/json');
             utils.mostrarToast('Turma exportada!', 'success');
@@ -267,6 +267,228 @@ const exportModule = {
             console.error(e);
             utils.mostrarToast("Erro ao exportar turma", 'error');
         }
+    },
+
+    async exportarTurmaProfessorJSON(turmaId) {
+        try {
+            const turma = await db.get('turmas', turmaId);
+            if (!turma) return;
+
+            const alunosOriginais = await db.getByIndex('alunos', 'turmaId', turmaId);
+            const escola = turma.escolaId ? await db.get('escolas', turma.escolaId) : null;
+
+            // Migração entre professores: preserva dados do aluno e qrId, mas remove foto.
+            const alunosSemFoto = alunosOriginais.map((aluno) => {
+                const alunoClone = { ...aluno };
+                delete alunoClone.foto;
+                return alunoClone;
+            });
+
+            const dados = {
+                schemaVersion: 1,
+                backupType: 'qrcodes_turma_compartilhamento',
+                appVersion: '0.9.2-beta',
+                exportedAt: new Date().toISOString(),
+                data: {
+                    turma: turma,
+                    escola: escola,
+                    alunos: alunosSemFoto
+                }
+            };
+
+            const json = JSON.stringify(dados, null, 2);
+            const turmaSlug = this._slug(turma.nome || 'turma');
+            const filename = `qrcodes_turma_${turmaSlug}_${this._formatarStampArquivo()}.chf`;
+
+            utils.downloadFile(filename, json, 'application/json');
+            utils.mostrarToast('Arquivo de QRCodes exportado', 'success');
+        } catch (e) {
+            console.error(e);
+            utils.mostrarToast('Erro ao exportar QRCodes da turma', 'error');
+        }
+    },
+
+    migrateTurmaProfessorBackupIfNeeded(raw) {
+        if (!raw || typeof raw !== 'object') {
+            throw new Error('Arquivo inválido');
+        }
+
+        if (raw.schemaVersion > 1) {
+            throw new Error(`Arquivo de QRCodes versão ${raw.schemaVersion} incompatível. Atualize o app.`);
+        }
+
+        const tiposAceitos = ['qrcodes_turma_compartilhamento', 'turma_professor'];
+        if (!tiposAceitos.includes(raw.backupType)) {
+            throw new Error('Este arquivo não é um compartilhamento de QRCodes de turma');
+        }
+
+        if (!raw.data || !raw.data.turma || !Array.isArray(raw.data.alunos)) {
+            throw new Error('Estrutura de arquivo de QRCodes inválida');
+        }
+
+        return raw;
+    },
+
+    async importarTurmaProfessorJSON() {
+        return new Promise((resolve) => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.chf,.json';
+
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) {
+                    resolve(null);
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    try {
+                        const rawBackup = JSON.parse(event.target.result);
+                        const backup = this.migrateTurmaProfessorBackupIfNeeded(rawBackup);
+                        const turmaOriginal = backup.data.turma || {};
+                        const escolaOriginal = backup.data.escola || null;
+                        const alunosOriginais = Array.isArray(backup.data.alunos) ? backup.data.alunos : [];
+
+                        const resumo = `Turma: ${turmaOriginal.nome || 'Sem nome'}\n` +
+                            `Alunos no arquivo: ${alunosOriginais.length}\n\n` +
+                            `A turma será importada como nova turma. Deseja continuar?`;
+
+                        if (!utils.confirmar(resumo)) {
+                            resolve(null);
+                            return;
+                        }
+
+                        const conflitos = [];
+                        const qrNoArquivo = new Set();
+                        for (const aluno of alunosOriginais) {
+                            const qrId = String(aluno?.qrId || '').trim();
+                            if (!qrId || qrNoArquivo.has(qrId)) {
+                                conflitos.push({ qrId, motivo: 'duplicado-no-arquivo', alunoNome: aluno?.nome || '' });
+                                continue;
+                            }
+                            qrNoArquivo.add(qrId);
+
+                            const existentes = await db.getByIndex('alunos', 'qrId', qrId);
+                            if (existentes && existentes.length > 0) {
+                                const existente = existentes[0];
+                                conflitos.push({
+                                    qrId,
+                                    motivo: 'ja-existe-no-app',
+                                    alunoNome: aluno?.nome || '',
+                                    alunoDestinoNome: existente?.nome || ''
+                                });
+                            }
+                        }
+
+                        let importarParcialSemConflito = false;
+                        if (conflitos.length > 0) {
+                            const preview = conflitos
+                                .slice(0, 5)
+                                .map((c, i) => `${i + 1}. QR ${c.qrId || '(vazio)'} - ${c.alunoNome || 'Aluno'}`)
+                                .join('\n');
+
+                            const msgConflito = `Foram encontrados ${conflitos.length} conflito(s) de QR.\n\n` +
+                                `${preview}${conflitos.length > 5 ? '\n...' : ''}\n\n` +
+                                `OK: importar apenas alunos sem conflito.\n` +
+                                `Cancelar: não importar nada.`;
+
+                            if (!utils.confirmar(msgConflito)) {
+                                utils.mostrarToast('Importação cancelada por conflito de QR', 'warning');
+                                resolve(null);
+                                return;
+                            }
+                            importarParcialSemConflito = true;
+                        }
+
+                        const conflitoSet = new Set(conflitos.map((c) => String(c.qrId || '').trim()));
+                        const alunosSelecionados = importarParcialSemConflito
+                            ? alunosOriginais.filter((a) => !conflitoSet.has(String(a?.qrId || '').trim()))
+                            : alunosOriginais.slice();
+
+                        if (alunosSelecionados.length === 0) {
+                            utils.mostrarToast('Nenhum aluno disponível para importar sem conflito', 'warning');
+                            resolve(null);
+                            return;
+                        }
+
+                        utils.mostrarToast('Recebendo QRCodes da turma...', 'info');
+
+                        const escolaResolvida = await this._resolverEscolaParaTurmaBackup(turmaOriginal, escolaOriginal);
+                        const novaTurma = {
+                            ...turmaOriginal,
+                            id: undefined,
+                            nome: turmaOriginal.nome || 'Turma migrada',
+                            escolaId: escolaResolvida.escolaId || 'default',
+                            criadaEm: new Date().toISOString()
+                        };
+                        delete novaTurma.id;
+                        delete novaTurma.escola_id;
+
+                        const novaTurmaId = await db.add('turmas', novaTurma);
+                        const alunosCriados = [];
+
+                        const limparImporteParcial = async () => {
+                            for (const id of alunosCriados) {
+                                await db.delete('alunos', id).catch(() => { });
+                            }
+                            await db.delete('turmas', novaTurmaId).catch(() => { });
+                        };
+
+                        try {
+                            for (const alunoOriginal of alunosSelecionados) {
+                                const qrId = String(alunoOriginal?.qrId || '').trim();
+                                if (!qrId) continue;
+
+                                const novoAluno = {
+                                    ...alunoOriginal,
+                                    id: undefined,
+                                    turmaId: novaTurmaId,
+                                    qrId: qrId,
+                                    foto: null
+                                };
+                                delete novoAluno.id;
+                                delete novoAluno.foto;
+
+                                const novoId = await db.add('alunos', novoAluno);
+                                alunosCriados.push(novoId);
+                            }
+                        } catch (eImport) {
+                            await limparImporteParcial();
+                            throw eImport;
+                        }
+
+                        if (escolaResolvida.escolaImportadaNome) {
+                            utils.mostrarToast(`Escola "${escolaResolvida.escolaImportadaNome}" adicionada ao cadastro`, 'info');
+                        }
+
+                        const msgFinal = importarParcialSemConflito
+                            ? `Recebimento concluído: ${alunosCriados.length} aluno(s) importado(s), ${conflitos.length} conflito(s) ignorado(s).`
+                            : `Recebimento concluído: ${alunosCriados.length} aluno(s) importado(s).`;
+
+                        utils.mostrarToast(msgFinal, 'success');
+                        resolve({
+                            novaTurmaId,
+                            importados: alunosCriados.length,
+                            conflitos: conflitos.length,
+                            parcial: importarParcialSemConflito
+                        });
+                    } catch (error) {
+                        console.error('Erro ao receber QRCodes da turma:', error);
+                        utils.mostrarToast(
+                            error?.message || 'Erro ao receber QRCodes da turma',
+                            'error'
+                        );
+                        resolve(null);
+                    }
+                };
+
+                reader.readAsText(file);
+            };
+
+            input.click();
+        });
     },
 
     migrateTurmaBackupIfNeeded(raw) {
@@ -308,7 +530,7 @@ const exportModule = {
         return new Promise((resolve) => {
             const input = document.createElement('input');
             input.type = 'file';
-            input.accept = '.json';
+            input.accept = '.chf,.json';
 
             input.onchange = (e) => {
                 const file = e.target.files[0];
