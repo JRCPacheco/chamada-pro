@@ -233,23 +233,26 @@
                         <button class="btn btn-primary btn-sm" data-action="alunos-mostrar-novo">
                             Adicionar
                         </button>
-                        <button class="btn btn-secondary btn-sm" data-action="alunos-importar-csv">
-                            <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg></span>Importar planilha
-                        </button>
                         <button class="btn btn-secondary btn-sm" data-action="alunos-gerar-qr-pdf">
                             <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M4 4h6v6H4z"/><path d="M14 4h6v6h-6z"/><path d="M4 14h6v6H4z"/><path d="M14 14h2"/><path d="M18 14h2"/><path d="M14 18h2"/><path d="M18 18h2"/></svg></span>QRCodes
                         </button>
                     </div>
-                    <div class="csv-modelo-download">
-                        <a href="assets/modelos/modelo_alunos.csv" download class="btn btn-secondary btn-sm">
-                            <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg></span>Baixar modelo de planilha
-                        </a>
-                        <small class="csv-modelo-hint">
-                            Abra no Excel ou Google Sheets e não altere os nomes das colunas.
-                        </small>
-                    </div>
                 </div>
 
+                <div class="importacao-alunos-card">
+                    <div class="importacao-alunos-head">
+                        <h4>Importacao de alunos</h4>
+                        <p>Use um arquivo de planilha preenchido para cadastrar alunos em lote.</p>
+                    </div>
+                    <button class="btn btn-secondary btn-sm importacao-alunos-btn" data-action="alunos-importar-csv">
+                        <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg></span>Importar arquivo da planilha
+                    </button>
+                    <div class="importacao-alunos-apoio">
+                        <a href="assets/modelos/modelo_alunos.xlsx" download>Baixar modelo da planilha</a>
+                        <small class="importacao-alunos-hint">Abra no Excel ou Google Sheets e nao altere os nomes das colunas.</small>
+                        <small class="importacao-alunos-hint">Se o arquivo for backup da turma, use "Recuperar turma" em Gerenciar Turmas.</small>
+                    </div>
+                </div>
                 <div class="search-box">
                     <input type="text" id="search-alunos" placeholder="Buscar aluno..." />
                 </div>
@@ -261,7 +264,7 @@
                 <div class="empty-state" id="empty-alunos" style="display: none;">
                     <div class="empty-icon"><svg class="icon-svg icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="3"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a3 3 0 0 1 0 5.75"/></svg></div>
                     <h3>Nenhum aluno cadastrado</h3>
-                    <p>Adicione alunos manualmente ou importe uma lista CSV</p>
+                    <p>Adicione alunos manualmente ou importe um arquivo de planilha</p>
                 </div>
             </div>
 
@@ -972,6 +975,7 @@
 </body>
 
 </html>
+
 
 
 

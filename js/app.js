@@ -682,8 +682,8 @@ const app = {
                     <p>No Menu, use \"Gerenciar Escolas\" para cadastrar ou editar escolas e definir logo. As turmas podem ser vinculadas a uma escola.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"3\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a3 3 0 0 1 0 5.75\"/></svg></span>Adicionar Alunos</h4>
-                    <p>Entre na turma e adicione alunos manualmente ou importe uma planilha CSV. Use também \"Baixar modelo de planilha\" para evitar erros.</p>
-                    <p><strong>Formato CSV:</strong><br>Matrícula;Nome;Email (opcional)</p>
+                    <p>Entre na turma e adicione alunos manualmente ou importe um arquivo de planilha. Use também \"Baixar modelo da planilha\" para evitar erros.</p>
+                    <p><strong>Formato da planilha:</strong><br>Matrícula;Nome</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M8 2h8\"/><path d=\"M9 2v2\"/><path d=\"M15 2v2\"/><rect x=\"4\" y=\"4\" width=\"16\" height=\"18\" rx=\"2\"/><path d=\"M8 11h8\"/><path d=\"M8 15h5\"/></svg></span>Diário de Classe</h4>
                     <p>Na aba \"Diário de Classe\", acompanhe o histórico mensal de chamadas da turma. Você pode abrir detalhes, exportar histórico e gerenciar registros.</p>
@@ -698,7 +698,7 @@ const app = {
                     <p>Use o botão \"Chamada\" no canto superior direito da turma. Escaneie os QR Codes dos alunos presentes e finalize ao concluir.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M3 3v18h18\"/><rect x=\"7\" y=\"10\" width=\"3\" height=\"6\"/><rect x=\"12\" y=\"7\" width=\"3\" height=\"9\"/><rect x=\"17\" y=\"5\" width=\"3\" height=\"11\"/></svg></span>Exportações e Relatórios</h4>
-                    <p>Após finalizar, você pode compartilhar, exportar CSV e gerar relatórios (CSV/PDF).</p>
+                    <p>Após finalizar, você pode compartilhar, exportar planilha e gerar relatórios (planilha/PDF).</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z\"/><path d=\"M3 8.5V16l9 4 9-4V8.5\"/><path d=\"M12 13v7\"/></svg></span>Backup e Recuperação</h4>
                     <p>Em Configurações, exporte backup completo da base. Também é possível recuperar backup para restaurar dados.</p>
@@ -807,6 +807,9 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
+
+
+
 
 
 

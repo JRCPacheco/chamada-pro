@@ -9,6 +9,7 @@ const alunos = {
     qrImportado: null,
     eventoPontoEmEdicao: null,
     obsOcultaAtual: false,
+    _sheetJsPromise: null,
     _deleteHoldTimers: new Map(),
     _deleteHoldTriggered: new Set(),
 
@@ -839,9 +840,156 @@ const alunos = {
         }
     },
 
-    // Importar alunos via CSV
+    _normalizarCabecalhoPlanilha(valor) {
+        return String(valor || '')
+            .trim()
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]/g, '');
+    },
+
+    async _obterSheetJs() {
+        if (window.XLSX) return window.XLSX;
+        if (this._sheetJsPromise) return this._sheetJsPromise;
+
+        this._sheetJsPromise = new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = './libs/xlsx.full.min.js';
+            script.async = true;
+            script.onload = () => resolve(window.XLSX);
+            script.onerror = () => reject(new Error('Nao foi possivel carregar o suporte a arquivo do Excel.'));
+            document.head.appendChild(script);
+        });
+
+        return this._sheetJsPromise;
+    },
+
+    async _extrairAlunosDeArquivoExcel(file) {
+        const XLSX = await this._obterSheetJs();
+        const buffer = await file.arrayBuffer();
+        const workbook = XLSX.read(buffer, { type: 'array' });
+        const primeiraAba = workbook?.SheetNames?.[0];
+        if (!primeiraAba) return [];
+
+        const sheet = workbook.Sheets[primeiraAba];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+        if (!rows.length) return [];
+
+        const primeiraLinha = Array.isArray(rows[0]) ? rows[0] : [];
+        const headers = primeiraLinha.map((col) => this._normalizarCabecalhoPlanilha(col));
+
+        const idxMatricula = headers.findIndex((h) => ['matricula', 'matric', 'registro'].includes(h));
+        const idxNome = headers.findIndex((h) => ['nome', 'aluno', 'nomealuno'].includes(h));
+        const temCabecalho = idxMatricula >= 0 && idxNome >= 0;
+
+        const startRow = temCabecalho ? 1 : 0;
+        const mapMatricula = temCabecalho ? idxMatricula : 0;
+        const mapNome = temCabecalho ? idxNome : 1;
+
+        const alunosRaw = [];
+        for (let i = startRow; i < rows.length; i++) {
+            const row = Array.isArray(rows[i]) ? rows[i] : [];
+            const matricula = String(row[mapMatricula] || '').trim();
+            const nome = String(row[mapNome] || '').trim();
+            if (!matricula && !nome) continue;
+            alunosRaw.push({ matricula, nome });
+        }
+
+        return alunosRaw;
+    },
+
+    _extrairAlunosDeTextoPlanilha(text) {
+        const lines = String(text || '').split(/\r?\n/).filter((line) => line.trim());
+        if (!lines.length) return [];
+
+        const splitRow = (line) => line.split(/[;,\t]/).map((v) => String(v || '').trim());
+        const firstRow = splitRow(lines[0]);
+        const headers = firstRow.map((col) => this._normalizarCabecalhoPlanilha(col));
+        const idxMatricula = headers.findIndex((h) => ['matricula', 'matric', 'registro'].includes(h));
+        const idxNome = headers.findIndex((h) => ['nome', 'aluno', 'nomealuno'].includes(h));
+        const temCabecalho = idxMatricula >= 0 && idxNome >= 0;
+
+        const startRow = temCabecalho ? 1 : 0;
+        const mapMatricula = temCabecalho ? idxMatricula : 0;
+        const mapNome = temCabecalho ? idxNome : 1;
+
+        const alunosRaw = [];
+        for (let i = startRow; i < lines.length; i++) {
+            const row = splitRow(lines[i]);
+            const matricula = String(row[mapMatricula] || '').trim();
+            const nome = String(row[mapNome] || '').trim();
+            if (!matricula && !nome) continue;
+            alunosRaw.push({ matricula, nome });
+        }
+
+        return alunosRaw;
+    },
+
+    async _importarLoteAlunos(alunosRaw) {
+        if (alunosRaw.length === 0) {
+            utils.mostrarToast('Nenhum aluno encontrado no arquivo', 'warning');
+            return;
+        }
+
+        let adicionados = 0;
+        let duplicados = 0;
+        let invalidos = 0;
+
+        const existingAlunos = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
+        const matriculasExistentes = new Set(existingAlunos.map((a) => String(a.matricula || '').trim()));
+
+        for (const raw of alunosRaw) {
+            const matricula = String(raw.matricula || '').trim();
+            const nome = String(raw.nome || '').trim();
+            if (!matricula || !nome) {
+                invalidos++;
+                continue;
+            }
+
+            if (matriculasExistentes.has(matricula)) {
+                duplicados++;
+                continue;
+            }
+
+            let qrId = utils.gerarQrId();
+            let exists = await db.getByIndex('alunos', 'qrId', qrId);
+            let attempts = 0;
+            while (exists.length > 0 && attempts < 5) {
+                qrId = utils.gerarQrId();
+                exists = await db.getByIndex('alunos', 'qrId', qrId);
+                attempts++;
+            }
+
+            const novoAluno = {
+                id: 'aluno_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                turmaId: turmas.turmaAtual.id,
+                matricula: matricula,
+                nome: nome,
+                email: '',
+                foto: null,
+                observacoes: '',
+                pontosExtra: 0,
+                qrId: qrId,
+                criadoEm: new Date().toISOString()
+            };
+
+            await db.add('alunos', novoAluno);
+            matriculasExistentes.add(matricula);
+            adicionados++;
+        }
+
+        const partesResumo = [`${adicionados} aluno(s) importado(s)`];
+        if (duplicados > 0) partesResumo.push(`${duplicados} duplicado(s) ignorado(s)`);
+        if (invalidos > 0) partesResumo.push(`${invalidos} linha(s) invalida(s) ignorada(s)`);
+
+        utils.mostrarToast(partesResumo.join(' | '), 'success');
+        await this.listar();
+        turmas.abrirDetalhes(turmas.turmaAtual.id);
+    },
+
+    // Importar alunos via arquivo de planilha
     importarCSV() {
-        // Validar se há uma turma selecionada
         if (!turmas.turmaAtual) {
             utils.mostrarToast('Erro: Nenhuma turma selecionada', 'error');
             return;
@@ -855,97 +1003,40 @@ const alunos = {
             const file = e.target.files[0];
             if (!file) return;
 
-            const processCsvText = async (text) => {
-                const alunosRaw = utils.parseCSV(text);
-
-                if (alunosRaw.length === 0) {
-                    utils.mostrarToast('Nenhum aluno encontrado no arquivo', 'warning');
-                    return;
-                }
-
-                let adicionados = 0;
-                let duplicados = 0;
-
-                // Buscar alunos já existentes na turma para evitar duplicidade de matrícula
-                const existingAlunos = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
-                const matriculasExistentes = new Set(existingAlunos.map(a => a.matricula));
-
-                for (const raw of alunosRaw) {
-                    if (matriculasExistentes.has(raw.matricula)) {
-                        duplicados++;
-                    } else {
-                        // Gerar QR único
-                        let qrId = utils.gerarQrId();
-                        let exists = await db.getByIndex('alunos', 'qrId', qrId);
-                        let attempts = 0;
-
-                        while (exists.length > 0 && attempts < 5) {
-                            qrId = utils.gerarQrId();
-                            exists = await db.getByIndex('alunos', 'qrId', qrId);
-                            attempts++;
-                        }
-                        // Check colisão QR (meio improavel em batch pequeno mas seguro)
-                        // Para performance do import, pular check complexo de QR se confiar no gerador?
-                        // Melhor garantir.
-
-                        const novoAluno = {
-                            id: 'aluno_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-                            turmaId: turmas.turmaAtual.id,
-                            matricula: raw.matricula,
-                            nome: raw.nome,
-                            email: raw.email || '',
-                            foto: null,
-                            observacoes: '',
-                            pontosExtra: 0,
-                            qrId: qrId,
-                            criadoEm: new Date().toISOString()
-                        };
-
-                        await db.add('alunos', novoAluno);
-                        matriculasExistentes.add(raw.matricula); // Evitar duplicação dentro do próprio CSV
-                        adicionados++;
-                    }
-                }
-
-                utils.mostrarToast(
-                    `${adicionados} aluno(s) importado(s)${duplicados > 0 ? ` (${duplicados} duplicado(s) ignorado(s))` : ''}`,
-                    'success'
-                );
-
-                await this.listar();
-                turmas.abrirDetalhes(turmas.turmaAtual.id);
-            };
-
-            // Verificar se é xlsx binário de verdade (assinatura ZIP: PK\x03\x04)
             const sniffReader = new FileReader();
-            sniffReader.onload = function (sniffEvt) {
+            sniffReader.onload = async (sniffEvt) => {
                 const bytes = new Uint8Array(sniffEvt.target.result);
-                const isXlsxBinary = bytes[0] === 0x50 && bytes[1] === 0x4B &&
-                                     bytes[2] === 0x03 && bytes[3] === 0x04;
+                const isXlsxBinary = bytes[0] === 0x50 && bytes[1] === 0x4B && bytes[2] === 0x03 && bytes[3] === 0x04;
+                const nomeArquivo = String(file.name || '').toLowerCase();
+                const pareceArquivoExcel = nomeArquivo.endsWith('.xlsx') || nomeArquivo.endsWith('.xls');
 
-                if (isXlsxBinary) {
-                    utils.mostrarToast(
-                        'Arquivo xlsx detectado. Abra a planilha e exporte como CSV (separado por ponto e vírgula) antes de importar.',
-                        'warning'
-                    );
+                if (isXlsxBinary || pareceArquivoExcel) {
+                    try {
+                        utils.mostrarToast('Lendo arquivo do Excel...', 'info');
+                        const alunosRaw = await this._extrairAlunosDeArquivoExcel(file);
+                        await this._importarLoteAlunos(alunosRaw);
+                    } catch (error) {
+                        console.error('Erro ao importar arquivo do Excel:', error);
+                        utils.mostrarToast(error?.message || 'Nao foi possivel importar o arquivo do Excel.', 'error');
+                    }
                     return;
                 }
 
-                // Arquivo é texto (CSV com extensão trocada ou .txt) — ler normalmente
                 const reader = new FileReader();
-                reader.onload = function (e) {
-                    const text = e.target.result;
-
-                    const looksBroken = /Ã.||\uFFFD/.test(text);
+                reader.onload = async (evt) => {
+                    const text = evt.target.result;
+                    const looksBroken = /Ã.|\uFFFD/.test(text);
 
                     if (looksBroken) {
                         const readerLatin = new FileReader();
-                        readerLatin.onload = function (ev) {
-                            processCsvText(ev.target.result);
+                        readerLatin.onload = async (ev) => {
+                            const alunosRaw = this._extrairAlunosDeTextoPlanilha(ev.target.result);
+                            await this._importarLoteAlunos(alunosRaw);
                         };
                         readerLatin.readAsText(file, 'ISO-8859-1');
                     } else {
-                        processCsvText(text);
+                        const alunosRaw = this._extrairAlunosDeTextoPlanilha(text);
+                        await this._importarLoteAlunos(alunosRaw);
                     }
                 };
 
@@ -957,7 +1048,6 @@ const alunos = {
 
         input.click();
     },
-
     // Gerar QR Codes em PDF
     async gerarQRCodesPDF() {
         // Validar se há uma turma selecionada
@@ -995,3 +1085,7 @@ const alunos = {
         }
     }
 };
+
+
+
+

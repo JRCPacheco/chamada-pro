@@ -1,5 +1,5 @@
 ﻿// Bump this value on every release that changes cached assets.
-const SW_VERSION = 'v14';
+const SW_VERSION = 'v16';
 const STATIC_CACHE = `static-${SW_VERSION}`;
 const RUNTIME_CACHE = `runtime-${SW_VERSION}`;
 const APP_SHELL_KEY = new Request('./index.html');
@@ -25,6 +25,7 @@ const PRECACHE_URLS = [
     './libs/html5-qrcode.min.js',
     './libs/jspdf.umd.min.js',
     './libs/qrcode.min.js',
+    './libs/xlsx.full.min.js',
     './assets/logo1024.svg',
     './assets/logo1024wt.svg',
     './assets/icons/icon-192.png',
@@ -32,7 +33,7 @@ const PRECACHE_URLS = [
     './assets/icons/icon-512-maskable.png',
     './assets/icons/apple-touch-icon.png',
     './assets/icons/favicon-32.png',
-    './assets/modelos/modelo_alunos.csv',
+    './assets/modelos/modelo_alunos.xlsx',
     './assets/fonts/inter-300.ttf',
     './assets/fonts/inter-400.ttf',
     './assets/fonts/inter-500.ttf',

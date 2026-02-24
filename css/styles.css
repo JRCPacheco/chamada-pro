@@ -2336,14 +2336,47 @@ body {
     transform: scale(0.94);
 }
 
-.csv-modelo-download {
-    margin-top: 12px;
+.importacao-alunos-card {
+    margin: 0 20px 14px;
+    padding: 14px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius-sm);
+    background: var(--gray-100);
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 10px;
 }
 
-.csv-modelo-hint {
+.importacao-alunos-head h4 {
+    margin: 0 0 4px;
+    font-size: 15px;
+    color: var(--dark);
+}
+
+.importacao-alunos-head p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--gray-600);
+}
+
+.importacao-alunos-btn {
+    align-self: flex-start;
+}
+
+.importacao-alunos-apoio {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.importacao-alunos-apoio a {
+    font-size: 13px;
+    color: var(--primary);
+    text-decoration: underline;
+    width: fit-content;
+}
+
+.importacao-alunos-hint {
     font-size: 12px;
     color: var(--gray-500);
 }
