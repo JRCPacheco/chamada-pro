@@ -66,7 +66,10 @@ const app = {
             case 'turmas-salvar-nova': return turmas.salvarNovaTurma();
             case 'turmas-salvar-edicao': return turmas.salvarEdicaoTurma();
             case 'alunos-mostrar-novo': return alunos.mostrarModalNovoAluno();
-            case 'alunos-importar-csv': return alunos.importarCSV();
+            case 'alunos-importar-csv':
+                this.fecharModal('modal-importacao-alunos');
+                return alunos.importarCSV();
+            case 'alunos-abrir-modal-importacao': return this.abrirModal('modal-importacao-alunos');
             case 'alunos-gerar-qr-pdf': return alunos.gerarQRCodesPDF();
             case 'alunos-cancelar-modal': alunos.resetarPreviewFoto(); return this.fecharModal('modal-novo-aluno');
             case 'alunos-escolher-fonte-foto': return alunos.escolherFonteFoto();
@@ -79,6 +82,10 @@ const app = {
             case 'alunos-salvar-evento-ponto': return alunos.salvarEventoPonto();
             case 'alunos-editar-evento-ponto': return alunos.editarEventoPonto(el.dataset.eventoId);
             case 'alunos-excluir-evento-ponto': return alunos.excluirEventoPonto(el.dataset.eventoId);
+            case 'alunos-toggle-reordenar': return alunos.entrarModoReordenacao();
+            case 'alunos-salvar-reordenacao': return alunos.salvarReordenacao();
+            case 'alunos-desfazer-reordenacao': return alunos.desfazerReordenacao();
+            case 'alunos-cancelar-reordenacao': return alunos.cancelarReordenacao();
             case 'escolas-mostrar-gerenciar': return escolas.mostrarModalGerenciar();
             case 'escolas-adicionar': return escolas.adicionarEscola();
             case 'escolas-click-foto-nova': return document.getElementById('input-escola-foto-nova')?.click();
@@ -115,6 +122,7 @@ const app = {
             case 'alunos-processar-foto': return alunos.processarFoto(el.files?.[0]);
             case 'escolas-processar-foto-nova': return escolas.processarFotoNova(el.files?.[0]);
             case 'escolas-processar-foto-editar': return escolas.processarFotoEditar(el.files?.[0]);
+            case 'alunos-mudar-politica-rapida': return alunos.mudarPoliticaRapida(el);
             default: return;
         }
     },

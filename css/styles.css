@@ -970,6 +970,111 @@ body {
     flex-wrap: wrap;
 }
 
+.alunos-context-row {
+    margin: 0 20px 10px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.alunos-context-row-wrap {
+    position: sticky;
+    top: 126px;
+    z-index: 95;
+    padding-top: 2px;
+    background: var(--gray-100);
+}
+
+.alunos-politica-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+    padding: 4px 6px;
+    border-radius: 999px;
+    border: 1px solid #dbe3ef;
+    background: #f8fbff;
+    color: #1f355d;
+}
+
+.alunos-politica-control label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1f355d;
+}
+
+.alunos-politica-control select {
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 600;
+    min-height: 28px;
+    padding: 4px 28px 4px 10px;
+    outline: none;
+}
+
+.alunos-politica-control select:disabled {
+    opacity: 0.7;
+}
+
+.alunos-reordenacao-toolbar {
+    padding: 0 20px 12px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.alunos-acoes-row {
+    padding: 12px 20px 4px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.alunos-acoes-row .btn {
+    width: 100%;
+}
+
+#btn-alunos-reordenar {
+    min-height: 34px;
+    padding: 8px 14px;
+    border-color: #cbd5e1;
+    background: #f8fafc;
+    color: #334155;
+}
+
+#btn-alunos-reordenar:hover {
+    background: #eef2f7;
+    border-color: #94a3b8;
+}
+
+#btn-alunos-reordenar:disabled {
+    opacity: 0.65;
+}
+
+@media (max-width: 420px) {
+    .alunos-context-row-wrap {
+        top: 118px;
+    }
+}
+
+.modal-importacao-alunos-content {
+    max-height: 85vh;
+    overflow: hidden;
+}
+
+.modal-importacao-alunos-content .modal-body {
+    overflow-y: auto;
+}
+
 /* ===== ALUNOS LIST ===== */
 .alunos-list {
     padding: 0 20px 56px;
@@ -1019,6 +1124,37 @@ body {
 .aluno-actions {
     display: flex;
     gap: 8px;
+}
+
+.aluno-card.reorder-enabled {
+    border-color: #bfdbfe;
+}
+
+.aluno-card.dragging {
+    border-color: var(--primary);
+    box-shadow: 0 10px 22px rgba(33, 47, 82, 0.22);
+    transform: scale(1.01);
+}
+
+.btn-drag-aluno {
+    border-color: #cbd5e1;
+    color: #475569;
+    background: #f8fafc;
+    touch-action: none;
+}
+
+.btn-drag-aluno.drag-armed {
+    background: #dbeafe;
+    border-color: #93c5fd;
+}
+
+.drag-handle-bars {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+    background:
+        radial-gradient(circle, currentColor 1.4px, transparent 1.6px) 0 0 / 7px 7px;
+    opacity: 0.9;
 }
 
 .btn-icon-sm {

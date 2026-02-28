@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
@@ -39,7 +39,7 @@
     <div id="loading-screen" class="loading-screen">
         <div class="loading-content">
             <img src="assets/logo1024wt.svg" alt="Chamada Fácil" class="logo-img">
-            <!-- <div class="logo">📋</div> -->
+            <!-- <div class="logo">✓</div> -->
             <h1><span style="color:#ffffff;">Chamada</span> <span style="color:#6ABF57;">Fácil</span></h1>
             <div class="loading-spinner"></div>
             <p>Carregando...</p>
@@ -227,34 +227,45 @@
 
             <!-- Tab Alunos -->
             <div id="tab-alunos" class="tab-content active">
-                <div class="section-header">
-                    <h3>Lista de Alunos</h3>
-                    <div class="action-buttons">
-                        <button class="btn btn-primary btn-sm" data-action="alunos-mostrar-novo">
-                            Adicionar
-                        </button>
-                        <button class="btn btn-secondary btn-sm" data-action="alunos-gerar-qr-pdf">
-                            <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M4 4h6v6H4z"/><path d="M14 4h6v6h-6z"/><path d="M4 14h6v6H4z"/><path d="M14 14h2"/><path d="M18 14h2"/><path d="M14 18h2"/><path d="M18 18h2"/></svg></span>QRCodes
-                        </button>
-                    </div>
+                <div class="alunos-acoes-row action-buttons">
+                    <button class="btn btn-primary btn-sm" data-action="alunos-mostrar-novo">
+                        Adicionar
+                    </button>
+                    <button class="btn btn-secondary btn-sm" data-action="alunos-gerar-qr-pdf">
+                        <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M4 4h6v6H4z"/><path d="M14 4h6v6h-6z"/><path d="M4 14h6v6H4z"/><path d="M14 14h2"/><path d="M18 14h2"/><path d="M14 18h2"/><path d="M18 18h2"/></svg></span>QRCodes
+                    </button>
+                    <button class="btn btn-secondary btn-sm" data-action="alunos-abrir-modal-importacao">
+                        Importar planilha
+                    </button>
                 </div>
 
-                <div class="importacao-alunos-card">
-                    <div class="importacao-alunos-head">
-                        <h4>Importacao de alunos</h4>
-                        <p>Use um arquivo de planilha preenchido para cadastrar alunos em lote.</p>
-                    </div>
-                    <button class="btn btn-secondary btn-sm importacao-alunos-btn" data-action="alunos-importar-csv">
-                        <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg></span>Importar arquivo da planilha
-                    </button>
-                    <div class="importacao-alunos-apoio">
-                        <a href="assets/modelos/modelo_alunos.xlsx" download>Baixar modelo da planilha</a>
-                        <small class="importacao-alunos-hint">Abra no Excel ou Google Sheets e nao altere os nomes das colunas.</small>
-                        <small class="importacao-alunos-hint">Se o arquivo for backup da turma, use "Recuperar turma" em Gerenciar Turmas.</small>
-                    </div>
+                <div class="section-header">
+                    <h3>Lista de Alunos</h3>
                 </div>
                 <div class="search-box">
                     <input type="text" id="search-alunos" placeholder="Buscar aluno..." />
+                </div>
+
+                <div class="alunos-context-row-wrap">
+                    <div class="alunos-context-row">
+                        <div class="alunos-politica-control">
+                            <label for="alunos-politica-select">Política:</label>
+                            <select id="alunos-politica-select" data-change="alunos-mudar-politica-rapida">
+                                <option value="alphabetical_shift">Ordem alfabética</option>
+                                <option value="append">Final da fila</option>
+                                <option value="manual">Manual</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" id="btn-alunos-reordenar" data-action="alunos-toggle-reordenar">
+                            Reordenar
+                        </button>
+                    </div>
+
+                    <div id="alunos-reordenacao-toolbar" class="alunos-reordenacao-toolbar" style="display:none;">
+                        <button class="btn btn-primary btn-sm" data-action="alunos-salvar-reordenacao">Salvar ordem</button>
+                        <button class="btn btn-secondary btn-sm" data-action="alunos-desfazer-reordenacao">Desfazer</button>
+                        <button class="btn btn-secondary btn-sm" data-action="alunos-cancelar-reordenacao">Cancelar</button>
+                    </div>
                 </div>
 
                 <div id="lista-alunos" class="alunos-list">
@@ -491,6 +502,34 @@
 
     </div>
 
+    <!-- Modal: Importação de alunos -->
+    <div id="modal-importacao-alunos" class="modal" data-overlay-close="modal-importacao-alunos">
+        <div class="modal-content modal-importacao-alunos-content">
+            <div class="modal-header">
+                <h3>Importação de alunos</h3>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-importacao-alunos">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="importacao-alunos-card" style="margin: 0; box-shadow: none;">
+                    <div class="importacao-alunos-head">
+                        <p>Use um arquivo de planilha preenchido para cadastrar alunos em lote.</p>
+                    </div>
+                    <button class="btn btn-secondary btn-sm importacao-alunos-btn" data-action="alunos-importar-csv">
+                        <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg></span>Importar arquivo da planilha
+                    </button>
+                    <div class="importacao-alunos-apoio">
+                        <a href="assets/modelos/modelo_alunos.xlsx" download>Baixar modelo da planilha</a>
+                        <small class="importacao-alunos-hint">Abra no Excel ou Google Sheets e nao altere os nomes das colunas.</small>
+                        <small class="importacao-alunos-hint">Se o arquivo for backup da turma, use "Recuperar turma" em Gerenciar Turmas.</small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-action="close-modal" data-modal-id="modal-importacao-alunos">Fechar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal: Nova Turma -->
     <div id="modal-nova-turma" class="modal">
         <div class="modal-content">
@@ -528,6 +567,15 @@
                             <span class="toggle-slider" aria-hidden="true"></span>
                         </span>
                     </label>
+                </div>
+                <div class="form-group">
+                    <label for="input-turma-politica-numero">Política de numeração dos alunos</label>
+                    <select id="input-turma-politica-numero">
+                        <option value="alphabetical_shift">Ordem alfabética com ajuste automático (recomendado)</option>
+                        <option value="append">Sempre adicionar no final (números estáveis)</option>
+                        <option value="manual">Manual (reordenar por arraste)</option>
+                    </select>
+                    <small class="text-muted">Define como novos alunos recebem número de chamada nesta turma.</small>
                 </div>
             </div>
             <div class="modal-footer">
@@ -576,6 +624,15 @@
                             <span class="toggle-slider" aria-hidden="true"></span>
                         </span>
                     </label>
+                </div>
+                <div class="form-group">
+                    <label for="input-editar-turma-politica-numero">Política de numeração dos alunos</label>
+                    <select id="input-editar-turma-politica-numero">
+                        <option value="alphabetical_shift">Ordem alfabética com ajuste automático (recomendado)</option>
+                        <option value="append">Sempre adicionar no final (números estáveis)</option>
+                        <option value="manual">Manual (reordenar por arraste)</option>
+                    </select>
+                    <small class="text-muted">Define como novos alunos recebem número de chamada nesta turma.</small>
                 </div>
             </div>
             <div class="modal-footer">
@@ -664,6 +721,11 @@
                 <div class="form-group">
                     <label>Matrícula / ID *</label>
                     <input type="text" id="input-aluno-matricula" placeholder="Ex: 2024001" />
+                </div>
+                <div class="form-group">
+                    <label>Número de Chamada</label>
+                    <input type="number" id="input-aluno-numero" min="1" step="1" placeholder="Automático" />
+                    <small class="text-muted">Usado para lista de chamada. Não altera matrícula nem QRCode.</small>
                 </div>
 
                 <div id="aluno-pontos-section" class="aluno-pontos-section" style="display: none;">
@@ -1021,6 +1083,7 @@
 </body>
 
 </html>
+
 
 
 

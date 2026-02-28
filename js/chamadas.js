@@ -1,4 +1,4 @@
-// ===== CHAMADAS MODULE =====
+﻿// ===== CHAMADAS MODULE =====
 // Gerenciamento de chamadas e histórico
 // Migrado para IndexedDB
 
@@ -972,7 +972,7 @@ const chamadas = {
             const total = p + f;
             const pct = total > 0 ? Math.round((p / total) * 100) : null;
             const pctClass = pct === null ? '' : pct >= 75 ? 'freq-ok' : 'freq-low';
-            const pctText = pct !== null ? `${pct}%` : '—';
+            const pctText = pct !== null ? `${pct}%` : '--';
 
             return `
                 <div class="diario-resumo-card">
@@ -1020,7 +1020,17 @@ const chamadas = {
 
         const diasNoMes = new Date(ano, mes, 0).getDate();
         const diasDoMes = Array.from({ length: diasNoMes }, (_, i) => String(i + 1).padStart(2, '0'));
-        const alunosOrdenados = [...alunos].sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+        const compararAlunosRelatorio = (a, b) => {
+            const na = Number(a?.numeroChamada);
+            const nb = Number(b?.numeroChamada);
+            const aValido = Number.isInteger(na) && na > 0;
+            const bValido = Number.isInteger(nb) && nb > 0;
+            if (aValido && bValido && na !== nb) return na - nb;
+            if (aValido && !bValido) return -1;
+            if (!aValido && bValido) return 1;
+            return (a.nome || '').localeCompare(b.nome || '');
+        };
+        const alunosOrdenados = [...alunos].sort(compararAlunosRelatorio);
         const normalizarStatus = (status) => (status === 'P' || !status) ? 'P' : 'F';
 
         const criarMatriz = () => {
@@ -1030,6 +1040,7 @@ const chamadas = {
                 diasDoMes.forEach(d => { dias[d] = ''; });
                 matriz[aluno.id] = {
                     alunoId: aluno.id,
+                    numeroChamada: Number.isInteger(Number(aluno.numeroChamada)) ? Number(aluno.numeroChamada) : '',
                     nome: aluno.nome || '',
                     matricula: aluno.matricula || '',
                     dias,
@@ -1136,6 +1147,7 @@ const chamadas = {
 
                 return `
                     <tr>
+                        <td>${linha.numeroChamada || ''}</td>
                         <td>${utils.escapeHtml(linha.nome || '')}</td>
                         <td class="col-matricula">${utils.escapeHtml(linha.matricula || '')}</td>
                         ${celulasDias}
@@ -1151,6 +1163,7 @@ const chamadas = {
                     <table class="table-relatorio-mensal">
                         <thead>
                             <tr>
+                                <th>Nº</th>
                                 <th>Aluno</th>
                                 <th>Matrícula</th>
                                 ${headerDias}
@@ -1186,11 +1199,12 @@ const chamadas = {
         };
 
         const montarBloco = (titulo, matriz) => {
-            const header = ['Aluno', 'Matricula', ...diasDoMes, 'Total P', 'Total F'];
+            const header = ['Numero', 'Aluno', 'Matricula', ...diasDoMes, 'Total P', 'Total F'];
             const linhas = [titulo, header.map(esc).join(';')];
             alunosOrdenados.forEach(aluno => {
                 const linha = matriz[aluno.id];
                 const row = [
+                    linha.numeroChamada || '',
                     linha.nome || '',
                     linha.matricula || '',
                     ...diasDoMes.map(d => linha.dias[d] || ''),
@@ -1356,13 +1370,14 @@ const chamadas = {
 
         const rowH = 26;
         const headerH = 30;
-        const colAluno = 220;
+        const colNumero = 52;
+        const colAluno = 196;
         const colMatricula = 120;
         const colDia = 26;
         const colTotal = 64;
 
         const colsDiasW = diasDoMes.length * colDia;
-        const width = colAluno + colMatricula + colsDiasW + (colTotal * 2);
+        const width = colNumero + colAluno + colMatricula + colsDiasW + (colTotal * 2);
         const height = headerH + (alunosOrdenados.length * rowH);
 
         const canvas = document.createElement('canvas');
@@ -1389,6 +1404,8 @@ const chamadas = {
         };
 
         let x = 0;
+        drawCell(x, 0, colNumero, headerH, 'Nº', '#f3f4f6');
+        x += colNumero;
         drawCell(x, 0, colAluno, headerH, 'Aluno', '#f3f4f6');
         x += colAluno;
         drawCell(x, 0, colMatricula, headerH, 'Matrícula', '#f3f4f6');
@@ -1407,18 +1424,26 @@ const chamadas = {
 
             ctx.fillStyle = '#111827';
             ctx.font = '12px Inter, Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.strokeStyle = '#d0d7de';
+            ctx.strokeRect(0, y, colNumero, rowH);
+            ctx.fillText(String(linha.numeroChamada || ''), colNumero / 2, y + rowH / 2);
+
+            ctx.fillStyle = '#111827';
+            ctx.font = '12px Inter, Arial, sans-serif';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             ctx.strokeStyle = '#d0d7de';
-            ctx.strokeRect(0, y, colAluno, rowH);
-            ctx.fillText(String(linha.nome || ''), 8, y + rowH / 2);
+            ctx.strokeRect(colNumero, y, colAluno, rowH);
+            ctx.fillText(String(linha.nome || ''), colNumero + 8, y + rowH / 2);
 
             ctx.textAlign = 'left';
             ctx.strokeStyle = '#d0d7de';
-            ctx.strokeRect(colAluno, y, colMatricula, rowH);
-            ctx.fillText(String(linha.matricula || ''), colAluno + 8, y + rowH / 2);
+            ctx.strokeRect(colNumero + colAluno, y, colMatricula, rowH);
+            ctx.fillText(String(linha.matricula || ''), colNumero + colAluno + 8, y + rowH / 2);
 
-            let xDia = colAluno + colMatricula;
+            let xDia = colNumero + colAluno + colMatricula;
             diasDoMes.forEach(d => {
                 const status = linha.dias[d] || '';
                 let bg = null;
@@ -1452,3 +1477,4 @@ const chamadas = {
         }
     }
 };
+

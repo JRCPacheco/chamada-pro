@@ -1,4 +1,4 @@
-// ===== ALUNOS MODULE =====
+﻿// ===== ALUNOS MODULE =====
 // Gerenciamento de alunos
 // Migrado para IndexedDB
 
@@ -12,14 +12,358 @@ const alunos = {
     _sheetJsPromise: null,
     _deleteHoldTimers: new Map(),
     _deleteHoldTriggered: new Set(),
+    _politicaNumeroAtual: 'alphabetical_shift',
+    _reordenacaoAtiva: false,
+    _reordenacaoOriginal: [],
+    _reordenacaoDraft: [],
+    _dragState: {
+        pending: false,
+        active: false,
+        timer: null,
+        pointerId: null,
+        alunoId: null,
+        sourceHandle: null,
+        lastMoveAt: 0
+    },
+
+    _normalizarNomeOrdenacao(valor) {
+        return String(valor || '').trim();
+    },
+
+    _ordenarPorNome(a, b) {
+        return this._normalizarNomeOrdenacao(a?.nome).localeCompare(this._normalizarNomeOrdenacao(b?.nome), 'pt-BR', { sensitivity: 'base' });
+    },
+
+    async _obterPoliticaNumeroTurma(turmaId) {
+        const turma = await db.get('turmas', turmaId);
+        return ['append', 'manual', 'alphabetical_shift'].includes(turma?.politicaNumeroChamada)
+            ? turma.politicaNumeroChamada
+            : 'alphabetical_shift';
+    },
+
+    _compararPorNumeroEIndice(a, b) {
+        const na = Number(a?.numeroChamada);
+        const nb = Number(b?.numeroChamada);
+        const aValido = Number.isInteger(na) && na > 0;
+        const bValido = Number.isInteger(nb) && nb > 0;
+        if (aValido && bValido && na !== nb) return na - nb;
+        if (aValido && !bValido) return -1;
+        if (!aValido && bValido) return 1;
+        return this._ordenarPorNome(a, b);
+    },
+
+    _ordenarParaLista(alunosArray) {
+        const lista = [...(alunosArray || [])];
+        if (this._reordenacaoAtiva) {
+            const ordem = new Map(this._reordenacaoDraft.map((id, index) => [id, index]));
+            lista.sort((a, b) => {
+                const ia = ordem.has(a.id) ? ordem.get(a.id) : Number.MAX_SAFE_INTEGER;
+                const ib = ordem.has(b.id) ? ordem.get(b.id) : Number.MAX_SAFE_INTEGER;
+                if (ia !== ib) return ia - ib;
+                return this._compararPorNumeroEIndice(a, b);
+            });
+            return lista;
+        }
+        if (this._politicaNumeroAtual === 'manual' || this._politicaNumeroAtual === 'append') {
+            return lista.sort((a, b) => this._compararPorNumeroEIndice(a, b));
+        }
+        return lista.sort((a, b) => this._ordenarPorNome(a, b));
+    },
+
+    async _obterProximoNumeroChamada(turmaId) {
+        const alunosTurma = await db.getByIndex('alunos', 'turmaId', turmaId);
+        let maior = 0;
+        alunosTurma.forEach((a) => {
+            const n = Number(a?.numeroChamada);
+            if (Number.isInteger(n) && n > maior) maior = n;
+        });
+        return maior + 1;
+    },
+
+    async recalcularNumeracaoTurma(turmaId = turmas.turmaAtual?.id, silent = false) {
+        if (!turmaId) return;
+        const alunosTurma = await db.getByIndex('alunos', 'turmaId', turmaId);
+        const ordenados = [...alunosTurma].sort((a, b) => this._ordenarPorNome(a, b));
+        for (let i = 0; i < ordenados.length; i++) {
+            const esperado = i + 1;
+            if (ordenados[i].numeroChamada !== esperado) {
+                ordenados[i].numeroChamada = esperado;
+                await db.put('alunos', ordenados[i]);
+            }
+        }
+        if (!silent) utils.mostrarToast('Numeração da turma recalculada', 'success');
+    },
+
+    async _garantirNumeracaoTurma(turmaId, alunosTurma = null) {
+        if (!turmaId) return false;
+
+        const lista = Array.isArray(alunosTurma)
+            ? [...alunosTurma]
+            : await db.getByIndex('alunos', 'turmaId', turmaId);
+
+        if (lista.length === 0) return false;
+
+        const politicaNumero = await this._obterPoliticaNumeroTurma(turmaId);
+        const numerosValidos = lista
+            .map((a) => Number(a?.numeroChamada))
+            .filter((n) => Number.isInteger(n) && n > 0);
+
+        const hasMissing = numerosValidos.length !== lista.length;
+        const hasDuplicados = new Set(numerosValidos).size !== numerosValidos.length;
+        if (!hasMissing && !hasDuplicados) return false;
+
+        if (politicaNumero === 'alphabetical_shift') {
+            await this.recalcularNumeracaoTurma(turmaId, true);
+            return true;
+        }
+
+        let proximo = numerosValidos.length > 0 ? Math.max(...numerosValidos) + 1 : 1;
+        const usados = new Set();
+        const ordenados = [...lista].sort((a, b) => {
+            if (politicaNumero === 'manual') return this._compararPorNumeroEIndice(a, b);
+            return this._ordenarPorNome(a, b);
+        });
+
+        for (const aluno of ordenados) {
+            const atual = Number(aluno?.numeroChamada);
+            const valido = Number.isInteger(atual) && atual > 0 && !usados.has(atual);
+            if (valido) {
+                usados.add(atual);
+                continue;
+            }
+            while (usados.has(proximo)) proximo++;
+            aluno.numeroChamada = proximo;
+            usados.add(proximo);
+            proximo++;
+            await db.put('alunos', aluno);
+        }
+
+        return true;
+    },
+
+    _parseNumeroChamada(input) {
+        const raw = String(input ?? '').trim();
+        if (!raw) return null;
+        const numero = Number(raw);
+        if (!Number.isInteger(numero) || numero <= 0) return NaN;
+        return numero;
+    },
+
+    _atualizarControlePolitica() {
+        const select = document.getElementById('alunos-politica-select');
+        if (!select) return;
+        const normalizada = ['append', 'manual', 'alphabetical_shift'].includes(this._politicaNumeroAtual)
+            ? this._politicaNumeroAtual
+            : 'alphabetical_shift';
+        select.value = normalizada;
+        select.disabled = this._reordenacaoAtiva;
+    },
+
+    _atualizarControlesReordenacao() {
+        const toolbar = document.getElementById('alunos-reordenacao-toolbar');
+        const btnReordenar = document.getElementById('btn-alunos-reordenar');
+        const search = document.getElementById('search-alunos');
+        if (toolbar) toolbar.style.display = this._reordenacaoAtiva ? 'flex' : 'none';
+        if (btnReordenar) {
+            btnReordenar.textContent = this._reordenacaoAtiva ? 'Reordenando...' : 'Reordenar';
+            btnReordenar.disabled = this._reordenacaoAtiva;
+        }
+        if (search) search.disabled = this._reordenacaoAtiva;
+        document.body.classList.toggle('alunos-reorder-mode', this._reordenacaoAtiva);
+    },
+
+    _limparEstadoDrag() {
+        if (this._dragState.timer) {
+            clearTimeout(this._dragState.timer);
+        }
+        this._dragState.pending = false;
+        this._dragState.active = false;
+        this._dragState.timer = null;
+        this._dragState.pointerId = null;
+        this._dragState.alunoId = null;
+        this._dragState.lastMoveAt = 0;
+        if (this._dragState.sourceHandle) {
+            this._dragState.sourceHandle.classList.remove('drag-armed');
+        }
+        this._dragState.sourceHandle = null;
+    },
+
+    async entrarModoReordenacao() {
+        if (!turmas.turmaAtual?.id) return;
+
+        const politica = await this._obterPoliticaNumeroTurma(turmas.turmaAtual.id);
+        this._politicaNumeroAtual = politica;
+        this._atualizarControlePolitica();
+
+        if (politica !== 'manual') {
+            utils.mostrarToast('Para reorganizar manualmente, altere a política para Manual em Editar Turma.', 'warning');
+            return;
+        }
+
+        if (this._reordenacaoAtiva) return;
+
+        const alunosTurma = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
+        const ordenados = this._ordenarParaLista(alunosTurma);
+        this._reordenacaoOriginal = ordenados.map((a) => a.id);
+        this._reordenacaoDraft = [...this._reordenacaoOriginal];
+        this._reordenacaoAtiva = true;
+        this._atualizarControlesReordenacao();
+        this._atualizarControlePolitica();
+        await this.listar();
+        utils.mostrarToast('Modo reordenação ativo. Segure a alça e arraste.', 'info');
+    },
+
+    async desfazerReordenacao() {
+        if (!this._reordenacaoAtiva) return;
+        this._reordenacaoDraft = [...this._reordenacaoOriginal];
+        await this.listar();
+        utils.mostrarToast('Ordem restaurada nesta sessão', 'info');
+    },
+
+    async cancelarReordenacao() {
+        if (!this._reordenacaoAtiva) return;
+        this._limparEstadoDrag();
+        this._reordenacaoAtiva = false;
+        this._reordenacaoDraft = [];
+        this._reordenacaoOriginal = [];
+        this._atualizarControlesReordenacao();
+        this._atualizarControlePolitica();
+        await this.listar();
+    },
+
+    async salvarReordenacao() {
+        if (!this._reordenacaoAtiva || !turmas.turmaAtual?.id) return;
+        try {
+            const alunosTurma = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
+            const mapa = new Map(alunosTurma.map((a) => [a.id, a]));
+            for (let i = 0; i < this._reordenacaoDraft.length; i++) {
+                const id = this._reordenacaoDraft[i];
+                const aluno = mapa.get(id);
+                if (!aluno) continue;
+                const numero = i + 1;
+                if (aluno.numeroChamada !== numero) {
+                    aluno.numeroChamada = numero;
+                    await db.put('alunos', aluno);
+                }
+            }
+
+            this._limparEstadoDrag();
+            this._reordenacaoAtiva = false;
+            this._reordenacaoDraft = [];
+            this._reordenacaoOriginal = [];
+            this._atualizarControlesReordenacao();
+            this._atualizarControlePolitica();
+            await this.listar();
+            if (typeof chamadas?.atualizarRelatorioMensal === 'function') {
+                await chamadas.atualizarRelatorioMensal();
+            }
+            utils.mostrarToast('Ordem salva com sucesso', 'success');
+        } catch (error) {
+            console.error('Erro ao salvar reordenação:', error);
+            utils.mostrarToast('Erro ao salvar ordem dos alunos', 'error');
+        }
+    },
+
+    _moverAlunoNoRascunho(draggedId, targetId) {
+        if (!draggedId || !targetId || draggedId === targetId) return false;
+        const from = this._reordenacaoDraft.indexOf(draggedId);
+        const to = this._reordenacaoDraft.indexOf(targetId);
+        if (from < 0 || to < 0 || from === to) return false;
+        this._reordenacaoDraft.splice(from, 1);
+        this._reordenacaoDraft.splice(to, 0, draggedId);
+        return true;
+    },
+
+    async mudarPoliticaRapida(selectEl) {
+        if (!turmas.turmaAtual?.id || !selectEl) return;
+
+        const novaPolitica = ['append', 'manual', 'alphabetical_shift'].includes(selectEl.value)
+            ? selectEl.value
+            : 'alphabetical_shift';
+
+        try {
+            const turma = await db.get('turmas', turmas.turmaAtual.id);
+            if (!turma) {
+                utils.mostrarToast('Turma não encontrada', 'error');
+                return;
+            }
+
+            const politicaAtual = ['append', 'manual', 'alphabetical_shift'].includes(turma.politicaNumeroChamada)
+                ? turma.politicaNumeroChamada
+                : 'alphabetical_shift';
+
+            if (politicaAtual === novaPolitica) {
+                this._politicaNumeroAtual = politicaAtual;
+                this._atualizarControlePolitica();
+                return;
+            }
+
+            if (this._reordenacaoAtiva) {
+                const podeTrocar = utils.confirmar('Você está no modo reordenação. Deseja cancelar a reordenação atual para trocar a política?');
+                if (!podeTrocar) {
+                    this._atualizarControlePolitica();
+                    return;
+                }
+                await this.cancelarReordenacao();
+            }
+
+            if (politicaAtual === 'manual' && novaPolitica !== 'manual') {
+                const confirmarSaidaManual = utils.confirmar('Esta turma está em modo manual. Ao sair desse modo, a ordem manual pode ser alterada automaticamente. Deseja continuar?');
+                if (!confirmarSaidaManual) {
+                    this._politicaNumeroAtual = politicaAtual;
+                    this._atualizarControlePolitica();
+                    return;
+                }
+            }
+
+            if (novaPolitica === 'alphabetical_shift') {
+                const confirmarReordenacao = utils.confirmar('A política Ordem alfabética renumera a turma inteira automaticamente. Confirmar alteração?');
+                if (!confirmarReordenacao) {
+                    this._politicaNumeroAtual = politicaAtual;
+                    this._atualizarControlePolitica();
+                    return;
+                }
+            }
+
+            turma.politicaNumeroChamada = novaPolitica;
+            await db.put('turmas', turma);
+            if (turmas.turmaAtual?.id === turma.id) {
+                turmas.turmaAtual.politicaNumeroChamada = novaPolitica;
+            }
+
+            if (novaPolitica === 'alphabetical_shift') {
+                await this.recalcularNumeracaoTurma(turma.id, true);
+            }
+
+            this._politicaNumeroAtual = novaPolitica;
+            this._atualizarControlePolitica();
+            await this.listar();
+            if (typeof chamadas?.atualizarRelatorioMensal === 'function') {
+                await chamadas.atualizarRelatorioMensal();
+            }
+            utils.mostrarToast('Política de numeração atualizada', 'success');
+        } catch (error) {
+            console.error('Erro ao alterar política rápida:', error);
+            this._atualizarControlePolitica();
+            utils.mostrarToast('Erro ao alterar política da turma', 'error');
+        }
+    },
 
     // Listar alunos da turma atual
     async listar() {
         if (!turmas.turmaAtual) return;
 
         try {
+            this._politicaNumeroAtual = await this._obterPoliticaNumeroTurma(turmas.turmaAtual.id);
+            this._atualizarControlePolitica();
+            this._atualizarControlesReordenacao();
+
             // Usando Index turmaId
-            const alunosArray = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
+            let alunosArray = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
+            const atualizouNumeracao = await this._garantirNumeracaoTurma(turmas.turmaAtual.id, alunosArray);
+            if (atualizouNumeracao) {
+                alunosArray = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
+            }
 
             const container = document.getElementById('lista-alunos');
             const emptyState = document.getElementById('empty-alunos');
@@ -36,6 +380,7 @@ const alunos = {
             // Busca em tempo real (Debounce)
             if (searchInput && !searchInput.oninput) {
                 searchInput.oninput = utils.debounce(async () => {
+                    if (this._reordenacaoAtiva) return;
                     const busca = searchInput.value.trim();
                     // Recarregar dados frescos do banco para garantir consistência
                     const alunosAtual = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
@@ -63,10 +408,9 @@ const alunos = {
             return;
         }
 
-        // Ordenar por nome
-        alunosArray.sort((a, b) => a.nome.localeCompare(b.nome));
+        const listaRender = this._ordenarParaLista(alunosArray);
 
-        container.innerHTML = alunosArray.map(aluno => {
+        container.innerHTML = listaRender.map(aluno => {
             const iniciais = utils.getIniciais(aluno.nome);
             const cor = utils.getCorFromString(aluno.nome);
             const avatarHtml = aluno.foto
@@ -75,18 +419,26 @@ const alunos = {
             const obsPrivadaBadge = (aluno.obsOculta && aluno.observacoes)
                 ? `<span class="obs-privada-badge" title="Observação privada">🔒</span>`
                 : '';
+            const showHandle = this._reordenacaoAtiva;
+            const cardClasses = ['aluno-card'];
+            if (showHandle) cardClasses.push('reorder-enabled');
+            if (this._dragState.active && this._dragState.alunoId === aluno.id) cardClasses.push('dragging');
 
             return `
-                <div class="aluno-card" data-id="${aluno.id}" style="cursor: pointer;" title="Toque para editar">
+                <div class="${cardClasses.join(' ')}" data-id="${aluno.id}" style="cursor: ${showHandle ? 'grab' : 'pointer'};" title="${showHandle ? 'Segure a alça para arrastar' : 'Toque para editar'}">
                     ${avatarHtml}
                     <div class="aluno-info">
                         <h4>${utils.escapeHtml(aluno.nome)} ${obsPrivadaBadge}</h4>
-                        <p>Matrícula: ${utils.escapeHtml(aluno.matricula)}</p>
+                        <p>Matrícula: ${utils.escapeHtml(aluno.matricula)} | Nº: ${Number.isInteger(Number(aluno.numeroChamada)) ? Number(aluno.numeroChamada) : '-'}</p>
                     </div>
                     <div class="aluno-actions">
+                        ${showHandle ? `
+                        <button class="btn-icon-sm btn-drag-aluno" data-id="${aluno.id}" title="Segure para arrastar" aria-label="Arrastar aluno">
+                            <span class="drag-handle-bars" aria-hidden="true"></span>
+                        </button>` : `
                         <button class="btn-icon-sm btn-deletar-aluno" data-id="${aluno.id}" title="Segure por 1 segundo para excluir">
                             🗑️
-                        </button>
+                        </button>`}
                     </div>
                 </div>
             `;
@@ -95,11 +447,17 @@ const alunos = {
         // Adicionar event listeners
         document.querySelectorAll('.aluno-card').forEach(card => {
             card.addEventListener('click', function (event) {
+                if (alunos._reordenacaoAtiva) return;
                 // Não disparar edição ao clicar na lixeira
                 if (event.target.closest('.btn-deletar-aluno')) return;
                 alunos.editar(this.dataset.id);
             });
         });
+
+        if (this._reordenacaoAtiva) {
+            this._bindReorderInteractions();
+            return;
+        }
 
         const clearHold = (btn, pointerId = null) => {
             const key = pointerId !== null ? `${btn.dataset.id}:${pointerId}` : btn.dataset.id;
@@ -162,6 +520,100 @@ const alunos = {
         });
     },
 
+    _bindReorderInteractions() {
+        const handles = document.querySelectorAll('.btn-drag-aluno');
+        if (!handles.length) return;
+
+        const clearPendingTimer = () => {
+            if (this._dragState.timer) {
+                clearTimeout(this._dragState.timer);
+                this._dragState.timer = null;
+            }
+        };
+
+        const onPointerMove = async (event) => {
+            if (this._dragState.pointerId !== event.pointerId) return;
+
+            if (this._dragState.pending) {
+                const elapsedMove = Math.abs((event.movementX || 0)) + Math.abs((event.movementY || 0));
+                if (elapsedMove > 6) {
+                    clearPendingTimer();
+                    this._dragState.pending = false;
+                    if (this._dragState.sourceHandle) this._dragState.sourceHandle.classList.remove('drag-armed');
+                }
+                return;
+            }
+
+            if (!this._dragState.active) return;
+
+            event.preventDefault();
+            const now = Date.now();
+            if (now - this._dragState.lastMoveAt < 40) return;
+            this._dragState.lastMoveAt = now;
+
+            const nearTop = event.clientY < 110;
+            const nearBottom = event.clientY > (window.innerHeight - 120);
+            if (nearTop) window.scrollBy(0, -14);
+            if (nearBottom) window.scrollBy(0, 14);
+
+            const overCard = document.elementFromPoint(event.clientX, event.clientY)?.closest('.aluno-card[data-id]');
+            const targetId = overCard?.dataset?.id;
+            if (!targetId) return;
+
+            const moved = this._moverAlunoNoRascunho(this._dragState.alunoId, targetId);
+            if (moved) {
+                await this.listar();
+            }
+        };
+
+        const onPointerEnd = (event) => {
+            if (this._dragState.pointerId !== event.pointerId) return;
+            clearPendingTimer();
+            if (this._dragState.sourceHandle) this._dragState.sourceHandle.classList.remove('drag-armed');
+            const wasDragging = this._dragState.active;
+            this._dragState.pending = false;
+            this._dragState.active = false;
+            this._dragState.pointerId = null;
+            this._dragState.sourceHandle = null;
+            this._dragState.lastMoveAt = 0;
+            if (wasDragging) {
+                this.listar();
+            }
+            window.removeEventListener('pointermove', onPointerMove, true);
+            window.removeEventListener('pointerup', onPointerEnd, true);
+            window.removeEventListener('pointercancel', onPointerEnd, true);
+        };
+
+        handles.forEach((handle) => {
+            handle.onpointerdown = (event) => {
+                if (!this._reordenacaoAtiva) return;
+                event.preventDefault();
+                event.stopPropagation();
+
+                clearPendingTimer();
+                this._dragState.pending = true;
+                this._dragState.active = false;
+                this._dragState.pointerId = event.pointerId;
+                this._dragState.alunoId = handle.dataset.id;
+                this._dragState.sourceHandle = handle;
+                this._dragState.lastMoveAt = 0;
+                handle.classList.add('drag-armed');
+
+                this._dragState.timer = setTimeout(() => {
+                    this._dragState.pending = false;
+                    this._dragState.active = true;
+                    handle.classList.remove('drag-armed');
+                    utils.vibrar([20]);
+                    this.listar();
+                }, 300);
+
+                window.addEventListener('pointermove', onPointerMove, { capture: true, passive: false });
+                window.addEventListener('pointerup', onPointerEnd, true);
+                window.addEventListener('pointercancel', onPointerEnd, true);
+            };
+        });
+    },
+
     // Mostrar modal de novo aluno
     mostrarModalNovoAluno() {
         // Validar se há uma turma selecionada
@@ -184,6 +636,12 @@ const alunos = {
         // Limpar campos
         document.getElementById('input-aluno-nome').value = '';
         document.getElementById('input-aluno-matricula').value = '';
+        const inputNumero = document.getElementById('input-aluno-numero');
+        if (inputNumero) {
+            inputNumero.value = '';
+            inputNumero.disabled = true;
+            inputNumero.placeholder = 'Automatico';
+        }
         document.getElementById('input-aluno-obs').value = '';
         document.getElementById('aluno-pontos-section').style.display = 'none';
         document.getElementById('aluno-pontos-total').textContent = 'Total de pontos: 0';
@@ -246,6 +704,7 @@ const alunos = {
 
         const nome = document.getElementById('input-aluno-nome').value.trim();
         const matricula = document.getElementById('input-aluno-matricula').value.trim();
+        const numeroInput = document.getElementById('input-aluno-numero')?.value;
         const obs = document.getElementById('input-aluno-obs')?.value || '';
 
         // Validações
@@ -261,11 +720,19 @@ const alunos = {
             return;
         }
 
+        const numeroDesejado = this._parseNumeroChamada(numeroInput);
+        if (Number.isNaN(numeroDesejado)) {
+            utils.mostrarToast('Numero de chamada invalido', 'warning');
+            document.getElementById('input-aluno-numero')?.focus();
+            return;
+        }
+
         try {
             // Verificar unicidade de Matrícula NA TURMA
             // Precisamos buscar alunos da turma e verificar se matricula ja existe
             const alunosTurma = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
             const matriculaExiste = alunosTurma.some(a => a.matricula === matricula && a.id !== this.alunoEmEdicao);
+            const politicaNumero = await this._obterPoliticaNumeroTurma(turmas.turmaAtual.id);
 
             if (matriculaExiste) {
                 utils.mostrarToast('Matrícula já existe nesta turma', 'warning');
@@ -302,6 +769,8 @@ const alunos = {
             }
 
             let aluno;
+            let trocaNumeroPendente = null;
+            let numeroAlteradoManualmente = false;
 
             if (this.alunoEmEdicao && original) {
                 // UPDATE: Merge com original
@@ -313,13 +782,35 @@ const alunos = {
                     observacoes: obs,
                     obsOculta: this.obsOcultaAtual
                 };
+                const numeroAtual = Number.isInteger(Number(original.numeroChamada)) ? Number(original.numeroChamada) : null;
+                if (numeroDesejado !== null && numeroDesejado !== numeroAtual) {
+                    const conflito = alunosTurma.find((a) => a.id !== original.id && Number(a.numeroChamada) === numeroDesejado);
+                    if (conflito) {
+                        const confirmarTroca = utils.confirmar(`O numero ${numeroDesejado} ja pertence a ${conflito.nome}. Deseja trocar os numeros entre eles?`);
+                        if (!confirmarTroca) {
+                            utils.mostrarToast('Escolha outro numero de chamada', 'warning');
+                            return;
+                        }
+                        trocaNumeroPendente = { alunoConflitoId: conflito.id, numeroOriginal: numeroAtual };
+                    }
+                    aluno.numeroChamada = numeroDesejado;
+                    numeroAlteradoManualmente = true;
+                } else if (numeroAtual === null) {
+                    aluno.numeroChamada = (politicaNumero === 'append' || politicaNumero === 'manual')
+                        ? await this._obterProximoNumeroChamada(turmas.turmaAtual.id)
+                        : null;
+                }
             } else {
                 // CREATE: Novo objeto
+                const numeroInicial = (politicaNumero === 'append' || politicaNumero === 'manual')
+                    ? await this._obterProximoNumeroChamada(turmas.turmaAtual.id)
+                    : null;
                 aluno = {
                     id: 'aluno_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
                     turmaId: turmas.turmaAtual.id,
                     matricula: matricula,
                     nome: nome,
+                    numeroChamada: numeroInicial,
                     foto: this.fotoTemp,
                     observacoes: obs,
                     obsOculta: this.obsOcultaAtual,
@@ -331,10 +822,25 @@ const alunos = {
 
             if (this.alunoEmEdicao) {
                 await db.put('alunos', aluno);
+                if (trocaNumeroPendente) {
+                    const alunoConflito = await db.get('alunos', trocaNumeroPendente.alunoConflitoId);
+                    if (alunoConflito) {
+                        alunoConflito.numeroChamada = trocaNumeroPendente.numeroOriginal;
+                        await db.put('alunos', alunoConflito);
+                    }
+                }
                 utils.mostrarToast('Aluno atualizado!', 'success');
             } else {
                 await db.add('alunos', aluno);
                 utils.mostrarToast('Aluno adicionado!', 'success');
+            }
+
+            if (politicaNumero === 'alphabetical_shift' && !numeroAlteradoManualmente) {
+                const nomeMudou = !!(original && original.nome !== nome);
+                const numeroAusente = !!(aluno && !Number.isInteger(Number(aluno.numeroChamada)));
+                if (!this.alunoEmEdicao || nomeMudou || numeroAusente) {
+                    await this.recalcularNumeracaoTurma(turmas.turmaAtual.id, true);
+                }
             }
 
             utils.vibrar([50, 50, 50]);
@@ -562,6 +1068,12 @@ const alunos = {
             // Preencher campos
             document.getElementById('input-aluno-nome').value = aluno.nome;
             document.getElementById('input-aluno-matricula').value = aluno.matricula;
+            const inputNumero = document.getElementById('input-aluno-numero');
+            if (inputNumero) {
+                inputNumero.disabled = false;
+                inputNumero.placeholder = 'Ex: 12';
+                inputNumero.value = Number.isInteger(Number(aluno.numeroChamada)) ? String(aluno.numeroChamada) : '';
+            }
             document.getElementById('input-aluno-obs').value = aluno.observacoes || '';
             document.getElementById('aluno-pontos-section').style.display = 'block';
             await this.carregarEventosPontos(aluno.id);
@@ -623,8 +1135,8 @@ const alunos = {
                             <div class="evento-ponto-meta">${dataFmt}</div>
                         </div>
                         <div class="evento-ponto-actions">
-                            <button class="btn-icon-sm" data-action="alunos-editar-evento-ponto" data-evento-id="${evento.id}" title="Editar">🖉</button>
-                            <button class="btn-icon-sm" data-action="alunos-excluir-evento-ponto" data-evento-id="${evento.id}" title="Excluir">🗑</button>
+                            <button class="btn-icon-sm" data-action="alunos-editar-evento-ponto" data-evento-id="${evento.id}" title="Editar">✏️</button>
+                            <button class="btn-icon-sm" data-action="alunos-excluir-evento-ponto" data-evento-id="${evento.id}" title="Excluir">🗑️</button>
                         </div>
                     </div>
                 `;
@@ -935,6 +1447,10 @@ const alunos = {
         let adicionados = 0;
         let duplicados = 0;
         let invalidos = 0;
+        const politicaNumero = await this._obterPoliticaNumeroTurma(turmas.turmaAtual.id);
+        let proximoNumeroAppend = (politicaNumero === 'append' || politicaNumero === 'manual')
+            ? await this._obterProximoNumeroChamada(turmas.turmaAtual.id)
+            : null;
 
         const existingAlunos = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
         const matriculasExistentes = new Set(existingAlunos.map((a) => String(a.matricula || '').trim()));
@@ -966,6 +1482,7 @@ const alunos = {
                 turmaId: turmas.turmaAtual.id,
                 matricula: matricula,
                 nome: nome,
+                numeroChamada: (politicaNumero === 'append' || politicaNumero === 'manual') ? proximoNumeroAppend++ : null,
                 email: '',
                 foto: null,
                 observacoes: '',
@@ -977,6 +1494,26 @@ const alunos = {
             await db.add('alunos', novoAluno);
             matriculasExistentes.add(matricula);
             adicionados++;
+        }
+
+        if (adicionados > 0) {
+            if (politicaNumero === 'append' || politicaNumero === 'manual') {
+                const alunosTurma = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
+                let proximo = 1;
+                alunosTurma.forEach((a) => {
+                    const n = Number(a?.numeroChamada);
+                    if (Number.isInteger(n) && n >= proximo) proximo = n + 1;
+                });
+                for (const aluno of alunosTurma) {
+                    const n = Number(aluno?.numeroChamada);
+                    if (!Number.isInteger(n) || n <= 0) {
+                        aluno.numeroChamada = proximo++;
+                        await db.put('alunos', aluno);
+                    }
+                }
+            } else {
+                await this.recalcularNumeracaoTurma(turmas.turmaAtual.id, true);
+            }
         }
 
         const partesResumo = [`${adicionados} aluno(s) importado(s)`];
@@ -1085,6 +1622,7 @@ const alunos = {
         }
     }
 };
+
 
 
 

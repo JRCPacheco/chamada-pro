@@ -243,6 +243,8 @@ const turmas = {
         // Limpar campos
         document.getElementById('input-turma-nome').value = '';
         document.getElementById('input-turma-descricao').value = '';
+        const politicaNumeroInput = document.getElementById('input-turma-politica-numero');
+        if (politicaNumeroInput) politicaNumeroInput.value = 'alphabetical_shift';
         const segundoHorarioInput = document.getElementById('input-turma-segundo-horario');
         if (segundoHorarioInput) segundoHorarioInput.checked = false;
 
@@ -288,6 +290,7 @@ const turmas = {
         }
 
         const segundoHorarioAtivo = !!document.getElementById('input-turma-segundo-horario')?.checked;
+        const politicaNumeroChamada = (document.getElementById('input-turma-politica-numero')?.value || 'alphabetical_shift').trim();
 
         const novaTurma = {
             // id: 'turma_' + Date.now(),
@@ -295,6 +298,9 @@ const turmas = {
             descricao: descricao,
             escolaId: escolaId, // Usando camelCase conforme schema novo? Validar se db.js usa escolaId ou escola_id no index
             segundoHorarioAtivo: segundoHorarioAtivo,
+            politicaNumeroChamada: ['append', 'manual', 'alphabetical_shift'].includes(politicaNumeroChamada)
+                ? politicaNumeroChamada
+                : 'alphabetical_shift',
             // O index no db.js é 'escolaId'. Mantendo consistencia
             criadaEm: new Date().toISOString()
             // REMOVIDO: alunos: {} -> Alunos agora são store independente
@@ -783,6 +789,12 @@ const turmas = {
         document.getElementById('input-editar-turma-nome').value = turma.nome || '';
         document.getElementById('input-editar-turma-descricao').value = turma.descricao || '';
         document.getElementById('input-editar-turma-segundo-horario').checked = !!turma.segundoHorarioAtivo;
+        const politicaNumeroEdit = document.getElementById('input-editar-turma-politica-numero');
+        if (politicaNumeroEdit) {
+            politicaNumeroEdit.value = ['append', 'manual', 'alphabetical_shift'].includes(turma.politicaNumeroChamada)
+                ? turma.politicaNumeroChamada
+                : 'alphabetical_shift';
+        }
 
         const selectEscola = document.getElementById('input-editar-turma-escola');
         if (selectEscola) {
@@ -811,6 +823,7 @@ const turmas = {
         const novaDescricao = (document.getElementById('input-editar-turma-descricao')?.value || '').trim();
         const novaEscolaId = (document.getElementById('input-editar-turma-escola')?.value || '').trim();
         const novoSegundoHorario = !!document.getElementById('input-editar-turma-segundo-horario')?.checked;
+        const novaPoliticaNumero = (document.getElementById('input-editar-turma-politica-numero')?.value || 'alphabetical_shift').trim();
 
         if (!novoNome) {
             utils.mostrarToast('Por favor, informe o nome da turma', 'warning');
@@ -825,13 +838,24 @@ const turmas = {
         }
 
         const valorSegundoHorarioAtual = !!turma.segundoHorarioAtivo;
+        const politicaNumeroAtual = ['append', 'manual', 'alphabetical_shift'].includes(turma.politicaNumeroChamada)
+            ? turma.politicaNumeroChamada
+            : 'alphabetical_shift';
         turma.nome = novoNome;
         turma.descricao = novaDescricao;
         turma.escolaId = novaEscolaId;
+        turma.politicaNumeroChamada = ['append', 'manual', 'alphabetical_shift'].includes(novaPoliticaNumero)
+            ? novaPoliticaNumero
+            : 'alphabetical_shift';
         await db.put('turmas', turma);
 
         if (valorSegundoHorarioAtual !== novoSegundoHorario) {
             await this.definirSegundoHorario(turmaId, novoSegundoHorario);
+        }
+        if (politicaNumeroAtual !== turma.politicaNumeroChamada && turma.politicaNumeroChamada === 'alphabetical_shift') {
+            if (typeof alunos?.recalcularNumeracaoTurma === 'function') {
+                await alunos.recalcularNumeracaoTurma(turmaId, true);
+            }
         }
 
         app.fecharModal('modal-editar-turma');
