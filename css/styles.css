@@ -36,7 +36,21 @@
     --border-radius-sm: 10px;
     --border-radius-lg: 24px;
 
-    --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --space-1: 8px;
+    --space-2: 16px;
+    --space-3: 24px;
+    --space-4: 32px;
+
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 18px;
+
+    --accent-turmas: #6d86ad;
+    --accent-alunos: #8f829f;
+    --accent-chamadas: #6d9a84;
+
+    --transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease,
+        box-shadow 0.2s ease, transform 0.18s ease, opacity 0.2s ease;
 }
 
 
@@ -236,18 +250,18 @@ body {
 
 .app-header {
     background: var(--primary-gradient);
-    padding: 14px 20px;
+    padding: 10px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
     position: sticky;
     top: 0;
     z-index: 100;
 }
 
 .app-header h1 {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 600;
     flex: 1;
     text-align: center;
@@ -327,15 +341,15 @@ body {
 }
 
 .logo-img {
-    width: 48px;
-    height: 48px;
+    width: 42px;
+    height: 42px;
     object-fit: contain;
     border-radius: 4px;
 }
 
 .btn-icon {
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
     border: none;
     background: transparent;
     font-size: 24px;
@@ -364,18 +378,18 @@ body {
 @keyframes slideIn {
     from {
         opacity: 0;
-        transform: translateY(20px) scale(0.98);
+        transform: translateY(12px);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
     }
 }
 
 /* ===== STATS ROW ===== */
 .turmas-header {
-    padding: 20px;
+    padding: var(--space-2);
 }
 
 .stats-row {
@@ -386,8 +400,8 @@ body {
 
 .stat-card {
     background: #ffffff;
-    padding: 16px 8px;
-    border-radius: var(--border-radius);
+    padding: var(--space-2) var(--space-1);
+    border-radius: var(--radius-md);
     text-align: center;
     box-shadow: var(--shadow-sm);
     border: 1px solid #e5e7eb;
@@ -412,9 +426,9 @@ body {
     margin-bottom: 4px;
 }
 
-.stat-icon--turmas  { color: #3A6DB5; }
-.stat-icon--alunos  { color: #E87722; }
-.stat-icon--chamadas { color: #6ABF57; }
+.stat-icon--turmas  { color: var(--accent-turmas); }
+.stat-icon--alunos  { color: var(--accent-alunos); }
+.stat-icon--chamadas { color: var(--accent-chamadas); }
 
 .stat-value {
     font-size: 26px;
@@ -432,9 +446,9 @@ body {
     letter-spacing: 0.6px;
 }
 
-.stat-label--turmas  { color: #3A6DB5; }
-.stat-label--alunos  { color: #E87722; }
-.stat-label--chamadas { color: #6ABF57; }
+.stat-label--turmas  { color: var(--accent-turmas); }
+.stat-label--alunos  { color: var(--accent-alunos); }
+.stat-label--chamadas { color: var(--accent-chamadas); }
 
 /* ===== SEARCH BOX ===== */
 .search-box {
@@ -461,8 +475,8 @@ body {
 .search-controls {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 0 20px 20px;
+    gap: var(--space-2);
+    padding: 0 var(--space-2) var(--space-3);
 }
 
 @media (min-width: 600px) {
@@ -539,15 +553,15 @@ body {
 
 /* ===== TURMAS LIST ===== */
 .turmas-list {
-    padding: 0 20px 56px;
+    padding: 0 var(--space-2) 56px;
 }
 
 .turma-card {
     background: #ffffff;
-    padding: 24px;
-    border-radius: var(--border-radius);
-    margin-bottom: 16px;
-    box-shadow: var(--shadow-sm);
+    padding: 20px;
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-2);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
     border: 1px solid #e5e7eb;
     cursor: pointer;
     transition: var(--transition);
@@ -556,8 +570,8 @@ body {
 }
 
 .turma-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
     border-color: var(--primary-light);
 }
 
@@ -567,8 +581,8 @@ body {
     left: 0;
     top: 0;
     bottom: 0;
-    width: 4px;
-    background: var(--primary-gradient);
+    width: 3px;
+    background: var(--primary-light);
 }
 
 .turma-card:active {
@@ -593,9 +607,9 @@ body {
 }
 
 .turma-delete-btn {
-    border: 1px solid #fecaca;
-    background: #fff1f2;
-    color: #b91c1c;
+    border: 1px solid var(--gray-300);
+    background: #f8fafc;
+    color: var(--gray-500);
     width: 36px;
     height: 36px;
     border-radius: 10px;
@@ -609,13 +623,15 @@ body {
 }
 
 .turma-delete-btn:hover {
-    background: #fee2e2;
-    border-color: #fca5a5;
+    background: var(--gray-100);
+    border-color: var(--gray-400);
+    color: var(--gray-700);
 }
 
 .turma-delete-btn.holding {
-    background: #fecaca;
+    background: #fee2e2;
     border-color: #ef4444;
+    color: #b91c1c;
     transform: scale(0.94);
 }
 
@@ -651,7 +667,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    min-height: 44px;
+    min-height: 48px;
     text-decoration: none;
 }
 
@@ -849,6 +865,15 @@ body {
     padding: 8px 14px;
     font-size: 14px;
     min-width: 190px;
+    border-color: rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+.turma-action-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.65);
+    color: #ffffff;
 }
 
 .turma-footer-row {
@@ -861,8 +886,9 @@ body {
 
 .turma-segundo-horario-toggle {
     margin: 0;
-    min-width: 320px;
+    min-width: 0;
     max-width: 420px;
+    padding: 12px;
 }
 
 .turma-segundo-horario-toggle .toggle-field-title {
@@ -1294,6 +1320,10 @@ body {
     padding: 0 20px 8px;
 }
 
+.diario-resumo-cards[hidden] {
+    display: none;
+}
+
 .diario-resumo-card {
     background: var(--gray-50, #f9fafb);
     border: 1px solid var(--gray-200);
@@ -1349,6 +1379,9 @@ body {
 
 .diario-tabela-toggle {
     padding: 4px 20px 10px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 /* ===== SCANNER ===== */
@@ -1992,7 +2025,8 @@ body {
 
 .menu-item {
     width: 100%;
-    padding: 16px;
+    padding: 14px 16px;
+    min-height: 52px;
     border: none;
     background: transparent;
     display: flex;

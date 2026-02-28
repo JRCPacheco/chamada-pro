@@ -7,6 +7,7 @@ const chamadas = {
     chamadaResumo: null,
     relatorioMensalAtual: null,
     relatorioMensalInicializado: false,
+    resumoMensalVisivel: false,
     tabelaMensalVisivel: false,
     alunosCache: {}, // Cache temporário de alunos para visualização
     historicoSelecaoAtiva: false,
@@ -622,7 +623,25 @@ const chamadas = {
             await this.atualizarPreviewPontos();
         });
 
+        this._atualizarControlesVisibilidadeDiario();
         this.relatorioMensalInicializado = true;
+    },
+
+    _atualizarControlesVisibilidadeDiario() {
+        const resumo = document.getElementById('diario-resumo-cards');
+        const tabela = document.getElementById('relatorio-mensal-tabela-wrap');
+        const btnResumo = document.getElementById('btn-ver-resumo');
+        const btnTabela = document.getElementById('btn-ver-tabela');
+
+        if (resumo) resumo.hidden = !this.resumoMensalVisivel;
+        if (tabela) tabela.style.display = this.tabelaMensalVisivel ? 'block' : 'none';
+        if (btnResumo) btnResumo.textContent = this.resumoMensalVisivel ? 'Ocultar resumo P/F/%' : 'Ver resumo P/F/%';
+        if (btnTabela) btnTabela.textContent = this.tabelaMensalVisivel ? 'Ocultar tabela' : 'Ver tabela completa';
+    },
+
+    toggleResumoMensal() {
+        this.resumoMensalVisivel = !this.resumoMensalVisivel;
+        this._atualizarControlesVisibilidadeDiario();
     },
 
     async abrirModalRelatorios() {
@@ -850,10 +869,7 @@ const chamadas = {
 
     toggleTabelaMensal() {
         this.tabelaMensalVisivel = !this.tabelaMensalVisivel;
-        const wrap = document.getElementById('relatorio-mensal-tabela-wrap');
-        const btn = document.getElementById('btn-ver-tabela');
-        if (wrap) wrap.style.display = this.tabelaMensalVisivel ? 'block' : 'none';
-        if (btn) btn.textContent = this.tabelaMensalVisivel ? 'Ocultar tabela' : 'Ver tabela completa';
+        this._atualizarControlesVisibilidadeDiario();
     },
 
     renderizarResumoCards(relatorio) {
