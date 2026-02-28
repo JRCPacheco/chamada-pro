@@ -9,11 +9,11 @@
     <title>Chamada Fácil - Scanner de Presença</title>
 
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#4A90E2">
+    <meta name="theme-color" content="#212F52">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Chamada PRO">
+    <meta name="apple-mobile-web-app-title" content="Chamada Facil">
     <meta name="description" content="Sistema inteligente de controle de presença via QR Code para professores">
 
     <!-- PWA Manifest -->
@@ -101,7 +101,7 @@
                 </svg>
             </button>
             <div class="header-logo">
-                <img src="assets/logo1024wt.svg" alt="Chamada PRO" class="logo-img">
+                <img src="assets/logo1024wt.svg" alt="Chamada Facil" class="logo-img">
                 <div class="header-wordmark">
                     <span class="wordmark-top">Chamada</span>
                     <span class="wordmark-bottom">Fácil</span>
@@ -276,19 +276,22 @@
                     <div class="section-header">
                         <h3>Diário de Classe</h3>
                         <div class="relatorio-mensal-controls">
-                            <label for="relatorio-mensal-mes">Mês:</label>
-                            <input type="month" id="relatorio-mensal-mes" />
+                            <label for="relatorio-mensal-mes-btn">Mês:</label>
+                            <button class="btn btn-outline btn-sm" id="relatorio-mensal-mes-btn" data-action="chamadas-abrir-seletor-mes">
+                                Selecionar mês
+                            </button>
+                            <input type="month" id="relatorio-mensal-mes" hidden />
                         </div>
                     </div>
-                    <div id="diario-resumo-cards" class="diario-resumo-cards"></div>
                     <div class="diario-tabela-toggle">
                         <button class="btn btn-outline btn-sm" id="btn-ver-resumo" data-action="chamadas-toggle-resumo">
-                            Ver resumo P/F/%
+                            Ver resumo de frequência
                         </button>
                         <button class="btn btn-outline btn-sm" id="btn-ver-tabela" data-action="chamadas-toggle-tabela">
                             Ver tabela completa
                         </button>
                     </div>
+                    <div id="diario-resumo-cards" class="diario-resumo-cards"></div>
                     <div id="relatorio-mensal-tabela-wrap" class="relatorio-mensal-tabela-wrap" style="display: none;"></div>
                 </div>
 
@@ -946,6 +949,43 @@
                     </div>
                     <div id="relatorio-pontos-preview" class="relatorio-pontos-preview" style="margin-top: 12px;"></div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Seleção de mês -->
+    <div id="modal-seletor-mes" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Selecionar mês</h3>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-seletor-mes">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="seletor-mes-ano">Ano</label>
+                    <select id="seletor-mes-ano"></select>
+                </div>
+                <div class="form-group">
+                    <label for="seletor-mes-mes">Mês</label>
+                    <select id="seletor-mes-mes">
+                        <option value="01">Janeiro</option>
+                        <option value="02">Fevereiro</option>
+                        <option value="03">Março</option>
+                        <option value="04">Abril</option>
+                        <option value="05">Maio</option>
+                        <option value="06">Junho</option>
+                        <option value="07">Julho</option>
+                        <option value="08">Agosto</option>
+                        <option value="09">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-action="close-modal" data-modal-id="modal-seletor-mes">Cancelar</button>
+                <button class="btn btn-primary" data-action="chamadas-aplicar-seletor-mes">Aplicar</button>
             </div>
         </div>
     </div>

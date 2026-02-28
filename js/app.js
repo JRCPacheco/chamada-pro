@@ -94,6 +94,8 @@ const app = {
             case 'chamadas-excluir-selecionadas': return chamadas.excluirChamadasSelecionadas();
             case 'chamadas-cancelar-selecao': return chamadas.cancelarModoSelecaoHistorico();
             case 'chamadas-abrir-relatorios': return chamadas.abrirModalRelatorios();
+            case 'chamadas-abrir-seletor-mes': return chamadas.abrirSeletorMes();
+            case 'chamadas-aplicar-seletor-mes': return chamadas.aplicarMesSeletor();
             case 'chamadas-toggle-resumo': return chamadas.toggleResumoMensal();
             case 'chamadas-toggle-tabela': return chamadas.toggleTabelaMensal();
             case 'chamadas-compartilhar': return chamadas.compartilhar();

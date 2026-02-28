@@ -1,13 +1,13 @@
 {
-  "name": "Chamada PRO - Scanner de Presença",
-  "short_name": "Chamada PRO",
+  "name": "Chamada Facil",
+  "short_name": "Chamada Facil",
   "description": "Sistema inteligente de controle de presença via QR Code para professores",
   "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#4A90E2",
-  "theme_color": "#4A90E2",
+  "background_color": "#212F52",
+  "theme_color": "#212F52",
   "orientation": "portrait",
   "icons": [
     {

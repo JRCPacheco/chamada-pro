@@ -611,6 +611,7 @@ const chamadas = {
         const agora = new Date();
         const mesAtual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`;
         inputMes.value = inputMes.value || mesAtual;
+        this._atualizarRotuloMesSelecionado();
 
         inputMes.addEventListener('change', async () => {
             const parsed = this._parseAnoMes(inputMes.value);
@@ -619,12 +620,83 @@ const chamadas = {
                 return;
             }
             inputMes.value = parsed.valorNormalizado;
+            this._atualizarRotuloMesSelecionado();
             await this.atualizarRelatorioMensal();
             await this.atualizarPreviewPontos();
         });
 
         this._atualizarControlesVisibilidadeDiario();
         this.relatorioMensalInicializado = true;
+    },
+
+    _atualizarRotuloMesSelecionado() {
+        const inputMes = document.getElementById('relatorio-mensal-mes');
+        const btnMes = document.getElementById('relatorio-mensal-mes-btn');
+        if (!inputMes || !btnMes) return;
+
+        const parsed = this._parseAnoMes(inputMes.value);
+        if (!parsed) {
+            btnMes.textContent = 'Selecionar mes';
+            return;
+        }
+
+        const data = new Date(parsed.ano, parsed.mes - 1, 1);
+        const mesNome = data.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+        const mesLabel = mesNome.charAt(0).toUpperCase() + mesNome.slice(1);
+        btnMes.textContent = `${mesLabel}/${parsed.ano}`;
+    },
+
+    async abrirSeletorMes() {
+        this.inicializarRelatorioMensalUI();
+        const inputMes = document.getElementById('relatorio-mensal-mes');
+        const selectAno = document.getElementById('seletor-mes-ano');
+        const selectMes = document.getElementById('seletor-mes-mes');
+        if (!inputMes || !selectAno || !selectMes) return;
+
+        const agora = new Date();
+        const fallback = {
+            ano: agora.getFullYear(),
+            mes: agora.getMonth() + 1
+        };
+        const parsed = this._parseAnoMes(inputMes.value) || fallback;
+
+        const anosDisponiveis = new Set([agora.getFullYear(), parsed.ano]);
+        if (turmas.turmaAtual?.id) {
+            const chamadasTurma = await db.getByIndex('chamadas', 'turmaId', turmas.turmaAtual.id);
+            chamadasTurma.forEach((chamada) => {
+                const ref = chamada.data || chamada.iniciadoEm || chamada.criadoEm;
+                const ano = Number(String(ref || '').slice(0, 4));
+                if (Number.isInteger(ano) && ano >= 2000 && ano <= 2100) {
+                    anosDisponiveis.add(ano);
+                }
+            });
+        }
+
+        const anosOrdenados = Array.from(anosDisponiveis).sort((a, b) => b - a);
+        selectAno.innerHTML = anosOrdenados.map((ano) => `<option value="${ano}">${ano}</option>`).join('');
+        selectAno.value = String(parsed.ano);
+        selectMes.value = String(parsed.mes).padStart(2, '0');
+        app.abrirModal('modal-seletor-mes');
+    },
+
+    async aplicarMesSeletor() {
+        const inputMes = document.getElementById('relatorio-mensal-mes');
+        const selectAno = document.getElementById('seletor-mes-ano');
+        const selectMes = document.getElementById('seletor-mes-mes');
+        if (!inputMes || !selectAno || !selectMes) return;
+
+        const ano = Number(selectAno.value);
+        const mes = Number(selectMes.value);
+        if (!Number.isInteger(ano) || !Number.isInteger(mes) || mes < 1 || mes > 12) {
+            utils.mostrarToast('Selecao de mes invalida', 'warning');
+            return;
+        }
+
+        inputMes.value = `${ano}-${String(mes).padStart(2, '0')}`;
+        app.fecharModal('modal-seletor-mes');
+        this._atualizarRotuloMesSelecionado();
+        await this.atualizarRelatorioMensal();
+        await this.atualizarPreviewPontos();
     },
 
     _atualizarControlesVisibilidadeDiario() {
@@ -635,7 +707,7 @@ const chamadas = {
 
         if (resumo) resumo.hidden = !this.resumoMensalVisivel;
         if (tabela) tabela.style.display = this.tabelaMensalVisivel ? 'block' : 'none';
-        if (btnResumo) btnResumo.textContent = this.resumoMensalVisivel ? 'Ocultar resumo P/F/%' : 'Ver resumo P/F/%';
+        if (btnResumo) btnResumo.textContent = this.resumoMensalVisivel ? 'Ocultar resumo de frequencia' : 'Ver resumo de frequencia';
         if (btnTabela) btnTabela.textContent = this.tabelaMensalVisivel ? 'Ocultar tabela' : 'Ver tabela completa';
     },
 
@@ -1162,19 +1234,18 @@ const chamadas = {
             const pageH = doc.internal.pageSize.getHeight();
             const drawW = pageW - 20;
             const headerTopY = 8;
-            const imageTopY = 12;
-            const assinaturaTopY = pageH - 18;
+            const imageTopY = 17;
+            const assinaturaAreaTopY = pageH - 32;
+            const assinaturaTopY = pageH - 20;
             const assinaturaLineY = pageH - 10;
-            const assinaturaNomeY = pageH - 6;
+            const assinaturaNomeY = pageH - 5;
             const assinaturaLineX1 = pageW - 74;
             const assinaturaLineX2 = pageW - 12;
-            const usableH = assinaturaTopY - imageTopY;
+            const usableH = assinaturaAreaTopY - imageTopY;
+            const tabelaHeaderPx = 30;
+            const tabelaRowPx = 26;
 
             const desenharAssinatura = () => {
-                doc.setFontSize(10);
-                doc.setTextColor(55, 65, 81);
-                doc.text('Assinatura do Professor(a)', assinaturaLineX1, assinaturaTopY);
-
                 doc.setDrawColor(107, 114, 128);
                 doc.setLineWidth(0.35);
                 doc.line(assinaturaLineX1, assinaturaLineY, assinaturaLineX2, assinaturaLineY);
@@ -1188,6 +1259,9 @@ const chamadas = {
             // Logo (escola ou padrão)
             const turmaParaLogo = turmas.turmaAtual || { escolaId: relatorio.turmaId };
             const logoDataMensal = await utils.carregarLogoParaPDF(turmaParaLogo);
+            const escolaDaTurma = turmaParaLogo?.escolaId ? await db.get('escolas', turmaParaLogo.escolaId) : null;
+            const usaLogoEscola = !!(escolaDaTurma && escolaDaTurma.foto);
+            const nomeEscolaHeader = String(escolaDaTurma?.nome || '').trim();
 
             const horarios = [{ slot: 1, titulo: '1º Horário' }];
             if (relatorio.segundoHorarioAtivo) {
@@ -1211,10 +1285,45 @@ const chamadas = {
                     if (logoDataMensal) {
                         doc.addImage(logoDataMensal, 'PNG', 10, 4, 10, 10);
                     }
-                    doc.setFontSize(12);
-                    doc.text(page > 0 ? `${title} (cont.)` : title, logoDataMensal ? 22 : 10, headerTopY);
+                    if (logoDataMensal) {
+                        doc.setFontSize(12);
+                        doc.setFont(undefined, 'bold');
+                        if (usaLogoEscola && nomeEscolaHeader) {
+                            let nomeExibicao = nomeEscolaHeader;
+                            const maxHeaderW = 92;
+                            while (doc.getTextWidth(nomeExibicao) > maxHeaderW && nomeExibicao.length > 10) {
+                                nomeExibicao = `${nomeExibicao.slice(0, -2)}...`;
+                            }
+                            doc.setTextColor(33, 47, 82);
+                            doc.text(nomeExibicao, 22, 10.1);
+                        } else {
+                            doc.setTextColor(33, 47, 82);
+                            doc.text('Chamada', 22, 10.1);
+                            doc.setTextColor(106, 191, 87);
+                            doc.text('Fácil', 42.5, 10.1);
+                        }
+                    }
 
-                    const sliceH = Math.min(maxSlicePx, canvas.height - offsetY);
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'normal');
+                    doc.setTextColor(17, 24, 39);
+                    doc.text(page > 0 ? `${title} (cont.)` : title, pageW - 12, headerTopY, { align: 'right' });
+
+                    const remainingPx = canvas.height - offsetY;
+                    let sliceH = remainingPx;
+                    if (remainingPx > maxSlicePx) {
+                        if (offsetY === 0) {
+                            const rowsFit = Math.max(1, Math.floor((maxSlicePx - tabelaHeaderPx) / tabelaRowPx));
+                            sliceH = tabelaHeaderPx + (rowsFit * tabelaRowPx);
+                        } else {
+                            const rowsFit = Math.max(1, Math.floor(maxSlicePx / tabelaRowPx));
+                            sliceH = rowsFit * tabelaRowPx;
+                        }
+                        if (sliceH > remainingPx) {
+                            sliceH = remainingPx;
+                        }
+                    }
+
                     const sliceCanvas = document.createElement('canvas');
                     sliceCanvas.width = canvas.width;
                     sliceCanvas.height = sliceH;
@@ -1254,7 +1363,7 @@ const chamadas = {
 
         const colsDiasW = diasDoMes.length * colDia;
         const width = colAluno + colMatricula + colsDiasW + (colTotal * 2);
-        const height = headerH + (alunosOrdenados.length * rowH) + 2;
+        const height = headerH + (alunosOrdenados.length * rowH);
 
         const canvas = document.createElement('canvas');
         canvas.width = width;

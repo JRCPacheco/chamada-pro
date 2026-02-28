@@ -329,8 +329,12 @@ const turmas = {
                 return;
             }
 
+            const iconSchool = '<svg class="icon-svg icon-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg>';
+            const iconTurma = '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>';
+
             // Atualizar informações da turma UI
-            document.getElementById('turma-nome-detalhe').textContent = `Turma ${this.turmaAtual.nome}`;
+            document.getElementById('turma-nome-detalhe').innerHTML =
+                `<span class="turma-headline-icon">${iconTurma}</span><span>${utils.escapeHtml(this.turmaAtual.nome)}</span>`;
             document.getElementById('turma-descricao-detalhe').textContent =
                 this.turmaAtual.descricao || 'Sem descrição';
             this._atualizarControleSegundoHorarioDetalhe();
@@ -346,14 +350,15 @@ const turmas = {
             if (escolaEl) {
                 const escolaNome = escolaDaTurma?.nome
                     || (this.turmaAtual.escolaId === 'default' ? 'Escola atual' : 'Sem escola');
-                escolaEl.textContent = `Escola ${escolaNome}`;
+                escolaEl.innerHTML =
+                    `<span class="turma-headline-icon">${iconSchool}</span><span>${utils.escapeHtml(escolaNome)}</span>`;
             }
 
             document.getElementById('turma-total-alunos').textContent = alunosDaTurma.length;
             document.getElementById('turma-total-chamadas-realizadas').textContent = chamadasDaTurma.length;
 
             // Atualizar título do header
-            document.getElementById('header-title').textContent = this.turmaAtual.nome;
+            document.getElementById('header-title').textContent = 'Turma';
 
             // Mostrar botão voltar
             document.getElementById('btn-back').style.display = 'block';

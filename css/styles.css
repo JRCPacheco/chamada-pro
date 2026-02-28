@@ -824,12 +824,25 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .turma-info-card h2 {
     font-size: 24px;
     line-height: 1.15;
     margin: 0 0 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.turma-headline-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.95;
 }
 
 .turma-info-card p {
@@ -1191,6 +1204,14 @@ body {
     gap: 8px;
     align-items: center;
     margin-bottom: 12px;
+}
+
+.relatorio-mensal-controls label {
+    font-weight: 600;
+}
+
+.relatorio-mensal-controls .btn {
+    min-height: 40px;
 }
 
 .relatorio-mensal-controls input[type="month"] {
