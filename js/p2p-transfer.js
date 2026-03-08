@@ -8,6 +8,9 @@ const p2pTransfer = {
     dataChannel: null,
     _senderPayload: null,
     _signalingSession: null,
+    _qrReader: null,
+    _qrLendo: false,
+    _waitingSignalingAnswer: false,
     _flowId: null,
     _flowFinished: false,
     _recebendoChunks: [],
@@ -27,6 +30,7 @@ const p2pTransfer = {
     _setCodigoLocal(txt) {
         const el = document.getElementById('p2p-codigo-local');
         if (el) el.value = txt || '';
+        this._renderQrLocal(txt || '');
     },
 
     _getCodigoRemoto() {
@@ -88,9 +92,47 @@ const p2pTransfer = {
         try { this.pc?.close(); } catch (_) { }
         this.dataChannel = null;
         this.pc = null;
+        this._waitingSignalingAnswer = false;
         this._signalingSession = null;
         this._recebendoChunks = [];
         this._recebendoMeta = null;
+    },
+
+    async _pararLeituraQr() {
+        if (!this._qrReader || !this._qrLendo) return;
+        try {
+            await this._qrReader.stop();
+        } catch (_) { }
+        this._qrLendo = false;
+        const wrap = document.getElementById('p2p-reader-wrap');
+        if (wrap) wrap.style.display = 'none';
+    },
+
+    _renderQrLocal(codeText) {
+        const wrap = document.getElementById('p2p-qr-local-wrap');
+        const canvas = document.getElementById('p2p-qr-local-canvas');
+        if (!wrap || !canvas || typeof QRCode === 'undefined') return;
+        const text = String(codeText || '').trim();
+        const isShortPairingCode = /^[A-Z0-9]{4,16}$/.test(text);
+        if (!text || !isShortPairingCode) {
+            wrap.style.display = 'none';
+            const ctx = canvas.getContext('2d');
+            if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+            return;
+        }
+
+        QRCode.toCanvas(canvas, text, {
+            width: 220,
+            margin: 1,
+            errorCorrectionLevel: 'M'
+        }, (err) => {
+            if (err) {
+                console.error(err);
+                wrap.style.display = 'none';
+                return;
+            }
+            wrap.style.display = '';
+        });
     },
 
     _startPilotFlow() {
@@ -217,6 +259,7 @@ const p2pTransfer = {
 
     abrirEnviar(turmaId) {
         this._safeClose();
+        this._pararLeituraQr().catch(() => { });
         this.modo = 'enviar';
         this.turmaIdEnvio = turmaId;
         this._senderPayload = null;
@@ -234,6 +277,7 @@ const p2pTransfer = {
 
     abrirReceber() {
         this._safeClose();
+        this._pararLeituraQr().catch(() => { });
         this.modo = 'receber';
         this.turmaIdEnvio = null;
         this._senderPayload = null;
@@ -276,6 +320,64 @@ const p2pTransfer = {
             return;
         }
         utils.copiarParaClipboard(txt);
+    },
+
+    async lerQrRemoto() {
+        const wrap = document.getElementById('p2p-reader-wrap');
+        if (!wrap) {
+            utils.mostrarToast('Leitor QR indisponivel', 'error');
+            return;
+        }
+        if (typeof Html5Qrcode === 'undefined') {
+            utils.mostrarToast('Biblioteca de QR indisponivel', 'error');
+            return;
+        }
+
+        if (!this._qrReader) {
+            this._qrReader = new Html5Qrcode('p2p-reader');
+        }
+
+        if (this._qrLendo) {
+            await this._pararLeituraQr();
+            this._setStatus('Leitura de QR interrompida.');
+            return;
+        }
+
+        wrap.style.display = '';
+        this._setStatus('Abrindo camera para ler QR...');
+        let concluido = false;
+
+        const onSuccess = async (decodedText) => {
+            if (concluido) return;
+            concluido = true;
+            const remoto = document.getElementById('p2p-codigo-remoto');
+            if (remoto) remoto.value = String(decodedText || '').trim();
+            await this._pararLeituraQr();
+            this._setStatus('QR lido. Aplicando codigo automaticamente...');
+            await this.aplicarCodigoRemoto();
+        };
+
+        try {
+            await this._qrReader.start(
+                { facingMode: 'environment' },
+                { fps: 10, qrbox: { width: 240, height: 240 } },
+                onSuccess,
+                () => { }
+            );
+            this._qrLendo = true;
+            this._setStatus('Aponte para o QR do outro aparelho.');
+        } catch (error) {
+            wrap.style.display = 'none';
+            this._qrLendo = false;
+            console.error(error);
+            utils.mostrarToast('Erro ao iniciar leitor QR', 'error');
+            this._setStatus('Falha ao abrir camera para leitura de QR.');
+        }
+    },
+
+    onModalClose() {
+        this._pararLeituraQr().catch(() => { });
+        this._safeClose();
     },
 
     usarFallback() {
@@ -341,19 +443,52 @@ const p2pTransfer = {
                     expiresAt: sessao.expiresAt
                 };
                 this._setCodigoLocal(sessao.sessionCode);
-                this._setStatus('Sessao pronta. Compartilhe o codigo curto com o outro aparelho.');
+                this._setStatus('Sessao pronta. Compartilhe o QR/codigo curto e aguarde o pareamento.');
+                this._setFallbackCta({ visible: true, label: 'Aguardar P2P (12s)...', disabled: true });
+                this._aguardarRespostaSignalingAuto().catch((e) => {
+                    console.error(e);
+                });
                 return;
             } catch (error) {
                 console.error(error);
                 this._registrarFalha('signaling_create_session_failed');
                 this._recordPilotEvent('signaling_error', { step: 'create_session' });
-                utils.mostrarToast('Falha na sinalizacao. Usando pareamento manual por codigo longo.', 'warning');
+                this._setResumo('Sinalizacao indisponivel. Use compartilhamento por WhatsApp/copia de codigo como fallback.');
+                utils.mostrarToast('Falha na sinalizacao. QR simplificado indisponivel neste momento.', 'warning');
             }
         }
 
         const code = this._encodeSignal(this.pc.localDescription);
         this._setCodigoLocal(code);
         this._setStatus('Oferta pronta. Envie este codigo para o outro aparelho.');
+        this._setResumo('Modo manual ativo: codigo longo. Recomenda-se usar WhatsApp/copia e colar no outro aparelho.');
+    },
+
+    async _aguardarRespostaSignalingAuto() {
+        if (this._waitingSignalingAnswer) return;
+        if (!this._isSignalingEnabled() || !this._signalingSession?.sessionId || !this._signalingSession?.senderToken || !this.pc) {
+            return;
+        }
+        this._waitingSignalingAnswer = true;
+        try {
+            const resposta = await p2pSignalingClient.waitForAnswer(
+                this._signalingSession.sessionId,
+                this._signalingSession.senderToken,
+                12000
+            );
+            await this.pc.setRemoteDescription(resposta.answer);
+            this._setStatus('Pareamento concluido. Aguardando conexao P2P...');
+            this._startConnectionTimeout('sender_wait_open');
+        } catch (error) {
+            this._registrarFalha('signaling_wait_answer_failed');
+            this._recordPilotEvent('signaling_error', { step: 'wait_answer_auto' });
+            this._setFallbackCta({ visible: true, label: 'Enviar por WhatsApp/Arquivo', disabled: false });
+            this._setStatus('Nao foi possivel concluir pareamento automatico.');
+            utils.mostrarToast('Pareamento automatico falhou. Use fallback.', 'warning');
+            throw error;
+        } finally {
+            this._waitingSignalingAnswer = false;
+        }
     },
 
     async _aplicarResposta() {
@@ -362,26 +497,10 @@ const p2pTransfer = {
             return;
         }
         if (this._isSignalingEnabled() && this._signalingSession?.sessionId && this._signalingSession?.senderToken) {
-            try {
-                this._setStatus('Aguardando resposta da sessao de sinalizacao...');
-                this._setFallbackCta({ visible: true, label: 'Aguardar P2P (12s)...', disabled: true });
-                const resposta = await p2pSignalingClient.waitForAnswer(
-                    this._signalingSession.sessionId,
-                    this._signalingSession.senderToken,
-                    12000
-                );
-                await this.pc.setRemoteDescription(resposta.answer);
-                this._setStatus('Resposta aplicada. Aguardando conexao...');
-                this._startConnectionTimeout('sender_wait_open');
-                return;
-            } catch (error) {
-                console.error(error);
-                this._registrarFalha('signaling_wait_answer_failed');
-                this._recordPilotEvent('signaling_error', { step: 'wait_answer' });
-                this._setFallbackCta({ visible: true, label: 'Enviar por WhatsApp/Arquivo', disabled: false });
-                utils.mostrarToast('Nao foi possivel obter resposta da sessao. Use fallback.', 'warning');
-                return;
-            }
+            this._setStatus('Aguardando resposta da sessao de sinalizacao...');
+            this._setFallbackCta({ visible: true, label: 'Aguardar P2P (12s)...', disabled: true });
+            await this._aguardarRespostaSignalingAuto();
+            return;
         }
 
         const raw = this._getCodigoRemoto();
@@ -457,6 +576,11 @@ const p2pTransfer = {
                 sessionCode: sessionReceiver.sessionCode,
                 expiresAt: sessionReceiver.expiresAt
             };
+        }
+        this._setStatus('Oferta aplicada.');
+        if (this._isSignalingEnabled() && this._signalingSession?.receiverToken) {
+            await this._gerarResposta();
+            return;
         }
         this._setStatus('Oferta aplicada. Agora gere sua resposta.');
     },

@@ -91,11 +91,13 @@ const app = {
             case 'p2p-gerar-codigo-local':
             case 'p2p-aplicar-codigo-remoto':
             case 'p2p-copiar-codigo-local':
+            case 'p2p-ler-qr-remoto':
             case 'p2p-usar-fallback':
                 if (!this._featureEnabled('p2p_manual')) return utils.mostrarToast('Recurso disponivel apenas nesta versao do produto', 'warning');
                 if (action === 'p2p-gerar-codigo-local') return p2pTransfer.gerarCodigoLocal();
                 if (action === 'p2p-aplicar-codigo-remoto') return p2pTransfer.aplicarCodigoRemoto();
                 if (action === 'p2p-copiar-codigo-local') return p2pTransfer.copiarCodigoLocal();
+                if (action === 'p2p-ler-qr-remoto') return p2pTransfer.lerQrRemoto();
                 return p2pTransfer.usarFallback();
             case 'turmas-excluir-atual': return turmas.excluirTurma(turmas.turmaAtual?.id);
             case 'turmas-salvar-nova': return turmas.salvarNovaTurma();
@@ -499,6 +501,9 @@ const app = {
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.classList.remove('active');
+            if (modalId === 'modal-p2p-turma' && typeof p2pTransfer?.onModalClose === 'function') {
+                p2pTransfer.onModalClose();
+            }
         }
     },
 
