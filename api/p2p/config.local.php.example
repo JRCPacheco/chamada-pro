@@ -1,0 +1,18 @@
+<?php
+return [
+    'db' => [
+        'host' => '127.0.0.1',
+        'port' => 3306,
+        'name' => 'SEU_BANCO',
+        'user' => 'SEU_USUARIO',
+        'pass' => 'SUA_SENHA',
+        'charset' => 'utf8mb4',
+    ],
+    'api' => [
+        'schemaVersion' => 1,
+        'defaultTtlSec' => 45,
+        'maxTtlSec' => 120,
+        'cleanupHours' => 24,
+    ],
+];
+

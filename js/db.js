@@ -2,7 +2,9 @@
 // Wrapper IndexedDB puro para Chamada Fácil
 // Sem dependências externas
 
-const DB_NAME = "chamada_facil_db";
+const DB_NAME = (typeof PRODUCT_CONFIG !== 'undefined' && PRODUCT_CONFIG?.dbName)
+    ? PRODUCT_CONFIG.dbName
+    : "chamada_facil_db";
 const DB_VERSION = 3;
 
 const db = {

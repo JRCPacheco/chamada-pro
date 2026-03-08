@@ -549,8 +549,12 @@ const turmas = {
                 const selecionada = this.gerenciarSelecionadas.has(turma.id);
                 const alunosQtd = countAlunos[turma.id] || 0;
                 const chamadasQtd = countChamadas[turma.id] || 0;
+                const p2pManualAtivo = !!(typeof PRODUCT_CONFIG !== 'undefined' && PRODUCT_CONFIG?.features?.p2p_manual);
                 const selectHtml = this.gerenciarSelecaoAtiva
                     ? `<label class="gerenciar-turma-select"><input type="checkbox" data-action="turmas-toggle-item-selecao-gerenciar" data-turma-id="${turma.id}" ${selecionada ? 'checked' : ''}> Selecionar</label>`
+                    : '';
+                const btnP2P = p2pManualAtivo
+                    ? `<button class="btn btn-secondary btn-sm" data-action="turmas-p2p-enviar-item-gerenciar" data-turma-id="${turma.id}">Enviar P2P</button>`
                     : '';
 
                 return `
@@ -568,6 +572,7 @@ const turmas = {
                             <button class="btn btn-secondary btn-sm" data-action="turmas-editar-item-gerenciar" data-turma-id="${turma.id}">Editar</button>
                             <button class="btn btn-secondary btn-sm" data-action="turmas-exportar-item-gerenciar" data-turma-id="${turma.id}">Backup</button>
                             <button class="btn btn-secondary btn-sm" data-action="turmas-exportar-migracao-item-gerenciar" data-turma-id="${turma.id}">Enviar QRCodes</button>
+                            ${btnP2P}
                             <button class="btn btn-danger btn-sm" data-action="turmas-excluir-item-gerenciar" data-turma-id="${turma.id}">Excluir</button>
                         </div>
                     </div>
@@ -676,6 +681,14 @@ const turmas = {
         }
     },
 
+    async abrirReceberP2PGlobal() {
+        if (typeof p2pTransfer === 'undefined' || typeof p2pTransfer.abrirReceber !== 'function') {
+            utils.mostrarToast('Modulo P2P indisponivel', 'error');
+            return;
+        }
+        p2pTransfer.abrirReceber();
+    },
+
     async sincronizarFiltroComTurmaImportada(turmaId) {
         if (!turmaId) return;
 
@@ -759,6 +772,15 @@ const turmas = {
             return;
         }
         await exportModule.exportarTurmaProfessorJSON(turmaId);
+    },
+
+    async exportarP2PItemGerenciarTurmas(turmaId) {
+        if (!turmaId) return;
+        if (typeof p2pTransfer === 'undefined' || typeof p2pTransfer.abrirEnviar !== 'function') {
+            utils.mostrarToast('Modulo P2P indisponivel', 'error');
+            return;
+        }
+        p2pTransfer.abrirEnviar(turmaId);
     },
 
     async excluirItemGerenciarTurmas(turmaId) {

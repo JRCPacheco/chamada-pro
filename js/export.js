@@ -1,8 +1,21 @@
-// ===== EXPORT MODULE =====
-// Funções de exportação de dados
+﻿// ===== EXPORT MODULE =====
+// FunÃ§Ãµes de exportaÃ§Ã£o de dados
 // Migrado para IndexedDB
 
 const exportModule = {
+    _getAppVersionLabel() {
+        try {
+            if (typeof APP_META !== 'undefined' && APP_META && typeof APP_META.label === 'string' && APP_META.label.trim()) {
+                return APP_META.label.trim();
+            }
+            if (typeof APP_META !== 'undefined' && APP_META && typeof APP_META.version === 'string') {
+                const stage = APP_META.stage ? `-${APP_META.stage}` : '';
+                return `v${APP_META.version}${stage}`;
+            }
+        } catch (_) { }
+        return 'v0.0.0-dev';
+    },
+
     _formatarStampArquivo(date = new Date()) {
         const d = new Date(date);
         const dd = String(d.getDate()).padStart(2, '0');
@@ -27,6 +40,39 @@ const exportModule = {
         return String(nome || '').trim().replace(/\s+/g, ' ').slice(0, 100);
     },
 
+    _baixarArquivoCompartilhamentoTurma(filename, json) {
+        utils.downloadFile(filename, json, 'application/json');
+    },
+
+    async _compartilharArquivoCompartilhamentoTurma(filename, json, turmaNome) {
+        try {
+            if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') {
+                return { ok: false, reason: 'unsupported' };
+            }
+
+            // Web Share com arquivo em memoria (sem precisar salvar em pasta antes).
+            const file = new File([json], filename, { type: 'application/json' });
+            const shareData = {
+                title: `Turma: ${String(turmaNome || 'Turma').trim()}`,
+                text: 'Arquivo .cmf para compartilhar turma entre professores',
+                files: [file]
+            };
+
+            if (typeof navigator.canShare === 'function' && !navigator.canShare({ files: [file] })) {
+                return { ok: false, reason: 'cannot_share_files' };
+            }
+
+            await navigator.share(shareData);
+            return { ok: true };
+        } catch (error) {
+            if (error?.name === 'AbortError') {
+                return { ok: false, reason: 'aborted' };
+            }
+            console.error('Falha no compartilhamento nativo de turma:', error);
+            return { ok: false, reason: 'share_failed' };
+        }
+    },
+
     async _resolverEscolaParaTurmaBackup(turmaOriginal, escolaOriginal = null) {
         const escolaIdOriginal = String(turmaOriginal?.escolaId || turmaOriginal?.escola_id || escolaOriginal?.id || '').trim();
         const nomePreferencial = this._normalizarNomeEscola(
@@ -36,7 +82,7 @@ const exportModule = {
             turmaOriginal?.escolaName
         );
 
-        // Sem escola no backup: mantém padrão.
+        // Sem escola no backup: mantÃ©m padrÃ£o.
         if (!escolaIdOriginal && !nomePreferencial) {
             return { escolaId: 'default', escolaImportadaNome: null };
         }
@@ -46,12 +92,12 @@ const exportModule = {
             const existente = await db.get('escolas', escolaIdOriginal);
             if (existente) {
                 // Caso comum de conflito: backup usa id "default", mas com outro nome de escola.
-                // Nessa situação, não devemos sobrescrever/forçar a escola default local.
+                // Nessa situaÃ§Ã£o, nÃ£o devemos sobrescrever/forÃ§ar a escola default local.
                 const nomeExistente = this._normalizarNomeEscola(existente.nome);
                 const nomeConflitante = !!nomePreferencial && nomeExistente.toLowerCase() !== nomePreferencial.toLowerCase();
 
                 if (nomeConflitante) {
-                    // Primeiro tenta encontrar escola já existente pelo nome do backup.
+                    // Primeiro tenta encontrar escola jÃ¡ existente pelo nome do backup.
                     const escolas = await db.getAll('escolas');
                     const matchNome = escolas.find(
                         (e) => this._normalizarNomeEscola(e.nome).toLowerCase() === nomePreferencial.toLowerCase()
@@ -60,7 +106,7 @@ const exportModule = {
                         return { escolaId: matchNome.id, escolaImportadaNome: null };
                     }
 
-                    // Se não houver, cria nova escola para preservar a identidade do backup.
+                    // Se nÃ£o houver, cria nova escola para preservar a identidade do backup.
                     const novaEscolaId = `escola_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
                     await db.put('escolas', {
                         id: novaEscolaId,
@@ -74,7 +120,7 @@ const exportModule = {
                 return { escolaId: existente.id, escolaImportadaNome: null };
             }
 
-            // ID existe no backup mas não existe localmente: cria escola automaticamente.
+            // ID existe no backup mas nÃ£o existe localmente: cria escola automaticamente.
             const nome = nomePreferencial || `Escola (${escolaIdOriginal})`;
             await db.put('escolas', {
                 id: escolaIdOriginal,
@@ -85,7 +131,7 @@ const exportModule = {
             return { escolaId: escolaIdOriginal, escolaImportadaNome: nome };
         }
 
-        // Backup sem ID, mas com nome: tenta match por nome e cria se necessário.
+        // Backup sem ID, mas com nome: tenta match por nome e cria se necessÃ¡rio.
         const escolas = await db.getAll('escolas');
         const nomeLower = nomePreferencial.toLowerCase();
         const match = escolas.find((e) => String(e.nome || '').trim().toLowerCase() === nomeLower);
@@ -135,7 +181,7 @@ const exportModule = {
         }
     },
 
-    // Migrar backup para formato atual se necessário
+    // Migrar backup para formato atual se necessÃ¡rio
     migrateBackupIfNeeded(backup) {
         // Formato legacy (v0) - sem schemaVersion
         if (!backup.schemaVersion) {
@@ -154,12 +200,12 @@ const exportModule = {
             };
         }
 
-        // Versão futura - incompatibilidade
+        // VersÃ£o futura - incompatibilidade
         if (backup.schemaVersion > 1) {
-            throw new Error(`Backup versão ${backup.schemaVersion} incompatível. Atualize o app.`);
+            throw new Error(`Backup versÃ£o ${backup.schemaVersion} incompatÃ­vel. Atualize o app.`);
         }
 
-        // Versão atual
+        // VersÃ£o atual
         return backup;
     },
 
@@ -178,23 +224,23 @@ const exportModule = {
                 try {
                     const rawBackup = JSON.parse(event.target.result);
 
-                    // Migrar se necessário
+                    // Migrar se necessÃ¡rio
                     const backup = this.migrateBackupIfNeeded(rawBackup);
 
-                    // Validar backup básico
+                    // Validar backup bÃ¡sico
                     if (!backup.data || !backup.data.turmas || !backup.data.alunos) {
-                        throw new Error('Arquivo de backup inválido (estruturas ausentes)');
+                        throw new Error('Arquivo de backup invÃ¡lido (estruturas ausentes)');
                     }
 
                     if (!utils.confirmar(
-                        'Importar backup irá SUBSTITUIR todos os dados atuais. Deseja continuar?'
+                        'Importar backup irÃ¡ SUBSTITUIR todos os dados atuais. Deseja continuar?'
                     )) {
                         return;
                     }
 
                     utils.mostrarToast('Importando dados...', 'info');
 
-                    // TRANSAÇÃO ATÔMICA: All-or-nothing
+                    // TRANSAÃ‡ÃƒO ATÃ”MICA: All-or-nothing
                     const stores = ['config', 'escolas', 'turmas', 'alunos', 'chamadas', 'eventos_nota'];
 
                     await db.transaction(stores, 'readwrite', (tx) => {
@@ -222,7 +268,7 @@ const exportModule = {
                 } catch (error) {
                     console.error('Erro ao processar backup:', error);
                     utils.mostrarToast(
-                        error.message || 'Arquivo de backup inválido ou erro na importação',
+                        error.message || 'Arquivo de backup invÃ¡lido ou erro na importaÃ§Ã£o',
                         'error'
                     );
                 }
@@ -277,7 +323,7 @@ const exportModule = {
             const alunosOriginais = await db.getByIndex('alunos', 'turmaId', turmaId);
             const escola = turma.escolaId ? await db.get('escolas', turma.escolaId) : null;
 
-            // Migração entre professores: preserva dados do aluno e qrId, mas remove foto.
+            // MigraÃ§Ã£o entre professores: preserva dados do aluno e qrId, mas remove foto.
             const alunosSemFoto = alunosOriginais.map((aluno) => {
                 const alunoClone = { ...aluno };
                 delete alunoClone.foto;
@@ -286,22 +332,33 @@ const exportModule = {
 
             const dados = {
                 schemaVersion: 1,
-                backupType: 'qrcodes_turma_compartilhamento',
-                appVersion: '0.9.2-beta',
+                appVersion: this._getAppVersionLabel(),
                 exportedAt: new Date().toISOString(),
-                data: {
-                    turma: turma,
-                    escola: escola,
-                    alunos: alunosSemFoto
-                }
+                turmaId: String(turma.id || '').trim(),
+                turmaNome: String(turma.nome || 'Turma').trim(),
+                alunos: alunosSemFoto,
+                // Campos extras para dar contexto no import e manter compatibilidade.
+                turma: turma,
+                escola: escola
             };
 
             const json = JSON.stringify(dados, null, 2);
             const turmaSlug = this._slug(turma.nome || 'turma');
-            const filename = `qrcodes_turma_${turmaSlug}_${this._formatarStampArquivo()}.chf`;
+            const filename = `qrcodes_turma_${turmaSlug}_${this._formatarStampArquivo()}.cmf`;
 
-            utils.downloadFile(filename, json, 'application/json');
-            utils.mostrarToast('Arquivo de QRCodes exportado', 'success');
+            const shareResult = await this._compartilharArquivoCompartilhamentoTurma(filename, json, turma.nome);
+            if (shareResult.ok) {
+                utils.mostrarToast('Arquivo .cmf compartilhado', 'success');
+                return;
+            }
+
+            if (shareResult.reason === 'aborted') {
+                utils.mostrarToast('Compartilhamento cancelado', 'warning');
+                return;
+            }
+
+            this._baixarArquivoCompartilhamentoTurma(filename, json);
+            utils.mostrarToast('Compartilhamento indisponivel. Arquivo baixado automaticamente.', 'warning');
         } catch (e) {
             console.error(e);
             utils.mostrarToast('Erro ao exportar QRCodes da turma', 'error');
@@ -310,30 +367,305 @@ const exportModule = {
 
     migrateTurmaProfessorBackupIfNeeded(raw) {
         if (!raw || typeof raw !== 'object') {
-            throw new Error('Arquivo inválido');
+            throw new Error('Arquivo invalido');
         }
 
-        if (raw.schemaVersion > 1) {
-            throw new Error(`Arquivo de QRCodes versão ${raw.schemaVersion} incompatível. Atualize o app.`);
+        // Compatibilidade retroativa: converte formato legado (.chf/.json antigo) para .cmf.
+        const tiposLegados = ['qrcodes_turma_compartilhamento', 'turma_professor'];
+        if (tiposLegados.includes(raw.backupType)) {
+            const turmaLegada = raw?.data?.turma;
+            const alunosLegados = raw?.data?.alunos;
+            if (!turmaLegada || !Array.isArray(alunosLegados)) {
+                throw new Error('Estrutura de arquivo de QRCodes invalida');
+            }
+            raw = {
+                schemaVersion: Number(raw.schemaVersion || 1),
+                appVersion: raw.appVersion || 'legacy',
+                exportedAt: raw.exportedAt || new Date().toISOString(),
+                turmaId: String(turmaLegada.id || '').trim(),
+                turmaNome: String(turmaLegada.nome || '').trim(),
+                alunos: alunosLegados,
+                turma: turmaLegada,
+                escola: raw?.data?.escola || null
+            };
         }
 
-        const tiposAceitos = ['qrcodes_turma_compartilhamento', 'turma_professor'];
-        if (!tiposAceitos.includes(raw.backupType)) {
-            throw new Error('Este arquivo não é um compartilhamento de QRCodes de turma');
+        const schemaVersion = Number(raw.schemaVersion);
+        if (!Number.isFinite(schemaVersion)) {
+            throw new Error('Arquivo invalido: campo obrigatorio "schemaVersion" ausente');
+        }
+        if (schemaVersion < 1) {
+            throw new Error(`Arquivo versao ${schemaVersion} nao suportado. Exporte novamente no app mais recente.`);
+        }
+        if (schemaVersion > 1) {
+            throw new Error(`Arquivo versao ${schemaVersion} incompativel com este app. Atualize o app para importar.`);
         }
 
-        if (!raw.data || !raw.data.turma || !Array.isArray(raw.data.alunos)) {
-            throw new Error('Estrutura de arquivo de QRCodes inválida');
+        const obrigatorios = ['appVersion', 'exportedAt', 'turmaId', 'turmaNome', 'alunos'];
+        for (const campo of obrigatorios) {
+            if (raw[campo] === undefined || raw[campo] === null) {
+                throw new Error(`Arquivo invalido: campo obrigatorio "${campo}" ausente`);
+            }
+        }
+
+        if (!String(raw.appVersion || '').trim()) {
+            throw new Error('Arquivo invalido: campo "appVersion" vazio');
+        }
+
+        const exportedAtDate = new Date(raw.exportedAt);
+        if (Number.isNaN(exportedAtDate.getTime())) {
+            throw new Error('Arquivo invalido: campo "exportedAt" com data/hora invalida');
+        }
+
+        if (!Array.isArray(raw.alunos)) {
+            throw new Error('Arquivo invalido: campo "alunos" deve ser uma lista');
+        }
+        if (!String(raw.turmaId || '').trim()) {
+            throw new Error('Arquivo invalido: campo "turmaId" vazio');
+        }
+        if (!String(raw.turmaNome || '').trim()) {
+            throw new Error('Arquivo invalido: campo "turmaNome" vazio');
+        }
+
+        const idxAlunoInvalido = raw.alunos.findIndex((aluno) => !aluno || typeof aluno !== 'object');
+        if (idxAlunoInvalido !== -1) {
+            throw new Error(`Arquivo invalido: aluno na posicao ${idxAlunoInvalido + 1} com estrutura invalida`);
+        }
+
+        const idxAlunoSemQr = raw.alunos.findIndex((aluno) => !String(aluno?.qrId || '').trim());
+        if (idxAlunoSemQr !== -1) {
+            throw new Error(`Arquivo invalido: aluno na posicao ${idxAlunoSemQr + 1} sem qrId`);
+        }
+
+        if (!raw.turma || typeof raw.turma !== 'object') {
+            raw.turma = {
+                id: String(raw.turmaId).trim(),
+                nome: String(raw.turmaNome).trim()
+            };
         }
 
         return raw;
+    },
+
+    _perguntarAcaoTurmaExistente(turmaNome, turmaId) {
+        const msg = `Ja existe uma turma com este ID.\n\n` +
+            `Turma: ${turmaNome || 'Sem nome'}\n` +
+            `ID: ${turmaId}\n\n` +
+            `Digite:\n` +
+            `M = Mesclar alunos\n` +
+            `S = Substituir alunos da turma existente\n` +
+            `C = Cancelar importacao`;
+
+        const resposta = prompt(msg, 'M');
+        if (resposta === null) return 'cancelar';
+
+        const opcao = String(resposta || '').trim().toUpperCase();
+        if (opcao === 'S') return 'substituir';
+        if (opcao === 'C') return 'cancelar';
+        return 'mesclar';
+    },
+
+    async importarTurmaProfessorRaw(rawBackup) {
+        const backup = this.migrateTurmaProfessorBackupIfNeeded(rawBackup);
+        const turmaOriginal = backup.turma || {};
+        const escolaOriginal = backup.escola || null;
+        const alunosOriginais = Array.isArray(backup.alunos) ? backup.alunos : [];
+        const turmaIdArquivo = String(backup.turmaId || '').trim();
+        const turmaExistente = await db.get('turmas', turmaIdArquivo);
+        let acaoTurmaExistente = 'nova';
+        const exportedAtDate = new Date(backup.exportedAt);
+        const exportedAtLabel = Number.isNaN(exportedAtDate.getTime())
+            ? String(backup.exportedAt || '')
+            : exportedAtDate.toLocaleString('pt-BR');
+
+        const resumo = `Turma: ${backup.turmaNome || turmaOriginal.nome || 'Sem nome'}\n` +
+            `ID da turma: ${backup.turmaId}\n` +
+            `Alunos no arquivo: ${alunosOriginais.length}\n\n` +
+            `Schema: v${backup.schemaVersion} | App: ${backup.appVersion}\n` +
+            `Exportado em: ${exportedAtLabel}\n\n` +
+            `A turma sera importada como nova turma. Deseja continuar?`;
+
+        if (!utils.confirmar(resumo)) return null;
+
+        if (turmaExistente) {
+            acaoTurmaExistente = this._perguntarAcaoTurmaExistente(
+                backup.turmaNome || turmaExistente.nome,
+                turmaIdArquivo
+            );
+            if (acaoTurmaExistente === 'cancelar') {
+                utils.mostrarToast('Importacao cancelada', 'warning');
+                return null;
+            }
+        }
+
+        const conflitos = [];
+        const qrNoArquivo = new Set();
+        for (const aluno of alunosOriginais) {
+            const qrId = String(aluno?.qrId || '').trim();
+            if (!qrId || qrNoArquivo.has(qrId)) {
+                conflitos.push({ qrId, motivo: 'duplicado-no-arquivo', alunoNome: aluno?.nome || '' });
+                continue;
+            }
+            qrNoArquivo.add(qrId);
+
+            const existentes = await db.getByIndex('alunos', 'qrId', qrId);
+            if (existentes && existentes.length > 0) {
+                const existente = existentes[0];
+                const conflitoNaMesmaTurmaId = turmaExistente && String(existente?.turmaId || '') === turmaIdArquivo;
+                if (acaoTurmaExistente === 'substituir' && conflitoNaMesmaTurmaId) {
+                    continue;
+                }
+                conflitos.push({
+                    qrId,
+                    motivo: conflitoNaMesmaTurmaId ? 'ja-existe-na-turma-destino' : 'ja-existe-no-app',
+                    alunoNome: aluno?.nome || '',
+                    alunoDestinoNome: existente?.nome || ''
+                });
+            }
+        }
+
+        let importarParcialSemConflito = false;
+        if (conflitos.length > 0) {
+            const preview = conflitos
+                .slice(0, 5)
+                .map((c, i) => `${i + 1}. QR ${c.qrId || '(vazio)'} - ${c.alunoNome || 'Aluno'}`)
+                .join('\n');
+
+            const msgConflito = `Foram encontrados ${conflitos.length} conflito(s) de QR.\n\n` +
+                `${preview}${conflitos.length > 5 ? '\n...' : ''}\n\n` +
+                `OK: importar apenas alunos sem conflito.\n` +
+                `Cancelar: nao importar nada.`;
+
+            if (!utils.confirmar(msgConflito)) {
+                utils.mostrarToast('Importacao cancelada por conflito de QR', 'warning');
+                return null;
+            }
+            importarParcialSemConflito = true;
+        }
+
+        const conflitoSet = new Set(conflitos.map((c) => String(c.qrId || '').trim()));
+        const alunosSelecionados = importarParcialSemConflito
+            ? alunosOriginais.filter((a) => !conflitoSet.has(String(a?.qrId || '').trim()))
+            : alunosOriginais.slice();
+
+        if (alunosSelecionados.length === 0) {
+            utils.mostrarToast('Nenhum aluno disponivel para importar sem conflito', 'warning');
+            return null;
+        }
+
+        const modoTexto = acaoTurmaExistente === 'substituir'
+            ? 'substituindo turma existente...'
+            : (acaoTurmaExistente === 'mesclar' ? 'mesclando na turma existente...' : 'criando nova turma...');
+        utils.mostrarToast(`Recebendo QRCodes da turma (${modoTexto})`, 'info');
+
+        const escolaResolvida = await this._resolverEscolaParaTurmaBackup(turmaOriginal, escolaOriginal);
+        const alunosCriados = [];
+        let turmaDestinoId = null;
+        let turmaCriadaAgora = false;
+        let snapshotTurmaAnterior = turmaExistente ? { ...turmaExistente } : null;
+        let snapshotAlunosTurmaAnterior = [];
+        let turmaTeveAlunosSubstituidos = false;
+
+        const limparImporteParcial = async () => {
+            for (const id of alunosCriados) {
+                await db.delete('alunos', id).catch(() => { });
+            }
+            if (turmaCriadaAgora && turmaDestinoId) {
+                await db.delete('turmas', turmaDestinoId).catch(() => { });
+            }
+            if (turmaTeveAlunosSubstituidos && turmaDestinoId) {
+                for (const alunoAnterior of snapshotAlunosTurmaAnterior) {
+                    await db.put('alunos', alunoAnterior).catch(() => { });
+                }
+                if (snapshotTurmaAnterior) {
+                    await db.put('turmas', snapshotTurmaAnterior).catch(() => { });
+                }
+            }
+        };
+
+        try {
+            if (turmaExistente) {
+                turmaDestinoId = turmaExistente.id;
+                if (acaoTurmaExistente === 'substituir') {
+                    snapshotAlunosTurmaAnterior = await db.getByIndex('alunos', 'turmaId', turmaDestinoId);
+
+                    const turmaAtualizada = {
+                        ...turmaExistente,
+                        ...turmaOriginal,
+                        id: turmaDestinoId,
+                        nome: turmaOriginal.nome || backup.turmaNome || turmaExistente.nome || 'Turma',
+                        escolaId: escolaResolvida.escolaId || turmaExistente.escolaId || 'default',
+                        criadaEm: turmaExistente.criadaEm || new Date().toISOString()
+                    };
+                    delete turmaAtualizada.escola_id;
+                    await db.put('turmas', turmaAtualizada);
+
+                    for (const alunoAnterior of snapshotAlunosTurmaAnterior) {
+                        await db.delete('alunos', alunoAnterior.id);
+                    }
+                    turmaTeveAlunosSubstituidos = true;
+                }
+            } else {
+                const novaTurma = {
+                    ...turmaOriginal,
+                    id: turmaIdArquivo,
+                    nome: turmaOriginal.nome || backup.turmaNome || 'Turma migrada',
+                    escolaId: escolaResolvida.escolaId || 'default',
+                    criadaEm: new Date().toISOString()
+                };
+                delete novaTurma.escola_id;
+                turmaDestinoId = await db.add('turmas', novaTurma);
+                turmaCriadaAgora = true;
+            }
+
+            for (const alunoOriginal of alunosSelecionados) {
+                const qrId = String(alunoOriginal?.qrId || '').trim();
+                if (!qrId) continue;
+
+                const novoAluno = {
+                    ...alunoOriginal,
+                    id: undefined,
+                    turmaId: turmaDestinoId,
+                    qrId: qrId,
+                    foto: null
+                };
+                delete novoAluno.id;
+                delete novoAluno.foto;
+
+                const novoId = await db.add('alunos', novoAluno);
+                alunosCriados.push(novoId);
+            }
+        } catch (eImport) {
+            await limparImporteParcial();
+            throw eImport;
+        }
+
+        if (escolaResolvida.escolaImportadaNome) {
+            utils.mostrarToast(`Escola "${escolaResolvida.escolaImportadaNome}" adicionada ao cadastro`, 'info');
+        }
+
+        const sufixoModo = acaoTurmaExistente === 'substituir'
+            ? ' (substituicao)'
+            : (acaoTurmaExistente === 'mesclar' ? ' (mescla)' : '');
+        const msgFinal = importarParcialSemConflito
+            ? `Recebimento concluido${sufixoModo}: ${alunosCriados.length} aluno(s) importado(s), ${conflitos.length} conflito(s) ignorado(s).`
+            : `Recebimento concluido${sufixoModo}: ${alunosCriados.length} aluno(s) importado(s).`;
+
+        utils.mostrarToast(msgFinal, 'success');
+        return {
+            novaTurmaId: turmaDestinoId,
+            importados: alunosCriados.length,
+            conflitos: conflitos.length,
+            parcial: importarParcialSemConflito,
+            modo: acaoTurmaExistente
+        };
     },
 
     async importarTurmaProfessorJSON() {
         return new Promise((resolve) => {
             const input = document.createElement('input');
             input.type = 'file';
-            input.accept = '.chf,.json';
+            input.accept = '.cmf,.json,.chf';
 
             input.onchange = (e) => {
                 const file = e.target.files[0];
@@ -345,141 +677,26 @@ const exportModule = {
                 const reader = new FileReader();
                 reader.onload = async (event) => {
                     try {
-                        const rawBackup = JSON.parse(event.target.result);
-                        const backup = this.migrateTurmaProfessorBackupIfNeeded(rawBackup);
-                        const turmaOriginal = backup.data.turma || {};
-                        const escolaOriginal = backup.data.escola || null;
-                        const alunosOriginais = Array.isArray(backup.data.alunos) ? backup.data.alunos : [];
-
-                        const resumo = `Turma: ${turmaOriginal.nome || 'Sem nome'}\n` +
-                            `Alunos no arquivo: ${alunosOriginais.length}\n\n` +
-                            `A turma será importada como nova turma. Deseja continuar?`;
-
-                        if (!utils.confirmar(resumo)) {
-                            resolve(null);
-                            return;
-                        }
-
-                        const conflitos = [];
-                        const qrNoArquivo = new Set();
-                        for (const aluno of alunosOriginais) {
-                            const qrId = String(aluno?.qrId || '').trim();
-                            if (!qrId || qrNoArquivo.has(qrId)) {
-                                conflitos.push({ qrId, motivo: 'duplicado-no-arquivo', alunoNome: aluno?.nome || '' });
-                                continue;
-                            }
-                            qrNoArquivo.add(qrId);
-
-                            const existentes = await db.getByIndex('alunos', 'qrId', qrId);
-                            if (existentes && existentes.length > 0) {
-                                const existente = existentes[0];
-                                conflitos.push({
-                                    qrId,
-                                    motivo: 'ja-existe-no-app',
-                                    alunoNome: aluno?.nome || '',
-                                    alunoDestinoNome: existente?.nome || ''
-                                });
-                            }
-                        }
-
-                        let importarParcialSemConflito = false;
-                        if (conflitos.length > 0) {
-                            const preview = conflitos
-                                .slice(0, 5)
-                                .map((c, i) => `${i + 1}. QR ${c.qrId || '(vazio)'} - ${c.alunoNome || 'Aluno'}`)
-                                .join('\n');
-
-                            const msgConflito = `Foram encontrados ${conflitos.length} conflito(s) de QR.\n\n` +
-                                `${preview}${conflitos.length > 5 ? '\n...' : ''}\n\n` +
-                                `OK: importar apenas alunos sem conflito.\n` +
-                                `Cancelar: não importar nada.`;
-
-                            if (!utils.confirmar(msgConflito)) {
-                                utils.mostrarToast('Importação cancelada por conflito de QR', 'warning');
-                                resolve(null);
-                                return;
-                            }
-                            importarParcialSemConflito = true;
-                        }
-
-                        const conflitoSet = new Set(conflitos.map((c) => String(c.qrId || '').trim()));
-                        const alunosSelecionados = importarParcialSemConflito
-                            ? alunosOriginais.filter((a) => !conflitoSet.has(String(a?.qrId || '').trim()))
-                            : alunosOriginais.slice();
-
-                        if (alunosSelecionados.length === 0) {
-                            utils.mostrarToast('Nenhum aluno disponível para importar sem conflito', 'warning');
-                            resolve(null);
-                            return;
-                        }
-
-                        utils.mostrarToast('Recebendo QRCodes da turma...', 'info');
-
-                        const escolaResolvida = await this._resolverEscolaParaTurmaBackup(turmaOriginal, escolaOriginal);
-                        const novaTurma = {
-                            ...turmaOriginal,
-                            id: undefined,
-                            nome: turmaOriginal.nome || 'Turma migrada',
-                            escolaId: escolaResolvida.escolaId || 'default',
-                            criadaEm: new Date().toISOString()
-                        };
-                        delete novaTurma.id;
-                        delete novaTurma.escola_id;
-
-                        const novaTurmaId = await db.add('turmas', novaTurma);
-                        const alunosCriados = [];
-
-                        const limparImporteParcial = async () => {
-                            for (const id of alunosCriados) {
-                                await db.delete('alunos', id).catch(() => { });
-                            }
-                            await db.delete('turmas', novaTurmaId).catch(() => { });
-                        };
-
+                        let rawBackup = null;
                         try {
-                            for (const alunoOriginal of alunosSelecionados) {
-                                const qrId = String(alunoOriginal?.qrId || '').trim();
-                                if (!qrId) continue;
-
-                                const novoAluno = {
-                                    ...alunoOriginal,
-                                    id: undefined,
-                                    turmaId: novaTurmaId,
-                                    qrId: qrId,
-                                    foto: null
-                                };
-                                delete novoAluno.id;
-                                delete novoAluno.foto;
-
-                                const novoId = await db.add('alunos', novoAluno);
-                                alunosCriados.push(novoId);
-                            }
-                        } catch (eImport) {
-                            await limparImporteParcial();
-                            throw eImport;
+                            rawBackup = JSON.parse(event.target.result);
+                        } catch (_) {
+                            throw new Error('Arquivo invalido: conteudo nao esta em JSON valido');
                         }
 
-                        if (escolaResolvida.escolaImportadaNome) {
-                            utils.mostrarToast(`Escola "${escolaResolvida.escolaImportadaNome}" adicionada ao cadastro`, 'info');
-                        }
-
-                        const msgFinal = importarParcialSemConflito
-                            ? `Recebimento concluído: ${alunosCriados.length} aluno(s) importado(s), ${conflitos.length} conflito(s) ignorado(s).`
-                            : `Recebimento concluído: ${alunosCriados.length} aluno(s) importado(s).`;
-
-                        utils.mostrarToast(msgFinal, 'success');
-                        resolve({
-                            novaTurmaId,
-                            importados: alunosCriados.length,
-                            conflitos: conflitos.length,
-                            parcial: importarParcialSemConflito
-                        });
+                        const resultado = await this.importarTurmaProfessorRaw(rawBackup);
+                        resolve(resultado);
                     } catch (error) {
                         console.error('Erro ao receber QRCodes da turma:', error);
-                        utils.mostrarToast(
-                            error?.message || 'Erro ao receber QRCodes da turma',
-                            'error'
-                        );
+                        if (typeof pilotMetrics?.recordEvent === 'function') {
+                            pilotMetrics.recordEvent('import_turma_professor_error', {
+                                message: String(error?.message || ''),
+                                name: String(error?.name || '')
+                            });
+                        }
+                        const msgErro = String(error?.message || '');
+                        const mensagem = msgErro || 'Erro ao receber QRCodes da turma';
+                        utils.mostrarToast(mensagem, 'error');
                         resolve(null);
                     }
                 };
@@ -493,7 +710,7 @@ const exportModule = {
 
     migrateTurmaBackupIfNeeded(raw) {
         if (!raw || typeof raw !== 'object') {
-            throw new Error('Arquivo inválido');
+            throw new Error('Arquivo invÃ¡lido');
         }
 
         // Legacy simples: { turma, alunos, chamadas, exportedAt }
@@ -512,15 +729,15 @@ const exportModule = {
         }
 
         if (raw.schemaVersion > 1) {
-            throw new Error(`Backup de turma versão ${raw.schemaVersion} incompatível. Atualize o app.`);
+            throw new Error(`Backup de turma versÃ£o ${raw.schemaVersion} incompatÃ­vel. Atualize o app.`);
         }
 
         if (raw.backupType !== 'turma') {
-            throw new Error('Este arquivo não • um backup de turma');
+            throw new Error('Este arquivo nÃ£o â€¢ um backup de turma');
         }
 
         if (!raw.data || !raw.data.turma || !Array.isArray(raw.data.alunos) || !Array.isArray(raw.data.chamadas)) {
-            throw new Error('Estrutura de backup de turma inválida');
+            throw new Error('Estrutura de backup de turma invÃ¡lida');
         }
 
         return raw;
@@ -552,7 +769,7 @@ const exportModule = {
                         const resumo = `Turma: ${turmaOriginal.nome || 'Sem nome'}\n` +
                             `Alunos: ${alunosOriginais.length}\n` +
                             `Chamadas: ${chamadasOriginais.length}\n\n` +
-                            `A turma será restaurada como NOVA turma. Deseja continuar?`;
+                            `A turma serÃ¡ restaurada como NOVA turma. Deseja continuar?`;
 
                         if (!utils.confirmar(resumo)) {
                             resolve(null);
@@ -606,7 +823,7 @@ const exportModule = {
                                 existentes = await db.getByIndex('alunos', 'qrId', qrId);
                                 tentativas++;
                                 if (tentativas > 40) {
-                                    throw new Error('Não foi possível gerar qrId único para aluno importado');
+                                    throw new Error('NÃ£o foi possÃ­vel gerar qrId Ãºnico para aluno importado');
                                 }
                             }
 
@@ -633,7 +850,7 @@ const exportModule = {
                                         novoId = await db.add('alunos', novoAluno);
                                     } catch (eInsert) {
                                         if (eInsert?.name === 'ConstraintError' && tentativasInsert < 3) {
-                                            // Colisão de qrId • gera um novo completamente aleatório
+                                            // ColisÃ£o de qrId â€¢ gera um novo completamente aleatÃ³rio
                                             tentativasInsert++;
                                             qrIdSeguro = utils.gerarQrId();
                                             qrIdsUsadosImport.add(qrIdSeguro);
@@ -669,7 +886,7 @@ const exportModule = {
                                 chamadasCriadas.push(chamadaId);
                             }
                         } catch (eImport) {
-                            // Remove tudo que foi criado para não deixar dados órfãos
+                            // Remove tudo que foi criado para nÃ£o deixar dados Ã³rfÃ£os
                             await limparImporteParcial();
                             throw eImport;
                         }
@@ -682,10 +899,16 @@ const exportModule = {
                         resolve(novaTurmaId);
                     } catch (error) {
                         console.error('Erro ao importar backup de turma:', error);
+                        if (typeof pilotMetrics?.recordEvent === 'function') {
+                            pilotMetrics.recordEvent('import_turma_backup_error', {
+                                message: String(error?.message || ''),
+                                name: String(error?.name || '')
+                            });
+                        }
                         const msg = String(error?.message || '');
                         const ehErroConstraint = error?.name === 'ConstraintError' || /constraint/i.test(msg);
                         const mensagem = ehErroConstraint
-                            ? 'Erro de dados no backup: conflito de identificadores únicos (ex.: QR).'
+                            ? 'Erro de dados no backup: conflito de identificadores Ãºnicos (ex.: QR).'
                             : (error.message || 'Erro ao recuperar backup da turma');
                         utils.mostrarToast(
                             mensagem,
@@ -716,7 +939,7 @@ const exportModule = {
             }
 
             const colunas = [
-                { field: 'matricula', label: 'Matrícula' },
+                { field: 'matricula', label: 'MatrÃ­cula' },
                 { field: 'nome', label: 'Nome' },
                 { field: 'email', label: 'Email' }
             ];
@@ -732,7 +955,7 @@ const exportModule = {
         }
     },
 
-    // Gerar relatório de frequência geral
+    // Gerar relatÃ³rio de frequÃªncia geral
     async gerarRelatorioFrequencia(turmaId) {
         try {
             const turma = await db.get('turmas', turmaId);
@@ -742,11 +965,11 @@ const exportModule = {
             const alunos = await db.getByIndex('alunos', 'turmaId', turmaId);
 
             if (chamadas.length === 0) {
-                utils.mostrarToast('Nenhuma chamada para gerar relatório', 'warning');
+                utils.mostrarToast('Nenhuma chamada para gerar relatÃ³rio', 'warning');
                 return;
             }
 
-            // Calcular frequência por aluno
+            // Calcular frequÃªncia por aluno
             const frequencia = alunos.map(aluno => {
                 const presencas = chamadas.filter(c => {
                     if (c.registros) {
@@ -774,11 +997,11 @@ const exportModule = {
             frequencia.sort((a, b) => a.nome.localeCompare(b.nome));
 
             const colunas = [
-                { field: 'matricula', label: 'Matrícula' },
+                { field: 'matricula', label: 'MatrÃ­cula' },
                 { field: 'nome', label: 'Nome' },
-                { field: 'presencas', label: 'Presenças' },
+                { field: 'presencas', label: 'PresenÃ§as' },
                 { field: 'totalChamadas', label: 'Total Chamadas' },
-                { field: 'percentual', label: 'Frequência' }
+                { field: 'percentual', label: 'FrequÃªncia' }
             ];
 
             const csv = utils.gerarCSV(frequencia, colunas);
@@ -786,10 +1009,11 @@ const exportModule = {
                 .replace(/[^a-z0-9.-]/gi, '_');
 
             utils.downloadFile(filename, csv, 'text/csv;charset=utf-8;');
-            utils.mostrarToast('Relatório de frequência exportado!', 'success');
+            utils.mostrarToast('RelatÃ³rio de frequÃªncia exportado!', 'success');
         } catch (e) {
             console.error(e);
-            utils.mostrarToast("Erro ao gerar relatório", 'error');
+            utils.mostrarToast("Erro ao gerar relatÃ³rio", 'error');
         }
     }
 };
+

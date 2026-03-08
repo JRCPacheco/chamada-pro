@@ -2595,6 +2595,12 @@ body {
     color: var(--gray-600);
 }
 
+.gerenciar-qrcodes-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
 /* ===== MOBILE EMPTY STATE SPACING FIX ===== */
 @media (max-width: 600px) {
 
