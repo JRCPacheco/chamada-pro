@@ -1,10 +1,13 @@
 :root {
 
     /* Paleta Chamada Fácil */
-    --primary: #212F52;
-    --primary-gradient: linear-gradient(135deg, #2D4A8A 0%, #212F52 100%);
-    --primary-dark: #182442;
-    --primary-light: #2D4A8A;
+    --primary: #1a4f86;
+    --primary-gradient: linear-gradient(145deg, #1a4f86 0%, #3f6f9d 52%, #244f7e 100%);
+    --primary-dark: #0b3766;
+    --primary-light: #3f6f9d;
+    --primary-soft: linear-gradient(180deg, #2f6396 0%, #3f6f9d 100%);
+    --primary-line: rgba(255, 255, 255, 0.18);
+    --primary-shadow: rgba(7, 34, 66, 0.22);
     --secondary: #6ABF57;
     --app-green: #6ABF57;
     --success: #10b981;
@@ -249,12 +252,15 @@ body {
 }
 
 .app-header {
-    background: var(--primary-gradient);
+    background:
+        radial-gradient(circle at top center, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 42%),
+        var(--primary-gradient);
     padding: 10px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+    box-shadow: 0 8px 18px var(--primary-shadow);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -389,7 +395,14 @@ body {
 
 /* ===== STATS ROW ===== */
 .turmas-header {
-    padding: var(--space-2);
+    margin: 16px 16px 12px;
+    padding: 18px;
+    background:
+        radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 38%),
+        var(--primary-gradient);
+    border-radius: 22px;
+    border: 1px solid var(--primary-line);
+    box-shadow: 0 12px 30px var(--primary-shadow);
 }
 
 .stats-row {
@@ -676,14 +689,19 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%),
+        var(--primary-gradient);
     color: white;
-    box-shadow: 0 4px 12px rgba(33, 47, 82, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 6px 16px var(--primary-shadow);
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
-    box-shadow: 0 6px 16px rgba(33, 47, 82, 0.4);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 100%),
+        linear-gradient(145deg, var(--primary-light) 0%, var(--primary) 58%, var(--primary-dark) 100%);
+    box-shadow: 0 10px 20px rgba(7, 34, 66, 0.28);
     transform: translateY(-2px);
 }
 
@@ -2642,10 +2660,12 @@ body {
     padding: 14px 24px;
     font-size: 16px;
     font-weight: 700;
-    background: linear-gradient(135deg, #212F52 0%, #1a2744 100%);
+    background:
+        radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 40%),
+        var(--primary-gradient);
     color: #ffffff;
-    border: none;
-    box-shadow: 0 4px 14px rgba(33, 47, 82, 0.35);
+    border: 1px solid var(--primary-line);
+    box-shadow: 0 10px 22px var(--primary-shadow);
     cursor: pointer;
     transition: var(--transition);
     display: block;

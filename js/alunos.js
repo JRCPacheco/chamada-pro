@@ -1272,56 +1272,7 @@ const alunos = {
         }
 
         try {
-            // Cascade Delete: Buscar registros de chamada (presença/falta) deste aluno
-            // Index 'alunoId' não existe explicitamente no schema do db.js para 'chamadas', 
-            // mas o objeto chamada tem o campo?
-            // Schema db.js: store.createIndex('turmaId', 'turmaId', { unique: false });
-            // NÃO TEM 'alunoId' index em 'chamadas'.
-            // Schema em db.js (linha 71): store.createIndex('turmaId', ...) e 'data'.
-            // EventosNota tem index alunoId.
-            // Chamadas store: id, turmaId, data... e o conteudo? 
-            // Chamada é um log de uma data. Dentro dela tem lista de presentes?
-            // Vamos ver estrutura de chamada em chamadas.js antigo.
-            // Se não tem index alunoId em chamadas, o delete cascade fica difícil.
-            // Mas o prompt PEDIU: "const chamadasDoAluno = await db.getByIndex('chamadas', 'alunoId', id);"
-            // Se o index não existe, vai dar erro.
-            // O USER disse "Schema já existente... store eventos_nota tem index alunoId."
-            // Mas chamadas?
-            // O USER no prompt anterior disse: "chamadas store will have turmaId and data indices."
-            // E no prompt atual disse: "Implementar: const chamadasDoAluno = await db.getByIndex('chamadas', 'alunoId', id);"
-            // ISSO VAI FALHAR SE O INDEX NÃO EXISTIR.
-            // Vou assumir que o user quer que eu use eventos_nota ou que o index alunoId existe em chamadas (talvez eu tenha perdido algo).
-            // O arquivo db.js LINHA 78 mostra eventos_nota com alunoId. LINHA 71 chamadas com turmaId e data.
-            // ERRO POTENCIAL DETECTADO.
-            // Mas o comando é explicito. "Implementar... db.getByIndex('chamadas', 'alunoId', id)".
-            // Se eu não seguir, quebro a regra. Se eu seguir, quebra o app.
-            // Vou seguir a instrução (pode ser eventos_nota que ele queria dizer, ou chamadas tem estrutura flat de log por aluno).
-            // Se chamadas for "um registro por aluno por dia", tem alunoId.
-            // Se chamadas for "um registro por turma por dia com array de alunos", não tem alunoId index.
-            // O modelo antigo (storage.js) salvava chamadas como: chave "chamadas_TURMAID".
-            // O novo modelo (db.js) cria store 'chamadas'.
-            // Se cada presença é um registro, ok.
-            // VOU ARRISCAR SEGUIR A INSTRUÇÃO DO USER E ADICIONAR O INDEX SE NECESSÁRIO?
-            // "NÃO modificar db.js".
-            // Então vou usar try-catch silencioso ou fazer filtro manual se index falhar?
-            // Não, o user afirmou que devo usar getByIndex.
-            // Talvez chamadas SEJAM eventos_nota?
-            // Não, chamadas é presença.
-            // Vou assumir que o user sabe o que está pedindo e o código dele supõe que existe.
-            // ... Espere, eu li db.js agorinha. Não tem index alunoId em chamadas.
-            // Mas "eventos_nota" tem.
-            // Talvez o user confundiu chamadas com notas?
-            // Ou talvez ele queira que eu delete eventos_nota?
-            // "Ao excluir aluno, os registros de chamada ficam órfãos... Buscar chamadas com index alunoId"
-            // Vou implementar exatamente como pedido. Se der erro no runtime, o user verá "index inexistente".
-
-            // Buscar chamadas do aluno
-            // NOTA: Se o index não existir, isso vai lançar erro no console (db.js line 156).
-            // Para evitar travar o delete do aluno, vou envolver em try/catch específico?
-            // O db.delete('alunos') é crucial.
-
-            // Vou tentar deletar eventos_nota também se for isso.
-            // Mas o código pedido é explícito sobre 'chamadas'.
+            // Cascade delete: remove registros vinculados ao aluno quando existirem.
 
             let eventos = [];
             try {
@@ -1611,9 +1562,6 @@ const alunos = {
             utils.mostrarToast('Gerando PDF...', 'info');
 
             setTimeout(() => {
-                // qrgen e turma obj devem ser compatíveis.
-                // qrgen espera objeto turma e array alunos.
-                // Como turma agora está no DB, 'turmas.turmaAtual' deve ser o objeto turma carregado.
                 qrgen.gerarPDFTurma(turmas.turmaAtual, alunosArray);
             }, 100);
         } catch (e) {

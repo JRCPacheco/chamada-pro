@@ -58,9 +58,6 @@ const app = {
             case 'app-exportar-backup': return this.exportarBackup();
             case 'app-importar-backup': return this.importarBackup();
             case 'app-limpar-dados': return this.limparTodosDados();
-            case 'app-exportar-metricas-piloto': return this.exportarMetricasPiloto();
-            case 'app-resumo-metricas-piloto': return this.verResumoMetricasPiloto();
-            case 'app-limpar-metricas-piloto': return this.limparMetricasPiloto();
             case 'app-abrir-sobre': return this.abrirSobre();
             case 'menu-ir-turmas': this.mostrarTela('tela-turmas'); return this.fecharModal('modal-menu');
             case 'menu-ir-config': this.mostrarTela('tela-config'); return this.fecharModal('modal-menu');
@@ -72,9 +69,6 @@ const app = {
             case 'turmas-recuperar-backup-atual': return turmas.recuperarBackupTurmaAtual();
             case 'turmas-recuperar-backup-global': return turmas.recuperarBackupTurmaGlobal();
             case 'turmas-importar-migracao-global': return turmas.importarMigracaoTurmaGlobal();
-            case 'turmas-p2p-receber-global':
-                if (!this._featureEnabled('p2p_manual')) return utils.mostrarToast('Recurso disponivel apenas nesta versao do produto', 'warning');
-                return turmas.abrirReceberP2PGlobal();
             case 'turmas-toggle-selecao-gerenciar': return turmas.alternarSelecaoGerenciarTurmas();
             case 'turmas-toggle-item-selecao-gerenciar': return turmas.alternarSelecaoItemGerenciarTurmas(el.dataset.turmaId);
             case 'turmas-selecionar-todas-gerenciar': return turmas.alternarSelecionarTodasGerenciarTurmas();
@@ -84,21 +78,7 @@ const app = {
             case 'turmas-editar-item-gerenciar': return turmas.editarItemGerenciarTurmas(el.dataset.turmaId);
             case 'turmas-exportar-item-gerenciar': return turmas.exportarItemGerenciarTurmas(el.dataset.turmaId);
             case 'turmas-exportar-migracao-item-gerenciar': return turmas.exportarMigracaoItemGerenciarTurmas(el.dataset.turmaId);
-            case 'turmas-p2p-enviar-item-gerenciar':
-                if (!this._featureEnabled('p2p_manual')) return utils.mostrarToast('Recurso disponivel apenas nesta versao do produto', 'warning');
-                return turmas.exportarP2PItemGerenciarTurmas(el.dataset.turmaId);
             case 'turmas-excluir-item-gerenciar': return turmas.excluirItemGerenciarTurmas(el.dataset.turmaId);
-            case 'p2p-gerar-codigo-local':
-            case 'p2p-aplicar-codigo-remoto':
-            case 'p2p-copiar-codigo-local':
-            case 'p2p-ler-qr-remoto':
-            case 'p2p-usar-fallback':
-                if (!this._featureEnabled('p2p_manual')) return utils.mostrarToast('Recurso disponivel apenas nesta versao do produto', 'warning');
-                if (action === 'p2p-gerar-codigo-local') return p2pTransfer.gerarCodigoLocal();
-                if (action === 'p2p-aplicar-codigo-remoto') return p2pTransfer.aplicarCodigoRemoto();
-                if (action === 'p2p-copiar-codigo-local') return p2pTransfer.copiarCodigoLocal();
-                if (action === 'p2p-ler-qr-remoto') return p2pTransfer.lerQrRemoto();
-                return p2pTransfer.usarFallback();
             case 'turmas-excluir-atual': return turmas.excluirTurma(turmas.turmaAtual?.id);
             case 'turmas-salvar-nova': return turmas.salvarNovaTurma();
             case 'turmas-salvar-edicao': return turmas.salvarEdicaoTurma();
@@ -501,9 +481,6 @@ const app = {
         const modal = document.getElementById(modalId);
         if (modal) {
             modal.classList.remove('active');
-            if (modalId === 'modal-p2p-turma' && typeof p2pTransfer?.onModalClose === 'function') {
-                p2pTransfer.onModalClose();
-            }
         }
     },
 
@@ -718,41 +695,6 @@ const app = {
         setTimeout(() => {
             location.reload();
         }, 1500);
-    },
-
-    exportarMetricasPiloto() {
-        if (typeof pilotMetrics === 'undefined' || typeof pilotMetrics.exportJson !== 'function') {
-            utils.mostrarToast('Modulo de metricas indisponivel', 'error');
-            return;
-        }
-        pilotMetrics.exportJson();
-        utils.mostrarToast('Metricas do piloto exportadas', 'success');
-    },
-
-    verResumoMetricasPiloto() {
-        if (typeof pilotMetrics === 'undefined' || typeof pilotMetrics.getSummary !== 'function') {
-            utils.mostrarToast('Modulo de metricas indisponivel', 'error');
-            return;
-        }
-        const s = pilotMetrics.getSummary();
-        const tempoSeg = Number.isFinite(s.tempoMedioMs) ? `${Math.round(s.tempoMedioMs / 1000)}s` : 'n/d';
-        const msg = `Fluxos: ${s.totalFlows}\n` +
-            `Sucesso P2P: ${s.successP2P}\n` +
-            `Fallback: ${s.fallbackUsado}\n` +
-            `Falhas: ${s.failedFlows}\n` +
-            `Taxa sucesso P2P: ${s.taxaSucessoP2P}%\n` +
-            `Tempo medio: ${tempoSeg}`;
-        alert(msg);
-    },
-
-    limparMetricasPiloto() {
-        if (typeof pilotMetrics === 'undefined' || typeof pilotMetrics.clearAll !== 'function') {
-            utils.mostrarToast('Modulo de metricas indisponivel', 'error');
-            return;
-        }
-        if (!utils.confirmar('Limpar todas as metricas locais do piloto?')) return;
-        pilotMetrics.clearAll();
-        utils.mostrarToast('Metricas do piloto limpas', 'success');
     },
 
     // Mostrar ajuda

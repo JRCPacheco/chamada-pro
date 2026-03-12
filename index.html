@@ -498,23 +498,6 @@
                 </button>
             </div>
 
-            <div class="config-section">
-                <h3>Piloto de Transferencia</h3>
-                <p class="text-muted" style="margin-bottom: 10px;">Exporte metricas locais para acompanhar sucesso P2P, fallback e tempo total da tarefa.</p>
-
-                <button class="btn btn-secondary btn-block" data-action="app-exportar-metricas-piloto">
-                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg></span>Exportar Metricas do Piloto
-                </button>
-
-                <button class="btn btn-secondary btn-block" data-action="app-resumo-metricas-piloto">
-                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="6"/><rect x="12" y="7" width="3" height="9"/><rect x="17" y="5" width="3" height="11"/></svg></span>Ver Resumo do Piloto
-                </button>
-
-                <button class="btn btn-danger btn-block" data-action="app-limpar-metricas-piloto">
-                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></span>Limpar Metricas do Piloto
-                </button>
-            </div>
-
         </div>
 
     </div>
@@ -689,15 +672,12 @@
                 </div>
                 <div class="gerenciar-qrcodes-card">
                     <div class="gerenciar-qrcodes-head">
-                        <h4>Compartilhamento de QRCodes</h4>
-                        <p>Use para compartilhar os alunos de uma turma com outro professor, mantendo os mesmos QRCodes.</p>
+                        <h4>Enviar para Outro Professor</h4>
+                        <p>Compartilhe uma turma por arquivo `.cmf`, mantendo os mesmos QRCodes dos alunos.</p>
                     </div>
                     <div class="gerenciar-qrcodes-actions">
                         <button class="btn btn-secondary btn-sm" data-action="turmas-importar-migracao-global">
-                            Receber QRCodes
-                        </button>
-                        <button class="btn btn-secondary btn-sm" data-feature="p2p_manual" data-action="turmas-p2p-receber-global">
-                            Receber via P2P (Beta)
+                            Receber arquivo do professor
                         </button>
                     </div>
                 </div>
@@ -705,50 +685,6 @@
                 <div id="empty-gerenciar-turmas" class="empty-state" style="display:none; padding: 20px;">
                     <h3>Nenhuma turma cadastrada</h3>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: Transferencia P2P -->
-    <div id="modal-p2p-turma" class="modal" data-feature="p2p_manual">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Transferencia P2P (Beta)</h3>
-                <button class="btn-close" data-action="close-modal" data-modal-id="modal-p2p-turma">×</button>
-            </div>
-            <div class="modal-body">
-                <p id="p2p-resumo" class="text-muted">Pareamento por codigo (oferta/resposta).</p>
-                <div class="form-group">
-                    <label>Seu codigo</label>
-                    <textarea id="p2p-codigo-local" rows="4" readonly placeholder="Gerar codigo..."></textarea>
-                </div>
-                <div id="p2p-qr-local-wrap" class="form-group" style="display:none;">
-                    <label>QR do seu codigo</label>
-                    <div style="display:flex; justify-content:center; padding:8px; background:#fff; border-radius:8px;">
-                        <canvas id="p2p-qr-local-canvas"></canvas>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Codigo do outro aparelho</label>
-                    <textarea id="p2p-codigo-remoto" rows="4" placeholder="Cole aqui o codigo recebido"></textarea>
-                </div>
-                <div id="p2p-reader-wrap" class="form-group" style="display:none;">
-                    <label>Leitura de QR</label>
-                    <div id="p2p-reader" style="min-height: 260px; background: #000; border-radius: 8px;"></div>
-                </div>
-                <div class="form-group">
-                    <label>Status</label>
-                    <div id="p2p-status" class="text-muted">Aguardando...</div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="btn-p2p-fallback" class="btn btn-secondary" data-action="p2p-usar-fallback" style="display:none;">
-                    Usar fallback
-                </button>
-                <button class="btn btn-secondary" data-action="p2p-copiar-codigo-local">Copiar Codigo</button>
-                <button class="btn btn-secondary" data-action="p2p-ler-qr-remoto">Ler QR</button>
-                <button class="btn btn-secondary" data-action="p2p-gerar-codigo-local">Gerar Codigo</button>
-                <button class="btn btn-primary" data-action="p2p-aplicar-codigo-remoto">Aplicar Codigo</button>
             </div>
         </div>
     </div>
@@ -1143,9 +1079,6 @@
     <script src="js/chamadas.js?v=5"></script>
     <script src="js/scanner.js?v=4"></script>
     <script src="js/export.js?v=5"></script>
-    <script src="js/pilot-metrics.js?v=1"></script>
-    <script src="js/p2p-signaling-client.js?v=1"></script>
-    <script src="js/p2p-transfer.js?v=1"></script>
     <script src="js/qrgen.js?v=4"></script>
 
     <script src="js/app.js?v=5"></script>

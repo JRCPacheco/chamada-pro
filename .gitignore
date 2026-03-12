@@ -9,7 +9,3 @@ dist/
 
 # Local checkpoint de retomada (nao publicar)
 docs/TRANSFER-STATUS.md
-
-# API signaling local secrets
-api/p2p/config.local.php
-

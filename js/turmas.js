@@ -369,13 +369,7 @@ const turmas = {
             // Mostrar botão voltar
             document.getElementById('btn-back').style.display = 'block';
 
-            // Carregar alunos e histórico
-            // OBSERVACAO: alunos.js e chamadas.js ainda não foram migrados.
-            // Eles usam storage.getTurmaById. Isso vai quebrar se não tiver compatibilidade?
-            // "Alunos store separado (NÃO usar ainda aqui)" -> O user disse para não migrar alunos.js.
-            // Mas alunos.listar() vai tentar ler do storage antigo ou falhar.
-            // Assumimos que a UI vai carregar vazio por enquanto até a proxima rodada.
-
+            // Carregar alunos e histórico da turma atual.
             if (typeof alunos.listar === 'function') alunos.listar();
             if (typeof chamadas.listarHistorico === 'function') chamadas.listarHistorico();
 
@@ -549,12 +543,8 @@ const turmas = {
                 const selecionada = this.gerenciarSelecionadas.has(turma.id);
                 const alunosQtd = countAlunos[turma.id] || 0;
                 const chamadasQtd = countChamadas[turma.id] || 0;
-                const p2pManualAtivo = !!(typeof PRODUCT_CONFIG !== 'undefined' && PRODUCT_CONFIG?.features?.p2p_manual);
                 const selectHtml = this.gerenciarSelecaoAtiva
                     ? `<label class="gerenciar-turma-select"><input type="checkbox" data-action="turmas-toggle-item-selecao-gerenciar" data-turma-id="${turma.id}" ${selecionada ? 'checked' : ''}> Selecionar</label>`
-                    : '';
-                const btnP2P = p2pManualAtivo
-                    ? `<button class="btn btn-secondary btn-sm" data-action="turmas-p2p-enviar-item-gerenciar" data-turma-id="${turma.id}">Enviar P2P</button>`
                     : '';
 
                 return `
@@ -571,8 +561,7 @@ const turmas = {
                             <button class="btn btn-secondary btn-sm" data-action="turmas-abrir-item-gerenciar" data-turma-id="${turma.id}">Abrir</button>
                             <button class="btn btn-secondary btn-sm" data-action="turmas-editar-item-gerenciar" data-turma-id="${turma.id}">Editar</button>
                             <button class="btn btn-secondary btn-sm" data-action="turmas-exportar-item-gerenciar" data-turma-id="${turma.id}">Backup</button>
-                            <button class="btn btn-secondary btn-sm" data-action="turmas-exportar-migracao-item-gerenciar" data-turma-id="${turma.id}">Enviar QRCodes</button>
-                            ${btnP2P}
+                            <button class="btn btn-secondary btn-sm" data-action="turmas-exportar-migracao-item-gerenciar" data-turma-id="${turma.id}">Enviar para Professor</button>
                             <button class="btn btn-danger btn-sm" data-action="turmas-excluir-item-gerenciar" data-turma-id="${turma.id}">Excluir</button>
                         </div>
                     </div>
@@ -657,7 +646,7 @@ const turmas = {
 
     async importarMigracaoTurmaGlobal() {
         if (typeof exportModule === 'undefined' || typeof exportModule.importarTurmaProfessorJSON !== 'function') {
-            utils.mostrarToast('Módulo de compartilhamento de QRCodes indisponível', 'error');
+            utils.mostrarToast('Modulo de recebimento de arquivo da turma indisponivel', 'error');
             return;
         }
 
@@ -676,17 +665,9 @@ const turmas = {
             await this.listar();
             await this.renderizarModalGerenciarTurmas();
         } catch (error) {
-            console.error('Erro ao receber QRCodes da turma:', error);
-            utils.mostrarToast('Erro ao receber QRCodes da turma', 'error');
+            console.error('Erro ao receber arquivo da turma:', error);
+            utils.mostrarToast('Erro ao receber arquivo da turma', 'error');
         }
-    },
-
-    async abrirReceberP2PGlobal() {
-        if (typeof p2pTransfer === 'undefined' || typeof p2pTransfer.abrirReceber !== 'function') {
-            utils.mostrarToast('Modulo P2P indisponivel', 'error');
-            return;
-        }
-        p2pTransfer.abrirReceber();
     },
 
     async sincronizarFiltroComTurmaImportada(turmaId) {
@@ -768,19 +749,10 @@ const turmas = {
     async exportarMigracaoItemGerenciarTurmas(turmaId) {
         if (!turmaId) return;
         if (typeof exportModule === 'undefined' || typeof exportModule.exportarTurmaProfessorJSON !== 'function') {
-            utils.mostrarToast('Módulo de compartilhamento de QRCodes indisponível', 'error');
+            utils.mostrarToast('Modulo de compartilhamento entre professores indisponivel', 'error');
             return;
         }
         await exportModule.exportarTurmaProfessorJSON(turmaId);
-    },
-
-    async exportarP2PItemGerenciarTurmas(turmaId) {
-        if (!turmaId) return;
-        if (typeof p2pTransfer === 'undefined' || typeof p2pTransfer.abrirEnviar !== 'function') {
-            utils.mostrarToast('Modulo P2P indisponivel', 'error');
-            return;
-        }
-        p2pTransfer.abrirEnviar(turmaId);
     },
 
     async excluirItemGerenciarTurmas(turmaId) {

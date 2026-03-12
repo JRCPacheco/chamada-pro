@@ -202,35 +202,7 @@ const qrgen = {
 
     // Gerar QR Code individual
     gerarQRCodeIndividual(matricula, nome) {
-        // Encontra aluno no banco ou usa dados passados? 
-        // A função original recebia (matricula, nome), mas para o QR precisamos do ID e QRID.
-        // A UI chama com (aluno.matricula, aluno.nome). Falta o ID e QRID.
-        // Precisamos buscar o aluno completo ou mudar a chamada.
-        // Como não posso mudar 'alunos.js' (onde chama isso), preciso me virar.
-        // MAS espere, 'alunos.js' chama renderizarAlunos...
-        // ... e o botão "Baixar Imagem" chama 'qrgen.downloadQRCodeIndividual'.
-        // O botão "Visualizar QR" (se existir) chamaria gerarQRCodeIndividual?
-        // Revisando 'qrgen.js' antigo... 
-        // A função era: gerarQRCodeIndividual(matricula, nome). E dentro ela criava um QRCode com texto=matricula.
-        // O QR individual mostrava APENAS A MATRICULA?
-        // Código antigo: text: matricula.
-        // O QR de turma usava o payload JSON completo.
-        // O QR individual servia para o aluno ver?
-        // Se eu mudar o QR individual para payload completo, preciso do ID.
-        // O prompt não mandou mudar a assinatura. 
-        // Mas mandou "Substituir biblioteca".
-        // Vou manter o comportamento do QR Individual (mostrar matricula) ou atualizar?
-        // O User disse "Objetivo: substituir biblioteca... payload compacto... Scanner compatível".
-        // O Scanner lê "CF1|...". Se o QR Individual tiver só matricula, o scanner não lê como presença.
-        // Se o QR individual for para presença, tem que ser o payload CF1.
-        // No código antigo do arquivo 'qrgen.js' (linha 190): text: matricula.
-        // Isso sugere que o QR Individual era só para visualizar a matrícula?
-        // Mas se o scanner espera CF1, esse QR não funcionaria para chamada.
-        // Porem, eu NÃO POSSO MODIFICAR alunos.js para passar o objeto aluno.
-        // Vou manter o QR Individual gerando o que gerava (matricula), mas com a biblioteca nova.
-        // OU, melhor: se conseguir, recuperar o aluno via DB se necessário.
-        // Mas 'gerarQRCodeIndividual' só abre modal.
-        // Vou implementar a geração com a lib nova, usando o texto que vier.
+        // Mantem o QR individual compativel com o fluxo atual desta tela.
 
         const modal = document.createElement('div');
         modal.className = 'modal active';

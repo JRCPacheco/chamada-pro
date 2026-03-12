@@ -1,5 +1,5 @@
 ﻿// ===== EXPORT MODULE =====
-// FunÃ§Ãµes de exportaÃ§Ã£o de dados
+// Funções de exportação de dados
 // Migrado para IndexedDB
 
 const exportModule = {
@@ -50,7 +50,7 @@ const exportModule = {
                 return { ok: false, reason: 'unsupported' };
             }
 
-            // Web Share com arquivo em memoria (sem precisar salvar em pasta antes).
+            // Web Share com arquivo em memória (sem precisar salvar em pasta antes).
             const file = new File([json], filename, { type: 'application/json' });
             const shareData = {
                 title: `Turma: ${String(turmaNome || 'Turma').trim()}`,
@@ -82,7 +82,7 @@ const exportModule = {
             turmaOriginal?.escolaName
         );
 
-        // Sem escola no backup: mantÃ©m padrÃ£o.
+        // Sem escola no backup: mantém padrão.
         if (!escolaIdOriginal && !nomePreferencial) {
             return { escolaId: 'default', escolaImportadaNome: null };
         }
@@ -92,12 +92,12 @@ const exportModule = {
             const existente = await db.get('escolas', escolaIdOriginal);
             if (existente) {
                 // Caso comum de conflito: backup usa id "default", mas com outro nome de escola.
-                // Nessa situaÃ§Ã£o, nÃ£o devemos sobrescrever/forÃ§ar a escola default local.
+                // Nessa situação, não devemos sobrescrever/forçar a escola padrão local.
                 const nomeExistente = this._normalizarNomeEscola(existente.nome);
                 const nomeConflitante = !!nomePreferencial && nomeExistente.toLowerCase() !== nomePreferencial.toLowerCase();
 
                 if (nomeConflitante) {
-                    // Primeiro tenta encontrar escola jÃ¡ existente pelo nome do backup.
+                    // Primeiro tenta encontrar escola já existente pelo nome do backup.
                     const escolas = await db.getAll('escolas');
                     const matchNome = escolas.find(
                         (e) => this._normalizarNomeEscola(e.nome).toLowerCase() === nomePreferencial.toLowerCase()
@@ -106,7 +106,7 @@ const exportModule = {
                         return { escolaId: matchNome.id, escolaImportadaNome: null };
                     }
 
-                    // Se nÃ£o houver, cria nova escola para preservar a identidade do backup.
+                    // Se não houver, cria nova escola para preservar a identidade do backup.
                     const novaEscolaId = `escola_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
                     await db.put('escolas', {
                         id: novaEscolaId,
@@ -120,7 +120,7 @@ const exportModule = {
                 return { escolaId: existente.id, escolaImportadaNome: null };
             }
 
-            // ID existe no backup mas nÃ£o existe localmente: cria escola automaticamente.
+            // ID existe no backup, mas não existe localmente: cria escola automaticamente.
             const nome = nomePreferencial || `Escola (${escolaIdOriginal})`;
             await db.put('escolas', {
                 id: escolaIdOriginal,
@@ -131,7 +131,7 @@ const exportModule = {
             return { escolaId: escolaIdOriginal, escolaImportadaNome: nome };
         }
 
-        // Backup sem ID, mas com nome: tenta match por nome e cria se necessÃ¡rio.
+        // Backup sem ID, mas com nome: tenta match por nome e cria se necessário.
         const escolas = await db.getAll('escolas');
         const nomeLower = nomePreferencial.toLowerCase();
         const match = escolas.find((e) => String(e.nome || '').trim().toLowerCase() === nomeLower);
@@ -181,7 +181,7 @@ const exportModule = {
         }
     },
 
-    // Migrar backup para formato atual se necessÃ¡rio
+    // Migrar backup para formato atual se necessário
     migrateBackupIfNeeded(backup) {
         // Formato legacy (v0) - sem schemaVersion
         if (!backup.schemaVersion) {
@@ -200,12 +200,12 @@ const exportModule = {
             };
         }
 
-        // VersÃ£o futura - incompatibilidade
+        // Versão futura - incompatibilidade
         if (backup.schemaVersion > 1) {
-            throw new Error(`Backup versÃ£o ${backup.schemaVersion} incompatÃ­vel. Atualize o app.`);
+            throw new Error(`Backup versão ${backup.schemaVersion} incompatível. Atualize o app.`);
         }
 
-        // VersÃ£o atual
+        // Versão atual
         return backup;
     },
 
@@ -224,23 +224,23 @@ const exportModule = {
                 try {
                     const rawBackup = JSON.parse(event.target.result);
 
-                    // Migrar se necessÃ¡rio
+                    // Migrar se necessário
                     const backup = this.migrateBackupIfNeeded(rawBackup);
 
-                    // Validar backup bÃ¡sico
+                    // Validar backup básico
                     if (!backup.data || !backup.data.turmas || !backup.data.alunos) {
-                        throw new Error('Arquivo de backup invÃ¡lido (estruturas ausentes)');
+                        throw new Error('Arquivo de backup inválido (estruturas ausentes)');
                     }
 
                     if (!utils.confirmar(
-                        'Importar backup irÃ¡ SUBSTITUIR todos os dados atuais. Deseja continuar?'
+                        'Importar backup irá SUBSTITUIR todos os dados atuais. Deseja continuar?'
                     )) {
                         return;
                     }
 
                     utils.mostrarToast('Importando dados...', 'info');
 
-                    // TRANSAÃ‡ÃƒO ATÃ”MICA: All-or-nothing
+                    // Transação atômica: all-or-nothing.
                     const stores = ['config', 'escolas', 'turmas', 'alunos', 'chamadas', 'eventos_nota'];
 
                     await db.transaction(stores, 'readwrite', (tx) => {
@@ -268,7 +268,7 @@ const exportModule = {
                 } catch (error) {
                     console.error('Erro ao processar backup:', error);
                     utils.mostrarToast(
-                        error.message || 'Arquivo de backup invÃ¡lido ou erro na importaÃ§Ã£o',
+                        error.message || 'Arquivo de backup inválido ou erro na importação',
                         'error'
                     );
                 }
@@ -323,7 +323,7 @@ const exportModule = {
             const alunosOriginais = await db.getByIndex('alunos', 'turmaId', turmaId);
             const escola = turma.escolaId ? await db.get('escolas', turma.escolaId) : null;
 
-            // MigraÃ§Ã£o entre professores: preserva dados do aluno e qrId, mas remove foto.
+            // Migração entre professores: preserva dados do aluno e qrId, mas remove foto.
             const alunosSemFoto = alunosOriginais.map((aluno) => {
                 const alunoClone = { ...aluno };
                 delete alunoClone.foto;
@@ -344,11 +344,11 @@ const exportModule = {
 
             const json = JSON.stringify(dados, null, 2);
             const turmaSlug = this._slug(turma.nome || 'turma');
-            const filename = `qrcodes_turma_${turmaSlug}_${this._formatarStampArquivo()}.cmf`;
+            const filename = `turma_professor_${turmaSlug}_${this._formatarStampArquivo()}.cmf`;
 
             const shareResult = await this._compartilharArquivoCompartilhamentoTurma(filename, json, turma.nome);
             if (shareResult.ok) {
-                utils.mostrarToast('Arquivo .cmf compartilhado', 'success');
+                utils.mostrarToast('Arquivo da turma compartilhado', 'success');
                 return;
             }
 
@@ -358,10 +358,10 @@ const exportModule = {
             }
 
             this._baixarArquivoCompartilhamentoTurma(filename, json);
-            utils.mostrarToast('Compartilhamento indisponivel. Arquivo baixado automaticamente.', 'warning');
+            utils.mostrarToast('Compartilhamento indisponivel. Arquivo da turma baixado automaticamente.', 'warning');
         } catch (e) {
             console.error(e);
-            utils.mostrarToast('Erro ao exportar QRCodes da turma', 'error');
+            utils.mostrarToast('Erro ao exportar arquivo da turma', 'error');
         }
     },
 
@@ -376,7 +376,7 @@ const exportModule = {
             const turmaLegada = raw?.data?.turma;
             const alunosLegados = raw?.data?.alunos;
             if (!turmaLegada || !Array.isArray(alunosLegados)) {
-                throw new Error('Estrutura de arquivo de QRCodes invalida');
+                throw new Error('Estrutura do arquivo da turma invalida');
             }
             raw = {
                 schemaVersion: Number(raw.schemaVersion || 1),
@@ -392,13 +392,13 @@ const exportModule = {
 
         const schemaVersion = Number(raw.schemaVersion);
         if (!Number.isFinite(schemaVersion)) {
-            throw new Error('Arquivo invalido: campo obrigatorio "schemaVersion" ausente');
+            throw new Error('Arquivo invalido: versao do arquivo ausente');
         }
         if (schemaVersion < 1) {
-            throw new Error(`Arquivo versao ${schemaVersion} nao suportado. Exporte novamente no app mais recente.`);
+            throw new Error(`Arquivo da turma na versao ${schemaVersion} nao suportada. Exporte novamente no app mais recente.`);
         }
         if (schemaVersion > 1) {
-            throw new Error(`Arquivo versao ${schemaVersion} incompativel com este app. Atualize o app para importar.`);
+            throw new Error(`Arquivo da turma na versao ${schemaVersion} incompativel com este app. Atualize o app para importar.`);
         }
 
         const obrigatorios = ['appVersion', 'exportedAt', 'turmaId', 'turmaNome', 'alunos'];
@@ -409,7 +409,7 @@ const exportModule = {
         }
 
         if (!String(raw.appVersion || '').trim()) {
-            throw new Error('Arquivo invalido: campo "appVersion" vazio');
+            throw new Error('Arquivo invalido: versao do app de origem ausente');
         }
 
         const exportedAtDate = new Date(raw.exportedAt);
@@ -481,7 +481,7 @@ const exportModule = {
         const resumo = `Turma: ${backup.turmaNome || turmaOriginal.nome || 'Sem nome'}\n` +
             `ID da turma: ${backup.turmaId}\n` +
             `Alunos no arquivo: ${alunosOriginais.length}\n\n` +
-            `Schema: v${backup.schemaVersion} | App: ${backup.appVersion}\n` +
+            `Versao do arquivo: v${backup.schemaVersion} | App de origem: ${backup.appVersion}\n` +
             `Exportado em: ${exportedAtLabel}\n\n` +
             `A turma sera importada como nova turma. Deseja continuar?`;
 
@@ -493,7 +493,7 @@ const exportModule = {
                 turmaIdArquivo
             );
             if (acaoTurmaExistente === 'cancelar') {
-                utils.mostrarToast('Importacao cancelada', 'warning');
+                utils.mostrarToast('Importacao do arquivo cancelada', 'warning');
                 return null;
             }
         }
@@ -537,7 +537,7 @@ const exportModule = {
                 `Cancelar: nao importar nada.`;
 
             if (!utils.confirmar(msgConflito)) {
-                utils.mostrarToast('Importacao cancelada por conflito de QR', 'warning');
+                utils.mostrarToast('Importacao cancelada por conflito de identificacao dos alunos', 'warning');
                 return null;
             }
             importarParcialSemConflito = true;
@@ -556,7 +556,7 @@ const exportModule = {
         const modoTexto = acaoTurmaExistente === 'substituir'
             ? 'substituindo turma existente...'
             : (acaoTurmaExistente === 'mesclar' ? 'mesclando na turma existente...' : 'criando nova turma...');
-        utils.mostrarToast(`Recebendo QRCodes da turma (${modoTexto})`, 'info');
+        utils.mostrarToast(`Recebendo arquivo da turma (${modoTexto})`, 'info');
 
         const escolaResolvida = await this._resolverEscolaParaTurmaBackup(turmaOriginal, escolaOriginal);
         const alunosCriados = [];
@@ -648,8 +648,8 @@ const exportModule = {
             ? ' (substituicao)'
             : (acaoTurmaExistente === 'mesclar' ? ' (mescla)' : '');
         const msgFinal = importarParcialSemConflito
-            ? `Recebimento concluido${sufixoModo}: ${alunosCriados.length} aluno(s) importado(s), ${conflitos.length} conflito(s) ignorado(s).`
-            : `Recebimento concluido${sufixoModo}: ${alunosCriados.length} aluno(s) importado(s).`;
+            ? `Importacao concluida${sufixoModo}: ${alunosCriados.length} aluno(s) importado(s), ${conflitos.length} conflito(s) ignorado(s).`
+            : `Importacao concluida${sufixoModo}: ${alunosCriados.length} aluno(s) importado(s).`;
 
         utils.mostrarToast(msgFinal, 'success');
         return {
@@ -687,15 +687,9 @@ const exportModule = {
                         const resultado = await this.importarTurmaProfessorRaw(rawBackup);
                         resolve(resultado);
                     } catch (error) {
-                        console.error('Erro ao receber QRCodes da turma:', error);
-                        if (typeof pilotMetrics?.recordEvent === 'function') {
-                            pilotMetrics.recordEvent('import_turma_professor_error', {
-                                message: String(error?.message || ''),
-                                name: String(error?.name || '')
-                            });
-                        }
+                        console.error('Erro ao receber arquivo da turma:', error);
                         const msgErro = String(error?.message || '');
-                        const mensagem = msgErro || 'Erro ao receber QRCodes da turma';
+                        const mensagem = msgErro || 'Erro ao receber arquivo da turma';
                         utils.mostrarToast(mensagem, 'error');
                         resolve(null);
                     }
@@ -710,7 +704,7 @@ const exportModule = {
 
     migrateTurmaBackupIfNeeded(raw) {
         if (!raw || typeof raw !== 'object') {
-            throw new Error('Arquivo invÃ¡lido');
+            throw new Error('Arquivo inválido');
         }
 
         // Legacy simples: { turma, alunos, chamadas, exportedAt }
@@ -729,15 +723,15 @@ const exportModule = {
         }
 
         if (raw.schemaVersion > 1) {
-            throw new Error(`Backup de turma versÃ£o ${raw.schemaVersion} incompatÃ­vel. Atualize o app.`);
+            throw new Error(`Backup de turma versão ${raw.schemaVersion} incompatível. Atualize o app.`);
         }
 
         if (raw.backupType !== 'turma') {
-            throw new Error('Este arquivo nÃ£o â€¢ um backup de turma');
+            throw new Error('Este arquivo não é um backup de turma');
         }
 
         if (!raw.data || !raw.data.turma || !Array.isArray(raw.data.alunos) || !Array.isArray(raw.data.chamadas)) {
-            throw new Error('Estrutura de backup de turma invÃ¡lida');
+            throw new Error('Estrutura de backup de turma inválida');
         }
 
         return raw;
@@ -769,7 +763,7 @@ const exportModule = {
                         const resumo = `Turma: ${turmaOriginal.nome || 'Sem nome'}\n` +
                             `Alunos: ${alunosOriginais.length}\n` +
                             `Chamadas: ${chamadasOriginais.length}\n\n` +
-                            `A turma serÃ¡ restaurada como NOVA turma. Deseja continuar?`;
+                            `A turma será restaurada como NOVA turma. Deseja continuar?`;
 
                         if (!utils.confirmar(resumo)) {
                             resolve(null);
@@ -823,7 +817,7 @@ const exportModule = {
                                 existentes = await db.getByIndex('alunos', 'qrId', qrId);
                                 tentativas++;
                                 if (tentativas > 40) {
-                                    throw new Error('NÃ£o foi possÃ­vel gerar qrId Ãºnico para aluno importado');
+                                    throw new Error('Não foi possível gerar qrId único para aluno importado');
                                 }
                             }
 
@@ -850,7 +844,7 @@ const exportModule = {
                                         novoId = await db.add('alunos', novoAluno);
                                     } catch (eInsert) {
                                         if (eInsert?.name === 'ConstraintError' && tentativasInsert < 3) {
-                                            // ColisÃ£o de qrId â€¢ gera um novo completamente aleatÃ³rio
+                                            // Colisão de qrId: gera um novo completamente aleatório.
                                             tentativasInsert++;
                                             qrIdSeguro = utils.gerarQrId();
                                             qrIdsUsadosImport.add(qrIdSeguro);
@@ -886,7 +880,7 @@ const exportModule = {
                                 chamadasCriadas.push(chamadaId);
                             }
                         } catch (eImport) {
-                            // Remove tudo que foi criado para nÃ£o deixar dados Ã³rfÃ£os
+                            // Remove tudo que foi criado para não deixar dados órfãos.
                             await limparImporteParcial();
                             throw eImport;
                         }
@@ -899,16 +893,10 @@ const exportModule = {
                         resolve(novaTurmaId);
                     } catch (error) {
                         console.error('Erro ao importar backup de turma:', error);
-                        if (typeof pilotMetrics?.recordEvent === 'function') {
-                            pilotMetrics.recordEvent('import_turma_backup_error', {
-                                message: String(error?.message || ''),
-                                name: String(error?.name || '')
-                            });
-                        }
                         const msg = String(error?.message || '');
                         const ehErroConstraint = error?.name === 'ConstraintError' || /constraint/i.test(msg);
                         const mensagem = ehErroConstraint
-                            ? 'Erro de dados no backup: conflito de identificadores Ãºnicos (ex.: QR).'
+                            ? 'Erro de dados no backup: conflito de identificadores únicos (ex.: QR).'
                             : (error.message || 'Erro ao recuperar backup da turma');
                         utils.mostrarToast(
                             mensagem,
@@ -939,7 +927,7 @@ const exportModule = {
             }
 
             const colunas = [
-                { field: 'matricula', label: 'MatrÃ­cula' },
+                { field: 'matricula', label: 'Matrícula' },
                 { field: 'nome', label: 'Nome' },
                 { field: 'email', label: 'Email' }
             ];
@@ -955,7 +943,7 @@ const exportModule = {
         }
     },
 
-    // Gerar relatÃ³rio de frequÃªncia geral
+    // Gerar relatório de frequência geral
     async gerarRelatorioFrequencia(turmaId) {
         try {
             const turma = await db.get('turmas', turmaId);
@@ -965,11 +953,11 @@ const exportModule = {
             const alunos = await db.getByIndex('alunos', 'turmaId', turmaId);
 
             if (chamadas.length === 0) {
-                utils.mostrarToast('Nenhuma chamada para gerar relatÃ³rio', 'warning');
+            utils.mostrarToast('Nenhuma chamada para gerar relatório', 'warning');
                 return;
             }
 
-            // Calcular frequÃªncia por aluno
+            // Calcular frequência por aluno
             const frequencia = alunos.map(aluno => {
                 const presencas = chamadas.filter(c => {
                     if (c.registros) {
@@ -997,11 +985,11 @@ const exportModule = {
             frequencia.sort((a, b) => a.nome.localeCompare(b.nome));
 
             const colunas = [
-                { field: 'matricula', label: 'MatrÃ­cula' },
+                { field: 'matricula', label: 'Matrícula' },
                 { field: 'nome', label: 'Nome' },
-                { field: 'presencas', label: 'PresenÃ§as' },
+                { field: 'presencas', label: 'Presenças' },
                 { field: 'totalChamadas', label: 'Total Chamadas' },
-                { field: 'percentual', label: 'FrequÃªncia' }
+                { field: 'percentual', label: 'Frequência' }
             ];
 
             const csv = utils.gerarCSV(frequencia, colunas);
@@ -1009,10 +997,10 @@ const exportModule = {
                 .replace(/[^a-z0-9.-]/gi, '_');
 
             utils.downloadFile(filename, csv, 'text/csv;charset=utf-8;');
-            utils.mostrarToast('RelatÃ³rio de frequÃªncia exportado!', 'success');
+            utils.mostrarToast('Relatório de frequência exportado!', 'success');
         } catch (e) {
             console.error(e);
-            utils.mostrarToast("Erro ao gerar relatÃ³rio", 'error');
+            utils.mostrarToast("Erro ao gerar relatório", 'error');
         }
     }
 };
