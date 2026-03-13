@@ -48,6 +48,7 @@
     --radius-md: 14px;
     --radius-lg: 18px;
 
+    --accent-escolas: #6f879d;
     --accent-turmas: #6d86ad;
     --accent-alunos: #8f829f;
     --accent-chamadas: #6d9a84;
@@ -439,6 +440,7 @@ body {
     margin-bottom: 4px;
 }
 
+.stat-icon--escolas { color: var(--accent-escolas); }
 .stat-icon--turmas  { color: var(--accent-turmas); }
 .stat-icon--alunos  { color: var(--accent-alunos); }
 .stat-icon--chamadas { color: var(--accent-chamadas); }
@@ -459,6 +461,7 @@ body {
     letter-spacing: 0.6px;
 }
 
+.stat-label--escolas { color: var(--accent-escolas); }
 .stat-label--turmas  { color: var(--accent-turmas); }
 .stat-label--alunos  { color: var(--accent-alunos); }
 .stat-label--chamadas { color: var(--accent-chamadas); }
@@ -505,42 +508,6 @@ body {
 
 .search-controls .search-box {
     padding: 0;
-}
-
-.multi-escola-toggle-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.multi-escola-toggle {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 14px;
-    color: var(--gray-700);
-    cursor: pointer;
-    white-space: nowrap;
-    padding: 0 16px;
-    background: var(--white);
-    border: 2px solid var(--gray-300);
-    border-radius: var(--border-radius);
-    transition: var(--transition);
-    height: 48px;
-    user-select: none;
-}
-
-.multi-escola-toggle:hover {
-    border-color: var(--primary-light);
-    background: var(--gray-100);
-}
-
-.multi-escola-toggle input {
-    width: 20px;
-    height: 20px;
-    margin: 0;
-    cursor: pointer;
-    accent-color: var(--primary);
 }
 
 /* .multi-escola-hint {
@@ -2017,6 +1984,10 @@ body {
     animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.modal-dialog-compact {
+    max-width: 420px;
+}
+
 @keyframes slideUp {
     from {
         opacity: 0;
@@ -2062,6 +2033,13 @@ body {
     padding: 20px;
 }
 
+.modal-helper-text {
+    color: var(--gray-600);
+    margin-bottom: 16px;
+    line-height: 1.45;
+    white-space: pre-line;
+}
+
 .modal-footer {
     padding: 20px;
     border-top: 1px solid var(--gray-200);
@@ -2102,6 +2080,17 @@ body {
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
 }
 
+.modal-choice-options {
+    display: grid;
+    gap: 12px;
+}
+
+.modal-choice-options .btn {
+    justify-content: flex-start;
+    text-align: left;
+    min-height: 52px;
+}
+
 .toggle-field {
     display: flex;
     align-items: center;
@@ -2129,6 +2118,23 @@ body {
 .toggle-field-copy .text-muted {
     margin: 0;
     line-height: 1.35;
+}
+
+.escolas-contexto-group {
+    margin-bottom: 24px;
+}
+
+.modal-section-title {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    margin: 0 0 12px;
+}
+
+.modal-section-title--list {
+    margin-top: 28px;
 }
 
 .toggle-switch {
@@ -2632,22 +2638,6 @@ body {
     }
 }
 
-/* ===== TELA TURMAS — controles reorganizados ===== */
-
-/* Toggle + Gerenciar Escolas na mesma linha */
-.multi-escola-toggle-wrapper {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    flex-wrap: nowrap;
-}
-
-#btn-gerenciar-escolas-container {
-    padding: 0;
-    flex-shrink: 0;
-}
 
 /* Botão Adicionar Turma: pill centralizado, largura total */
 .adicionar-turma-wrapper {

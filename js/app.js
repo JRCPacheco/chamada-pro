@@ -9,6 +9,8 @@ const app = {
     _initRunning: false,
     _configCache: null, // Cache de configuração
     _declarativeEventsBound: false,
+    _modalResolvers: {},
+    _modalState: {},
 
     _getAppVersionLabel() {
         try {
@@ -52,6 +54,10 @@ const app = {
             case 'app-concluir-onboarding': return this.concluirOnboarding(true);
             case 'close-modal': return this.fecharModal(el.dataset.modalId);
             case 'close-nearest-modal': return el.closest('.modal')?.remove();
+            case 'app-modal-input-confirm': return this.confirmarModalTexto();
+            case 'app-modal-input-cancel': return this.cancelarModalDialogo('modal-app-text-input');
+            case 'app-modal-choice-select': return this.confirmarModalEscolha(el.dataset.choiceValue);
+            case 'app-modal-choice-cancel': return this.cancelarModalDialogo('modal-app-choice');
             case 'app-voltar-para-turma': return this.voltarParaTurma();
             case 'app-salvar-professor': return this.salvarNomeProfessor();
             case 'app-remover-professor': return this.removerNomeProfessor();
@@ -482,6 +488,7 @@ const app = {
         if (modal) {
             modal.classList.remove('active');
         }
+        this._resolverModalPendente(modalId, null);
     },
 
     // Abrir modal
@@ -490,6 +497,143 @@ const app = {
         if (modal) {
             modal.classList.add('active');
         }
+    },
+
+    _fecharModalSilencioso(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    },
+
+    _resolverModalPendente(modalId, valor) {
+        const resolver = this._modalResolvers[modalId];
+        if (typeof resolver === 'function') {
+            delete this._modalResolvers[modalId];
+            delete this._modalState[modalId];
+            resolver(valor);
+        }
+    },
+
+    cancelarModalDialogo(modalId) {
+        this._fecharModalSilencioso(modalId);
+        this._resolverModalPendente(modalId, null);
+    },
+
+    abrirModalTexto({ title, message = '', label, value = '', placeholder = '', confirmText = 'Salvar', cancelText = 'Cancelar', validate = null }) {
+        const modalId = 'modal-app-text-input';
+        const titleEl = document.getElementById('modal-app-text-input-title');
+        const messageEl = document.getElementById('modal-app-text-input-message');
+        const labelEl = document.getElementById('modal-app-text-input-label');
+        const inputEl = document.getElementById('modal-app-text-input-field');
+        const confirmEl = document.getElementById('modal-app-text-input-confirm');
+        const cancelEl = document.getElementById('modal-app-text-input-cancel');
+
+        if (!titleEl || !messageEl || !labelEl || !inputEl || !confirmEl || !cancelEl) {
+            return Promise.resolve(null);
+        }
+
+        titleEl.textContent = title || 'Editar';
+        messageEl.textContent = message || '';
+        messageEl.style.display = message ? '' : 'none';
+        labelEl.textContent = label || 'Valor';
+        inputEl.value = value || '';
+        inputEl.placeholder = placeholder || '';
+        confirmEl.textContent = confirmText || 'Salvar';
+        cancelEl.textContent = cancelText || 'Cancelar';
+        this._modalState[modalId] = { validate };
+        inputEl.onkeydown = (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                this.confirmarModalTexto();
+            }
+        };
+
+        this.abrirModal(modalId);
+        requestAnimationFrame(() => {
+            inputEl.focus();
+            inputEl.select();
+        });
+
+        return new Promise((resolve) => {
+            this._modalResolvers[modalId] = resolve;
+        });
+    },
+
+    confirmarModalTexto() {
+        const modalId = 'modal-app-text-input';
+        const inputEl = document.getElementById('modal-app-text-input-field');
+        const value = inputEl ? inputEl.value : '';
+        const validate = this._modalState?.[modalId]?.validate;
+
+        if (typeof validate === 'function') {
+            const resultado = validate(value);
+            if (resultado !== true) {
+                utils.mostrarToast(resultado || 'Revise o valor informado', 'warning');
+                inputEl?.focus();
+                return;
+            }
+        }
+
+        this._fecharModalSilencioso(modalId);
+        this._resolverModalPendente(modalId, value);
+    },
+
+    abrirModalEscolha({ title, message, options = [] }) {
+        const modalId = 'modal-app-choice';
+        const titleEl = document.getElementById('modal-app-choice-title');
+        const messageEl = document.getElementById('modal-app-choice-message');
+        const buttons = [
+            document.getElementById('modal-app-choice-option-1'),
+            document.getElementById('modal-app-choice-option-2'),
+            document.getElementById('modal-app-choice-option-3')
+        ];
+
+        if (!titleEl || !messageEl || buttons.some((btn) => !btn)) {
+            return Promise.resolve(null);
+        }
+
+        titleEl.textContent = title || 'Escolha uma ação';
+        messageEl.textContent = message || '';
+
+        buttons.forEach((btn, index) => {
+            const option = options[index];
+            if (!option) {
+                btn.style.display = 'none';
+                return;
+            }
+            btn.style.display = '';
+            btn.textContent = option.label;
+            btn.dataset.choiceValue = option.value;
+            btn.className = option.variant === 'primary' ? 'btn btn-primary' : 'btn btn-secondary';
+        });
+
+        this.abrirModal(modalId);
+        requestAnimationFrame(() => {
+            buttons.find((btn) => btn.style.display !== 'none')?.focus();
+        });
+
+        return new Promise((resolve) => {
+            this._modalResolvers[modalId] = resolve;
+        });
+    },
+
+    async confirmarAcao({ title = 'Confirmar ação', message = '', confirmText = 'Continuar', cancelText = 'Cancelar' }) {
+        const resposta = await this.abrirModalEscolha({
+            title,
+            message,
+            options: [
+                { value: 'confirmar', label: confirmText, variant: 'primary' },
+                { value: 'cancelar', label: cancelText, variant: 'secondary' }
+            ]
+        });
+        return resposta === 'confirmar';
+    },
+
+    confirmarModalEscolha(valor) {
+        const modalId = 'modal-app-choice';
+        this._fecharModalSilencioso(modalId);
+        this._resolverModalPendente(modalId, valor || null);
     },
 
     // Abrir modal Sobre
@@ -602,7 +746,7 @@ const app = {
     async aplicarConfiguracoesInterface() {
         const { multi_escola } = await this._getAppConfig();
 
-        console.log('?? UI: Atualizando interface Multi-Escola:', multi_escola);
+        console.log('[ui] Atualizando interface Multi-Escola:', multi_escola);
 
         // Elementos exclusivos multi-escola
         const multiEscolaElements = document.querySelectorAll('.multi-escola-only');
@@ -672,25 +816,26 @@ const app = {
     },
 
     // Limpar todos os dados
-    limparTodosDados() {
-        if (!utils.confirmar(
-            'ATENÇÃO: Esta ação irá APAGAR TODOS OS DADOS permanentemente. Deseja continuar?'
-        )) {
+    async limparTodosDados() {
+        const confirmarPrimeiraEtapa = await this.confirmarAcao({
+            title: 'Apagar todos os dados',
+            message: 'Esta acao ira apagar permanentemente todos os dados do app neste aparelho.',
+            confirmText: 'Continuar',
+            cancelText: 'Cancelar'
+        });
+        if (!confirmarPrimeiraEtapa) {
             return;
         }
 
-        if (!utils.confirmar(
-            'Tem CERTEZA ABSOLUTA? Esta ação NÃO PODE ser desfeita!'
-        )) {
+        const confirmarSegundaEtapa = await this.confirmarAcao({
+            title: 'Confirmacao final',
+            message: 'Tem certeza absoluta? Esta acao nao pode ser desfeita.',
+            confirmText: 'Apagar tudo',
+            cancelText: 'Voltar'
+        });
+        if (!confirmarSegundaEtapa) {
             return;
         }
-
-        const dbName = (typeof PRODUCT_CONFIG !== 'undefined' && PRODUCT_CONFIG?.dbName)
-            ? PRODUCT_CONFIG.dbName
-            : "chamada_facil_db";
-        indexedDB.deleteDatabase(dbName);
-        this._configCache = null;
-        utils.mostrarToast('Todos os dados foram apagados', 'success');
 
         setTimeout(() => {
             location.reload();
@@ -792,7 +937,7 @@ if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
             .then((registration) => {
                 let refreshTriggered = false;
-                const avisarAtualizacao = (worker) => {
+                const avisarAtualizacao = async (worker) => {
                     if (typeof utils !== 'undefined' && typeof utils.mostrarToast === 'function') {
                         utils.mostrarToast('Nova versao disponivel. Recarregue para atualizar.', 'info', 5000);
                     } else {
@@ -801,17 +946,16 @@ if ('serviceWorker' in navigator) {
 
                     if (!worker) return;
 
-                    const atualizarAgora = confirm('Nova versao disponivel. Atualizar agora?');
+                    const atualizarAgora = await app.confirmarAcao({
+                        title: 'Atualizacao disponivel',
+                        message: 'Nova versao disponivel. Atualizar agora?',
+                        confirmText: 'Atualizar agora',
+                        cancelText: 'Depois'
+                    });
                     if (atualizarAgora) {
                         worker.postMessage({ type: 'SKIP_WAITING' });
                     }
                 };
-
-                navigator.serviceWorker.addEventListener('controllerchange', () => {
-                    if (refreshTriggered) return;
-                    refreshTriggered = true;
-                    window.location.reload();
-                });
 
                 registration.addEventListener('updatefound', () => {
                     const newWorker = registration.installing;
@@ -840,6 +984,8 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
+
+
 
 
 

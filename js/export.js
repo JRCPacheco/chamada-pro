@@ -232,9 +232,13 @@ const exportModule = {
                         throw new Error('Arquivo de backup inválido (estruturas ausentes)');
                     }
 
-                    if (!utils.confirmar(
-                        'Importar backup irá SUBSTITUIR todos os dados atuais. Deseja continuar?'
-                    )) {
+                    const confirmarImportacao = await app.confirmarAcao({
+                        title: 'Importar backup completo',
+                        message: 'Esta ação vai substituir todos os dados atuais do app neste aparelho.',
+                        confirmText: 'Importar backup',
+                        cancelText: 'Cancelar'
+                    });
+                    if (!confirmarImportacao) {
                         return;
                     }
 
@@ -447,22 +451,22 @@ const exportModule = {
         return raw;
     },
 
-    _perguntarAcaoTurmaExistente(turmaNome, turmaId) {
-        const msg = `Ja existe uma turma com este ID.\n\n` +
-            `Turma: ${turmaNome || 'Sem nome'}\n` +
-            `ID: ${turmaId}\n\n` +
-            `Digite:\n` +
-            `M = Mesclar alunos\n` +
-            `S = Substituir alunos da turma existente\n` +
-            `C = Cancelar importacao`;
+    async _perguntarAcaoTurmaExistente(turmaNome, turmaId) {
+        const resposta = await app.abrirModalEscolha({
+            title: 'Turma ja existente',
+            message:
+                `Ja existe uma turma com este identificador.\n\n` +
+                `Turma: ${turmaNome || 'Sem nome'}\n` +
+                `ID: ${turmaId}\n\n` +
+                `Escolha como deseja continuar a importacao.`,
+            options: [
+                { value: 'mesclar', label: 'Mesclar alunos nesta turma', variant: 'primary' },
+                { value: 'substituir', label: 'Substituir alunos da turma existente', variant: 'secondary' },
+                { value: 'cancelar', label: 'Cancelar importacao', variant: 'secondary' }
+            ]
+        });
 
-        const resposta = prompt(msg, 'M');
-        if (resposta === null) return 'cancelar';
-
-        const opcao = String(resposta || '').trim().toUpperCase();
-        if (opcao === 'S') return 'substituir';
-        if (opcao === 'C') return 'cancelar';
-        return 'mesclar';
+        return resposta || 'cancelar';
     },
 
     async importarTurmaProfessorRaw(rawBackup) {
@@ -485,10 +489,16 @@ const exportModule = {
             `Exportado em: ${exportedAtLabel}\n\n` +
             `A turma sera importada como nova turma. Deseja continuar?`;
 
-        if (!utils.confirmar(resumo)) return null;
+        const confirmarResumo = await app.confirmarAcao({
+            title: 'Receber arquivo da turma',
+            message: resumo,
+            confirmText: 'Continuar importacao',
+            cancelText: 'Cancelar'
+        });
+        if (!confirmarResumo) return null;
 
         if (turmaExistente) {
-            acaoTurmaExistente = this._perguntarAcaoTurmaExistente(
+            acaoTurmaExistente = await this._perguntarAcaoTurmaExistente(
                 backup.turmaNome || turmaExistente.nome,
                 turmaIdArquivo
             );
@@ -536,7 +546,13 @@ const exportModule = {
                 `OK: importar apenas alunos sem conflito.\n` +
                 `Cancelar: nao importar nada.`;
 
-            if (!utils.confirmar(msgConflito)) {
+            const confirmarParcial = await app.confirmarAcao({
+                title: 'Conflitos encontrados',
+                message: msgConflito,
+                confirmText: 'Importar sem conflitos',
+                cancelText: 'Cancelar'
+            });
+            if (!confirmarParcial) {
                 utils.mostrarToast('Importacao cancelada por conflito de identificacao dos alunos', 'warning');
                 return null;
             }
@@ -765,7 +781,13 @@ const exportModule = {
                             `Chamadas: ${chamadasOriginais.length}\n\n` +
                             `A turma será restaurada como NOVA turma. Deseja continuar?`;
 
-                        if (!utils.confirmar(resumo)) {
+                        const confirmarRecuperacao = await app.confirmarAcao({
+                            title: 'Recuperar turma',
+                            message: resumo,
+                            confirmText: 'Recuperar como nova',
+                            cancelText: 'Cancelar'
+                        });
+                        if (!confirmarRecuperacao) {
                             resolve(null);
                             return;
                         }

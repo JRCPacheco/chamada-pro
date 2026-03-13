@@ -299,7 +299,12 @@ const alunos = {
             }
 
             if (this._reordenacaoAtiva) {
-                const podeTrocar = utils.confirmar('Você está no modo reordenação. Deseja cancelar a reordenação atual para trocar a política?');
+                const podeTrocar = await app.confirmarAcao({
+                    title: 'Cancelar reordenação',
+                    message: 'Você está no modo reordenação. Deseja cancelar a reordenação atual para trocar a política?',
+                    confirmText: 'Cancelar reordenação',
+                    cancelText: 'Voltar'
+                });
                 if (!podeTrocar) {
                     this._atualizarControlePolitica();
                     return;
@@ -308,7 +313,12 @@ const alunos = {
             }
 
             if (politicaAtual === 'manual' && novaPolitica !== 'manual') {
-                const confirmarSaidaManual = utils.confirmar('Esta turma está em modo manual. Ao sair desse modo, a ordem manual pode ser alterada automaticamente. Deseja continuar?');
+                const confirmarSaidaManual = await app.confirmarAcao({
+                    title: 'Sair do modo manual',
+                    message: 'Ao sair desse modo, a ordem manual da turma pode ser alterada automaticamente.',
+                    confirmText: 'Continuar',
+                    cancelText: 'Cancelar'
+                });
                 if (!confirmarSaidaManual) {
                     this._politicaNumeroAtual = politicaAtual;
                     this._atualizarControlePolitica();
@@ -317,7 +327,12 @@ const alunos = {
             }
 
             if (novaPolitica === 'alphabetical_shift') {
-                const confirmarReordenacao = utils.confirmar('A política Ordem alfabética renumera a turma inteira automaticamente. Confirmar alteração?');
+                const confirmarReordenacao = await app.confirmarAcao({
+                    title: 'Aplicar ordem alfabética',
+                    message: 'A política de ordem alfabética renumera a turma inteira automaticamente.',
+                    confirmText: 'Aplicar',
+                    cancelText: 'Cancelar'
+                });
                 if (!confirmarReordenacao) {
                     this._politicaNumeroAtual = politicaAtual;
                     this._atualizarControlePolitica();
@@ -786,7 +801,12 @@ const alunos = {
                 if (numeroDesejado !== null && numeroDesejado !== numeroAtual) {
                     const conflito = alunosTurma.find((a) => a.id !== original.id && Number(a.numeroChamada) === numeroDesejado);
                     if (conflito) {
-                        const confirmarTroca = utils.confirmar(`O numero ${numeroDesejado} ja pertence a ${conflito.nome}. Deseja trocar os numeros entre eles?`);
+                        const confirmarTroca = await app.confirmarAcao({
+                            title: 'Trocar numeros de chamada',
+                            message: `O numero ${numeroDesejado} ja pertence a ${conflito.nome}. Deseja trocar os numeros entre eles?`,
+                            confirmText: 'Trocar numeros',
+                            cancelText: 'Cancelar'
+                        });
                         if (!confirmarTroca) {
                             utils.mostrarToast('Escolha outro numero de chamada', 'warning');
                             return;
@@ -1247,7 +1267,13 @@ const alunos = {
 
     // Excluir evento de ponto
     async excluirEventoPonto(id) {
-        if (!utils.confirmar('Confirmar exclusão deste ponto?')) return;
+        const confirmarExclusao = await app.confirmarAcao({
+            title: 'Excluir ponto',
+            message: 'Confirmar exclusão deste ponto?',
+            confirmText: 'Excluir ponto',
+            cancelText: 'Cancelar'
+        });
+        if (!confirmarExclusao) return;
 
         try {
             await db.delete('eventos_nota', id);
@@ -1267,7 +1293,13 @@ const alunos = {
             return;
         }
 
-        if (!utils.confirmar('Tem certeza que deseja excluir este aluno? Todos os registros de chamada dele também serão apagados.')) {
+        const confirmarExclusaoAluno = await app.confirmarAcao({
+            title: 'Excluir aluno',
+            message: 'Tem certeza que deseja excluir este aluno? Todos os registros de chamada dele também serão apagados.',
+            confirmText: 'Excluir aluno',
+            cancelText: 'Cancelar'
+        });
+        if (!confirmarExclusaoAluno) {
             return;
         }
 
@@ -1553,9 +1585,12 @@ const alunos = {
             }
 
             if (alunosArray.length < 5) {
-                const ok = utils.confirmar(
-                    'A turma ainda tem poucos alunos cadastrados. Deseja gerar os QR Codes mesmo assim?'
-                );
+                const ok = await app.confirmarAcao({
+                    title: 'Gerar QR Codes',
+                    message: 'A turma ainda tem poucos alunos cadastrados. Deseja gerar os QR Codes mesmo assim?',
+                    confirmText: 'Gerar mesmo assim',
+                    cancelText: 'Cancelar'
+                });
                 if (!ok) return;
             }
 

@@ -98,14 +98,20 @@ const chamadas = {
             return;
         }
 
-        const confirmacaoInicial = utils.confirmar(
-            `Você selecionou ${ids.length} chamada(s). Deseja continuar com a exclusão?`
-        );
+        const confirmacaoInicial = await app.confirmarAcao({
+            title: 'Excluir chamadas selecionadas',
+            message: `Você selecionou ${ids.length} chamada(s). Deseja continuar com a exclusão?`,
+            confirmText: 'Continuar',
+            cancelText: 'Cancelar'
+        });
         if (!confirmacaoInicial) return;
 
-        const confirmacaoFinal = utils.confirmar(
-            `Confirma a exclusão PERMANENTE de ${ids.length} chamada(s)?`
-        );
+        const confirmacaoFinal = await app.confirmarAcao({
+            title: 'Confirmação final',
+            message: `Confirma a exclusão permanente de ${ids.length} chamada(s)?`,
+            confirmText: 'Excluir chamadas',
+            cancelText: 'Voltar'
+        });
         if (!confirmacaoFinal) return;
 
         try {
@@ -1463,7 +1469,13 @@ const chamadas = {
 
     // Deletar chamada
     async deletarChamada(chamadaId) {
-        if (!utils.confirmar('Tem certeza que deseja excluir esta chamada?')) {
+        const confirmarExclusao = await app.confirmarAcao({
+            title: 'Excluir chamada',
+            message: 'Tem certeza que deseja excluir esta chamada?',
+            confirmText: 'Excluir chamada',
+            cancelText: 'Cancelar'
+        });
+        if (!confirmarExclusao) {
             return;
         }
 

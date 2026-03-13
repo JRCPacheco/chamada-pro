@@ -625,7 +625,13 @@ const scanner = {
         const presencasCount = Object.values(this.chamadaAtual.registros || {}).filter(r => r.status === 'P').length;
 
         if (presencasCount === 0) {
-            if (!utils.confirmar('Nenhuma presença foi registrada. Deseja finalizar mesmo assim?')) {
+            const confirmarFinalizacao = await app.confirmarAcao({
+                title: 'Finalizar chamada',
+                message: 'Nenhuma presença foi registrada. Deseja finalizar mesmo assim?',
+                confirmText: 'Finalizar assim mesmo',
+                cancelText: 'Continuar lendo'
+            });
+            if (!confirmarFinalizacao) {
                 return;
             }
         }
@@ -669,4 +675,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
 

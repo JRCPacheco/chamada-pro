@@ -407,6 +407,9 @@ const escolas = {
         if (!modal) return;
 
         modal.classList.add('active');
+        const config = await app._getAppConfig();
+        const toggleMultiEscola = document.getElementById('config-multi-escola');
+        if (toggleMultiEscola) toggleMultiEscola.checked = !!config.multi_escola;
         await this.listarEscolas();
 
         // Limpar campos

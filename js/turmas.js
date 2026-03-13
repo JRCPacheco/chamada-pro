@@ -226,13 +226,13 @@ const turmas = {
     async atualizarStats() {
         // Stats requer contagem global
         // Isso pode ser pesado, mas para PWA local é ok
+        const allEscolas = await db.getAll('escolas');
         const allTurmas = await db.getAll('turmas');
         const allAlunos = await db.getAll('alunos');
-        const allChamadas = await db.getAll('chamadas');
 
+        document.getElementById('total-escolas').textContent = allEscolas.length;
         document.getElementById('total-turmas').textContent = allTurmas.length;
         document.getElementById('total-alunos').textContent = allAlunos.length;
-        document.getElementById('total-chamadas').textContent = allChamadas.length;
     },
 
     // Mostrar modal de nova turma
@@ -424,7 +424,13 @@ const turmas = {
             if (possuiRegistrosSegundoHorario) {
                 mensagem += '\n\nEsta turma já tem registros no 2º horário. Eles não serão apagados, mas podem deixar de aparecer em alguns relatórios enquanto a opção estiver desativada.';
             }
-            if (!confirm(mensagem)) return false;
+            const confirmarMudanca = await app.confirmarAcao({
+                title: 'Desativar 2º horário',
+                message: mensagem,
+                confirmText: 'Desativar',
+                cancelText: 'Cancelar'
+            });
+            if (!confirmarMudanca) return false;
         }
 
         turma.segundoHorarioAtivo = !!novoValor;
@@ -691,7 +697,12 @@ const turmas = {
             return;
         }
 
-        const confirmar = utils.confirmar(`Excluir ${ids.length} turma(s) selecionada(s)? Esta ação não pode ser desfeita.`);
+        const confirmar = await app.confirmarAcao({
+            title: 'Excluir turmas selecionadas',
+            message: `Excluir ${ids.length} turma(s) selecionada(s)? Esta ação não pode ser desfeita.`,
+            confirmText: 'Excluir selecionadas',
+            cancelText: 'Cancelar'
+        });
         if (!confirmar) return;
 
         try {
@@ -867,17 +878,27 @@ const turmas = {
             const turma = await db.get('turmas', turmaId);
             if (!turma) return;
 
-            const novoNome = prompt('Novo nome da turma:', turma.nome);
-            if (novoNome && novoNome.trim()) {
-                turma.nome = novoNome.trim();
-                await db.put('turmas', turma);
+            const novoNome = await app.abrirModalTexto({
+                title: 'Renomear turma',
+                message: 'Atualize apenas o nome exibido para esta turma.',
+                label: 'Nome da turma',
+                value: turma.nome || '',
+                placeholder: 'Ex: 3º Ano A - Matemática',
+                confirmText: 'Salvar nome',
+                cancelText: 'Cancelar',
+                validate: (value) => String(value || '').trim() ? true : 'Informe um nome para a turma'
+            });
 
-                utils.mostrarToast('Turma atualizada!', 'success');
-                await this.listar();
+            if (novoNome === null) return;
 
-                if (this.turmaAtual && this.turmaAtual.id === turmaId) {
-                    await this.abrirDetalhes(turmaId);
-                }
+            turma.nome = String(novoNome || '').trim();
+            await db.put('turmas', turma);
+
+            utils.mostrarToast('Turma atualizada!', 'success');
+            await this.listar();
+
+            if (this.turmaAtual && this.turmaAtual.id === turmaId) {
+                await this.abrirDetalhes(turmaId);
             }
         } catch (e) {
             console.error(e);
@@ -922,7 +943,13 @@ const turmas = {
             `• Todos os dados associados\n\n` +
             `Esta ação NÃO pode ser desfeita!`;
 
-        if (confirm(mensagem)) {
+        const confirmarExclusao = await app.confirmarAcao({
+            title: 'Excluir turma',
+            message: mensagem,
+            confirmText: 'Excluir turma',
+            cancelText: 'Cancelar'
+        });
+        if (confirmarExclusao) {
             await this.excluirTurmaCompleta(this.turmaAtual.id);
         }
     },
@@ -972,7 +999,13 @@ const turmas = {
     // Deletar turma (mantido para compatibilidade, redireciona para cascade)
     async deletar(turmaId) {
         // Redireciona para logica completa se tiver confirmação simples, mas ideal é usar confirmarExcluirTurma
-        if (!utils.confirmar('Tem certeza que deseja excluir esta turma?')) return;
+        const confirmar = await app.confirmarAcao({
+            title: 'Excluir turma',
+            message: 'Tem certeza que deseja excluir esta turma?',
+            confirmText: 'Excluir turma',
+            cancelText: 'Cancelar'
+        });
+        if (!confirmar) return;
 
         await this.excluirTurmaCompleta(turmaId);
     },

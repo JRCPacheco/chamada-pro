@@ -128,10 +128,6 @@ const utils = {
     },
 
     // Confirmar ação
-    confirmar(mensagem) {
-        return confirm(mensagem);
-    },
-
     // Sanitizar string para usar como ID
     sanitizeId(str) {
         return str.toLowerCase()

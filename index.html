@@ -117,6 +117,13 @@
         <div id="tela-turmas" class="screen active">
             <div class="turmas-header">
                 <div class="stats-row">
+                    <div class="stat-card" role="button" tabindex="0" data-action="escolas-mostrar-gerenciar" title="Gerenciar escolas">
+                        <div class="stat-icon stat-icon--escolas">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg>
+                        </div>
+                        <div class="stat-value" id="total-escolas">0</div>
+                        <div class="stat-label stat-label--escolas">Escolas</div>
+                    </div>
                     <div class="stat-card" role="button" tabindex="0" data-action="turmas-abrir-gerenciar" title="Gerenciar turmas">
                         <div class="stat-icon stat-icon--turmas">
                             <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
@@ -131,31 +138,11 @@
                         <div class="stat-value" id="total-alunos">0</div>
                         <div class="stat-label stat-label--alunos">Alunos</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon--chamadas">
-                            <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                        </div>
-                        <div class="stat-value" id="total-chamadas">0</div>
-                        <div class="stat-label stat-label--chamadas">Chamadas</div>
-                    </div>
                 </div>
             </div>
 
             <div class="search-controls">
-                <!-- Linha 1: toggle Várias escolas + Gerenciar Escolas -->
-                <div class="multi-escola-toggle-wrapper">
-                    <label class="multi-escola-toggle" for="config-multi-escola">
-                        <input type="checkbox" id="config-multi-escola">
-                        <span>Várias escolas</span>
-                    </label>
-                    <div id="btn-gerenciar-escolas-container" class="multi-escola-only hidden" style="display:none;">
-                        <button class="btn btn-secondary btn-sm" data-action="escolas-mostrar-gerenciar">
-                            <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg></span>Gerenciar Escolas
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Linha 2: filtro por escola (multi-escola only) -->
+                <!-- Linha 1: filtro por escola (multi-escola only) -->
                 <div id="filter-escola-container" class="filter-container multi-escola-only hidden" style="display: none;">
                     <label for="filter-escola"><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg></span>Filtrar por Escola:</label>
                     <select id="filter-escola">
@@ -163,7 +150,7 @@
                     </select>
                 </div>
 
-                <!-- Linha 3: botão Adicionar turma centralizado -->
+                <!-- Linha 2: botão Adicionar turma centralizado -->
                 <div class="adicionar-turma-wrapper" id="adicionar-turma-wrapper">
                     <button class="btn-adicionar-turma" data-action="turmas-mostrar-nova">
                         Adicionar turma
@@ -500,6 +487,43 @@
 
         </div>
 
+    </div>
+
+    <div id="modal-app-text-input" class="modal" data-overlay-close="modal-app-text-input">
+        <div class="modal-content modal-dialog-compact">
+            <div class="modal-header">
+                <h3 id="modal-app-text-input-title">Editar</h3>
+                <button class="btn-close" data-action="app-modal-input-cancel">×</button>
+            </div>
+            <div class="modal-body">
+                <p id="modal-app-text-input-message" class="modal-helper-text" style="display:none;"></p>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label id="modal-app-text-input-label" for="modal-app-text-input-field">Valor</label>
+                    <input type="text" id="modal-app-text-input-field" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-action="app-modal-input-cancel" id="modal-app-text-input-cancel">Cancelar</button>
+                <button class="btn btn-primary" data-action="app-modal-input-confirm" id="modal-app-text-input-confirm">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-app-choice" class="modal" data-overlay-close="modal-app-choice">
+        <div class="modal-content modal-dialog-compact">
+            <div class="modal-header">
+                <h3 id="modal-app-choice-title">Escolha uma ação</h3>
+                <button class="btn-close" data-action="app-modal-choice-cancel">×</button>
+            </div>
+            <div class="modal-body">
+                <p id="modal-app-choice-message" class="modal-helper-text"></p>
+                <div class="modal-choice-options">
+                    <button class="btn btn-primary" data-action="app-modal-choice-select" data-choice-value="mesclar" id="modal-app-choice-option-1">Mesclar</button>
+                    <button class="btn btn-secondary" data-action="app-modal-choice-select" data-choice-value="substituir" id="modal-app-choice-option-2">Substituir</button>
+                    <button class="btn btn-secondary" data-action="app-modal-choice-select" data-choice-value="cancelar" id="modal-app-choice-option-3">Cancelar</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal: Importação de alunos -->
@@ -866,6 +890,19 @@
                 <button class="btn-close" data-action="close-modal" data-modal-id="modal-gerenciar-escolas">×</button>
             </div>
             <div class="modal-body">
+                <div class="form-group escolas-contexto-group">
+                    <label class="toggle-field" for="config-multi-escola">
+                        <span class="toggle-field-copy">
+                            <span class="toggle-field-title">Várias escolas</span>
+                            <small class="text-muted">Ative somente se precisar cadastrar e filtrar turmas por mais de uma escola.</small>
+                        </span>
+                        <span class="toggle-switch">
+                            <input type="checkbox" id="config-multi-escola" />
+                            <span class="toggle-slider" aria-hidden="true"></span>
+                        </span>
+                    </label>
+                </div>
+                <div class="modal-section-title">Cadastrar nova escola</div>
                 <div class="form-group">
                     <label>Nome da Escola *</label>
                     <div style="display: flex; gap: 8px;">
@@ -895,7 +932,7 @@
                         data-change="escolas-processar-foto-nova">
                 </div>
 
-                <h4 style="margin-top: 24px; margin-bottom: 12px;">Escolas Cadastradas</h4>
+                <div class="modal-section-title modal-section-title--list">Escolas cadastradas</div>
                 <div id="lista-escolas-gerenciar" class="escolas-list">
                     <!-- Escolas serão inseridas aqui -->
                 </div>
