@@ -3,6 +3,14 @@
 
 const app = {
 
+    supportConfig: {
+        pixKey: 'b5ce2235-461f-4581-afdb-3b257fc56d0c',
+        pixCode: '00020101021126580014br.gov.bcb.pix0136b5ce2235-461f-4581-afdb-3b257fc56d0c5204000053039865802BR5916JOSE R C PACHECO6011JOAO PESSOA62070503***63042ADD',
+        email: 'contato@chamadafacil.net.br',
+        whatsappDisplay: '(83) 99402-3009',
+        whatsappLink: 'https://wa.me/5583994023009'
+    },
+
     telaAtual: null,
 
     // Flag de inicialização
@@ -65,6 +73,10 @@ const app = {
             case 'app-importar-backup': return this.importarBackup();
             case 'app-limpar-dados': return this.limparTodosDados();
             case 'app-abrir-sobre': return this.abrirSobre();
+            case 'app-copiar-pix-chave': return this.copiarPixChave();
+            case 'app-copiar-pix-codigo': return this.copiarPixCodigo();
+            case 'app-contato-email': return this.abrirContatoEmail();
+            case 'app-contato-whatsapp': return this.abrirContatoWhatsapp();
             case 'menu-ir-turmas': this.mostrarTela('tela-turmas'); return this.fecharModal('modal-menu');
             case 'menu-ir-config': this.mostrarTela('tela-config'); return this.fecharModal('modal-menu');
             case 'menu-abrir-ajuda': this.mostrarAjuda(); return this.fecharModal('modal-menu');
@@ -640,6 +652,22 @@ const app = {
     abrirSobre() {
         this.fecharModal('modal-menu');
         this.abrirModal('modal-sobre');
+    },
+
+    copiarPixChave() {
+        utils.copiarParaClipboard(this.supportConfig.pixKey);
+    },
+
+    copiarPixCodigo() {
+        utils.copiarParaClipboard(this.supportConfig.pixCode);
+    },
+
+    abrirContatoEmail() {
+        window.location.href = `mailto:${this.supportConfig.email}`;
+    },
+
+    abrirContatoWhatsapp() {
+        window.open(this.supportConfig.whatsappLink, '_blank', 'noopener,noreferrer');
     },
 
     // Setup de listeners de configurações

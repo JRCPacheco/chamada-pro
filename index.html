@@ -473,11 +473,11 @@
                 <h3>Backup do aplicativo</h3>
 
                 <button class="btn btn-secondary btn-block" data-action="app-exportar-backup">
-                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z"/><path d="M3 8.5V16l9 4 9-4V8.5"/><path d="M12 13v7"/></svg></span>Exportar Backup do aplicativo
+                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z"/><path d="M3 8.5V16l9 4 9-4V8.5"/><path d="M12 13v7"/></svg></span>Exportar Backup
                 </button>
 
                 <button class="btn btn-secondary btn-block" data-action="app-importar-backup">
-                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 21V9"/><path d="m17 14-5-5-5 5"/><path d="M4 3h16"/></svg></span>Importar Backup do aplicativo
+                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 21V9"/><path d="m17 14-5-5-5 5"/><path d="M4 3h16"/></svg></span>Importar Backup
                 </button>
 
                 <button class="btn btn-danger btn-block" data-action="app-limpar-dados">
@@ -987,28 +987,57 @@
                 <button class="btn-close" data-action="close-modal" data-modal-id="modal-sobre">×</button>
             </div>
             <div class="modal-body">
-                <p><strong>Chamada Fácil</strong></p>
-                <p>Sistema de chamada escolar com QR Code, focado em agilidade para professores.</p>
+                <div class="about-section">
+                    <p><strong>Chamada Fácil</strong></p>
+                    <p>Sistema de chamada escolar com QR Code, focado em agilidade para professores.</p>
+                    <p style="margin-top: 12px;">Versão atual: <strong>Free</strong> <span style="color: var(--gray-500);">(<span data-app-version>v0.0.0-dev</span>)</span></p>
+                </div>
 
-                <p style="margin-top: 12px;">
-                    Versão: <strong data-app-version>v0.0.0-dev</strong><br>
-                </p>
+                <div class="about-section">
+                    <div class="modal-section-title">Sobre a versão Free</div>
+                    <p>Esta é a versão Free do Chamada Fácil: gratuita, funcional e pensada para uso imediato.</p>
+                    <p>Ela receberá apenas atualizações essenciais de manutenção e estabilidade.</p>
+                    <p>As próximas evoluções do projeto serão lançadas nas versões Lite e Pro.</p>
+                </div>
 
-                <p style="margin-top: 12px;">
-                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>E-mail:
-                    <a href="mailto:contato@chamadafacil.net.br">
+                <div class="about-section">
+                    <div class="modal-section-title">Apoiar o projeto</div>
+                    <p>Se o app te ajuda no dia a dia, você pode apoiar o projeto com um cafezinho.</p>
+                    <div class="about-actions">
+                        <button class="btn btn-secondary btn-sm" data-action="app-copiar-pix-chave">Copiar chave Pix</button>
+                        <button class="btn btn-secondary btn-sm" data-action="app-copiar-pix-codigo">Copiar código Pix</button>
+                    </div>
+                </div>
+
+                <div class="about-section">
+                    <div class="modal-section-title">Contato e sugestões</div>
+                    <p>
+                        <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
                         contato@chamadafacil.net.br
-                    </a>
-                </p>
-                <p style="margin-top: 12px;">
-                    © 2026 - Todos os direitos reservados
-                </p>
-                <div style="margin-top: 24px; text-align: center;">
+                    </p>
+                    <p>
+                        <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.63 2.62a2 2 0 0 1-.45 2.11L8 9.91a16 16 0 0 0 6.09 6.09l1.46-1.29a2 2 0 0 1 2.11-.45c.84.3 1.72.51 2.62.63A2 2 0 0 1 22 16.92z"/></svg></span>
+                        WhatsApp: (83) 99402-3009
+                    </p>
+                    <div class="about-actions">
+                        <button class="btn btn-secondary btn-sm" data-action="app-contato-email">Enviar e-mail</button>
+                        <button class="btn btn-secondary btn-sm" data-action="app-contato-whatsapp">Abrir WhatsApp</button>
+                    </div>
+                </div>
+
+                <div class="about-section">
+                    <div class="modal-section-title">Lite e Pro</div>
+                    <p>Quer receber notícias sobre as próximas versões Lite e Pro?</p>
+                    <p>Entre em contato com a gente por e-mail ou WhatsApp e peça para entrar na lista de interesse.</p>
+                </div>
+
+                <div class="about-actions about-actions--footer">
                     <a href="https://www.chamadafacil.net.br" target="_blank" rel="noopener noreferrer" class="btn btn-primary"
                         style="text-decoration: none; display: inline-block;">
                         <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10Z"/></svg></span>Site Oficial
                     </a>
                 </div>
+                <p style="margin-top: 16px;">© 2026 - Todos os direitos reservados</p>
             </div>
         </div>
     </div>
