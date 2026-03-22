@@ -1,8 +1,8 @@
-// Configuracao do produto (Lite/Pro) para este build.
-// Neste repo, o padrao atual e Lite.
+// Configuracao do produto (Free) para este build.
+// Neste repo, separamos o código da versão Free da versão Lite/Pro (que terão códigos compartilhados).
 const PRODUCT_CONFIG = Object.freeze({
-    productKey: 'lite',
-    productLabel: 'Chamada Facil Lite',
+    productKey: 'free',
+    productLabel: 'Chamada Facil Free',
     dbName: 'chamada_facil_lite_db',
     signaling: Object.freeze({
         enabled: false,

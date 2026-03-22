@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
@@ -6,7 +6,7 @@
     <meta http-equiv="Content-Security-Policy"
         content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; manifest-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' blob:; worker-src 'self' blob:">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Chamada Fácil - Scanner de Presença</title>
+    <title>Chamada Facil - Scanner de Presenca</title>
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#212F52">
@@ -14,7 +14,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Chamada Facil">
-    <meta name="description" content="Sistema inteligente de controle de presença via QR Code para professores">
+    <meta name="description" content="Sistema inteligente de controle de presenca via QR Code para professores">
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
@@ -38,9 +38,10 @@
     <!-- Loading Screen -->
     <div id="loading-screen" class="loading-screen">
         <div class="loading-content">
-            <img src="assets/logo1024wt.svg" alt="Chamada Fácil" class="logo-img">
-            <!-- <div class="logo">✓</div> -->
-            <h1><span style="color:#ffffff;">Chamada</span> <span style="color:#6ABF57;">Fácil</span></h1>
+            <img src="assets/logo1024wt.svg" alt="Chamada Facil" class="logo-img">
+            <!-- <div class="logo">?</div> -->
+            <h1><span style="color:#ffffff;">Chamada</span> <span style="color:#6ABF57;">Facil</span></h1>
+            <div class="app-version-badge app-version-badge--loading">Free</div>
             <div class="loading-spinner"></div>
             <p>Carregando...</p>
         </div>
@@ -50,9 +51,9 @@
     <div id="onboarding-screen" class="screen" style="display: none;">
         <div class="onboarding-content">
             <div class="onboarding-header">
-                <img src="assets/logo1024.svg" alt="Chamada Fácil" class="logo-img">
-                <h1>Chamada Fácil</h1>
-                <p class="subtitle">Controle de presença inteligente</p>
+                <img src="assets/logo1024.svg" alt="Chamada Facil" class="logo-img">
+                <h1>Chamada Facil</h1>
+                <p class="subtitle">Controle de presenca inteligente</p>
             </div>
 
             <div class="onboarding-steps">
@@ -66,25 +67,25 @@
                 </div>
                 <div class="step">
                     <div class="step-icon"><svg class="icon-svg icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="6"/><rect x="12" y="7" width="3" height="9"/><rect x="17" y="5" width="3" height="11"/></svg></div>
-                    <h3>Exporte relatórios e arquivos</h3>
+                    <h3>Exporte relatorios e arquivos</h3>
                 </div>
             </div>
 
             <div class="onboarding-profile">
                 <label for="onboarding-professor-nome">Nome do professor(a) (opcional)</label>
                 <input type="text" id="onboarding-professor-nome" maxlength="80" placeholder="Ex: Ana Souza" />
-                <small class="text-muted">Será usado para identificação em relatórios e PDF.</small>
+                <small class="text-muted">Sera usado para identificacao em relatorios e PDF.</small>
             </div>
 
             <div class="onboarding-profile">
                 <label for="onboarding-escola-nome">Qual a sua escola? *</label>
-                <input type="text" id="onboarding-escola-nome" maxlength="100" placeholder="Ex: Colégio São José" />
-                <small class="text-muted">Campo obrigatório para vincular suas turmas.</small>
+                <input type="text" id="onboarding-escola-nome" maxlength="100" placeholder="Ex: Colegio Sao Jose" />
+                <small class="text-muted">Campo obrigatorio para vincular suas turmas.</small>
             </div>
 
             <div class="onboarding-actions">
                 <button class="btn btn-primary onboarding-cta" data-action="app-concluir-onboarding">
-                    Começar Agora
+                    Comear Agora
                 </button>
             </div>
         </div>
@@ -104,8 +105,9 @@
                 <img src="assets/logo1024wt.svg" alt="Chamada Facil" class="logo-img">
                 <div class="header-wordmark">
                     <span class="wordmark-top">Chamada</span>
-                    <span class="wordmark-bottom">Fácil</span>
+                    <span class="wordmark-bottom">Facil</span>
                 </div>
+                <span class="app-version-badge app-version-badge--header">Free</span>
             </div>
             <h1 id="header-title">Minhas Turmas</h1>
             <button class="btn-icon btn-menu" id="btn-menu" aria-label="Menu">
@@ -131,7 +133,7 @@
                         <div class="stat-value" id="total-turmas">0</div>
                         <div class="stat-label stat-label--turmas">Turmas</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" role="button" tabindex="0" data-action="turmas-abrir-alunos-home" title="Gerenciar alunos">
                         <div class="stat-icon stat-icon--alunos">
                             <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
                         </div>
@@ -150,7 +152,7 @@
                     </select>
                 </div>
 
-                <!-- Linha 2: botão Adicionar turma centralizado -->
+                <!-- Linha 2: botao Adicionar turma centralizado -->
                 <div class="adicionar-turma-wrapper" id="adicionar-turma-wrapper">
                     <button class="btn-adicionar-turma" data-action="turmas-mostrar-nova">
                         Adicionar turma
@@ -159,13 +161,13 @@
             </div>
 
             <div id="lista-turmas" class="turmas-list">
-                <!-- Turmas serão inseridas aqui -->
+                <!-- Turmas serao inseridas aqui -->
             </div>
 
             <div class="empty-state" id="empty-turmas" style="display: none;">
                 <div class="empty-icon"><svg class="icon-svg icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
                 <h3>Nenhuma turma cadastrada</h3>
-                <p>Crie sua primeira turma para começar</p>
+                <p>Crie sua primeira turma para comecar</p>
                 <button class="btn btn-primary" data-action="turmas-mostrar-nova">
                     Criar primeira turma
                 </button>
@@ -188,17 +190,6 @@
                     <span><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M8 2h8"/><path d="M9 2v2"/><path d="M15 2v2"/><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M8 11h8"/><path d="M8 15h5"/></svg></span><strong id="turma-total-chamadas-realizadas">0</strong> chamadas</span>
                 </div>
                 <div class="turma-footer-row">
-                    <label class="toggle-field turma-segundo-horario-toggle" for="input-detalhe-segundo-horario">
-                        <span class="toggle-field-copy">
-                            <span class="toggle-field-title">Segundo horário</span>
-                            <small id="segundo-horario-status-detalhe" class="text-muted">Desligado (1 chamada/dia)</small>
-                        </span>
-                        <span class="toggle-switch">
-                            <input type="checkbox" id="input-detalhe-segundo-horario"
-                                data-change="turmas-segundo-horario" />
-                            <span class="toggle-slider" aria-hidden="true"></span>
-                        </span>
-                    </label>
                     <div class="turma-actions">
                         <button class="btn btn-secondary btn-sm turma-action-btn" data-action="turmas-editar-atual">
                             Editar Turma
@@ -209,7 +200,7 @@
 
             <div class="tabs">
                 <button class="tab-btn active" data-tab="alunos">Alunos</button>
-                <button class="tab-btn" data-tab="historico">Diário de Classe</button>
+                <button class="tab-btn" data-tab="historico">Diario de Classe</button>
             </div>
 
             <!-- Tab Alunos -->
@@ -236,9 +227,9 @@
                 <div class="alunos-context-row-wrap">
                     <div class="alunos-context-row">
                         <div class="alunos-politica-control">
-                            <label for="alunos-politica-select">Política:</label>
+                            <label for="alunos-politica-select">Politica:</label>
                             <select id="alunos-politica-select" data-change="alunos-mudar-politica-rapida">
-                                <option value="alphabetical_shift">Ordem alfabética</option>
+                                <option value="alphabetical_shift">Ordem alfabetica</option>
                                 <option value="append">Final da fila</option>
                                 <option value="manual">Manual</option>
                             </select>
@@ -256,7 +247,7 @@
                 </div>
 
                 <div id="lista-alunos" class="alunos-list">
-                    <!-- Alunos serão inseridos aqui -->
+                    <!-- Alunos serao inseridos aqui -->
                 </div>
 
                 <div class="empty-state" id="empty-alunos" style="display: none;">
@@ -266,24 +257,24 @@
                 </div>
             </div>
 
-            <!-- Tab Histórico -->
+            <!-- Tab Historico -->
             <div id="tab-historico" class="tab-content">
 
-                <!-- Seção: Diário de Classe -->
+                <!-- Secao: Diario de Classe -->
                 <div class="diario-classe-section">
                     <div class="section-header">
-                        <h3>Diário de Classe</h3>
+                        <h3>Diario de Classe</h3>
                         <div class="relatorio-mensal-controls">
-                            <label for="relatorio-mensal-mes-btn">Mês:</label>
+                            <label for="relatorio-mensal-mes-btn">Mes:</label>
                             <button class="btn btn-outline btn-sm" id="relatorio-mensal-mes-btn" data-action="chamadas-abrir-seletor-mes">
-                                Selecionar mês
+                                Selecionar ms
                             </button>
                             <input type="month" id="relatorio-mensal-mes" hidden />
                         </div>
                     </div>
                     <div class="diario-tabela-toggle">
                         <button class="btn btn-outline btn-sm" id="btn-ver-resumo" data-action="chamadas-toggle-resumo">
-                            Ver resumo de frequência
+                            Ver resumo de frequncia
                         </button>
                         <button class="btn btn-outline btn-sm" id="btn-ver-tabela" data-action="chamadas-toggle-tabela">
                             Ver tabela completa
@@ -293,7 +284,7 @@
                     <div id="relatorio-mensal-tabela-wrap" class="relatorio-mensal-tabela-wrap" style="display: none;"></div>
                 </div>
 
-                                <!-- Seção: Histórico de Chamadas -->
+                                <!-- Secao: Historico de Chamadas -->
                 <div class="section-header diario-historico-header">
                     <div class="action-buttons diario-historico-actions">
                         <button class="btn btn-secondary btn-sm" data-action="chamadas-exportar-historico">
@@ -316,20 +307,20 @@
                             Cancelar
                         </button>
                         <button class="btn btn-primary btn-sm" data-action="chamadas-abrir-relatorios">
-                            <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="6"/><rect x="12" y="7" width="3" height="9"/><rect x="17" y="5" width="3" height="11"/></svg></span>Relatórios
+                            <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="6"/><rect x="12" y="7" width="3" height="9"/><rect x="17" y="5" width="3" height="11"/></svg></span>Relatrios
                         </button>
                     </div>
-                    <h3>Histórico de Chamadas</h3>
+                    <h3>Historico de Chamadas</h3>
                 </div>
 
                 <div id="lista-historico" class="historico-list">
-                    <!-- Histórico será inserido aqui -->
+                    <!-- Historico sera inserido aqui -->
                 </div>
 
                 <div class="empty-state" id="empty-historico" style="display: none;">
                     <div class="empty-icon"><svg class="icon-svg icon-20" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8"/><path d="M9 2v2"/><path d="M15 2v2"/><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M8 11h8"/><path d="M8 15h5"/></svg></div>
                     <h3>Nenhuma chamada realizada</h3>
-                    <p>Inicie uma chamada para começar o histórico</p>
+                    <p>Inicie uma chamada para comecar o historico</p>
                 </div>
             </div>
 
@@ -342,7 +333,7 @@
                     <h3 id="scanner-turma-nome"></h3>
                     <p id="scanner-data-hora"></p>
                     <div class="presencas-counter">
-                        <span class="counter-label">Presenças:</span>
+                        <span class="counter-label">Presencas:</span>
                         <span class="counter-value" id="contador-presencas">0</span>
                     </div>
                 </div>
@@ -366,21 +357,21 @@
             </div>
 
             <div class="presencas-live-list">
-                <h4>Presenças Confirmadas</h4>
+                <h4>Presencas Confirmadas</h4>
                 <div id="lista-presencas-live">
-                    <!-- Presenças aparecerão aqui em tempo real -->
+                    <!-- Presencas aparecerao aqui em tempo real -->
                 </div>
             </div>
 
             <div id="camera-status" class="camera-status">
-                Câmera: Inativa
+                Camera: Inativa
             </div>
         </div>
 
         <!-- Tela 4: Resumo da Chamada -->
         <div id="tela-resumo" class="screen">
             <div class="resumo-header">
-                <div class="resumo-icon">✓</div>
+                <div class="resumo-icon">?</div>
                 <h2>Chamada Finalizada!</h2>
                 <p id="resumo-info"></p>
             </div>
@@ -396,7 +387,7 @@
                 </div>
                 <div class="stat-large">
                     <div class="stat-value" id="resumo-percentual">0%</div>
-                    <div class="stat-label">Frequência</div>
+                    <div class="stat-label">Frequencia</div>
                 </div>
             </div>
 
@@ -408,28 +399,24 @@
                 <div id="resumo-lista-ausentes"></div>
             </div>
 
-            <div class="resumo-actions">
-                <button class="btn btn-secondary btn-large" data-action="chamadas-compartilhar">
-                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5"/><path d="M15.4 6.5 8.6 10.5"/></svg></span>Compartilhar
-                </button>
-                <button class="btn btn-primary btn-large" data-action="chamadas-exportar-csv">
+            <div class="resumo-actions">                <button class="btn btn-primary btn-large" data-action="chamadas-exportar-csv">
                     <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg></span>Baixar CSV
                 </button>
                 <button class="btn btn-success btn-large" data-action="app-voltar-para-turma">
-                    ✓ Concluir
+                    ? Concluir
                 </button>
             </div>
         </div>
 
-        <!-- Tela 5: Configurações -->
+        <!-- Tela 5: Configuracoes -->
         <div id="tela-config" class="screen">
             <div class="config-section">
-                <h3>Preferências</h3>
+                <h3>Preferencias</h3>
 
                 <div class="config-item">
                     <label>
                         <input type="checkbox" id="config-som" checked>
-                        <span>Som de confirmação</span>
+                        <span>Som de confirmacao</span>
                     </label>
                 </div>
 
@@ -437,7 +424,7 @@
                 <div class="config-item">
                     <label>
                         <input type="checkbox" id="config-vibracao" checked>
-                        <span>Vibração</span>
+                        <span>Vibracao</span>
                     </label>
                 </div>
 
@@ -455,8 +442,8 @@
 
                 <div class="form-group" style="margin-bottom: 12px;">
                     <label for="config-professor-nome">Nome do professor(a)</label>
-                    <input type="text" id="config-professor-nome" maxlength="80" placeholder="Não informado" />
-                    <small class="text-muted">Usado para identificação em relatórios/PDF.</small>
+                    <input type="text" id="config-professor-nome" maxlength="80" placeholder="Nao informado" />
+                    <small class="text-muted">Usado para identificacao em relatorios/PDF.</small>
                 </div>
 
                 <div class="config-profile-actions">
@@ -470,15 +457,7 @@
             </div>
 
             <div class="config-section">
-                <h3>Backup do aplicativo</h3>
-
-                <button class="btn btn-secondary btn-block" data-action="app-exportar-backup">
-                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z"/><path d="M3 8.5V16l9 4 9-4V8.5"/><path d="M12 13v7"/></svg></span>Exportar Backup
-                </button>
-
-                <button class="btn btn-secondary btn-block" data-action="app-importar-backup">
-                    <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 21V9"/><path d="m17 14-5-5-5 5"/><path d="M4 3h16"/></svg></span>Importar Backup
-                </button>
+                <h3>Dados do aplicativo</h3>
 
                 <button class="btn btn-danger btn-block" data-action="app-limpar-dados">
                     <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></span>Limpar Todos os Dados
@@ -493,7 +472,7 @@
         <div class="modal-content modal-dialog-compact">
             <div class="modal-header">
                 <h3 id="modal-app-text-input-title">Editar</h3>
-                <button class="btn-close" data-action="app-modal-input-cancel">×</button>
+                <button class="btn-close" data-action="app-modal-input-cancel">&times;</button>
             </div>
             <div class="modal-body">
                 <p id="modal-app-text-input-message" class="modal-helper-text" style="display:none;"></p>
@@ -512,8 +491,8 @@
     <div id="modal-app-choice" class="modal" data-overlay-close="modal-app-choice">
         <div class="modal-content modal-dialog-compact">
             <div class="modal-header">
-                <h3 id="modal-app-choice-title">Escolha uma ação</h3>
-                <button class="btn-close" data-action="app-modal-choice-cancel">×</button>
+                <h3 id="modal-app-choice-title">Escolha uma acao</h3>
+                <button class="btn-close" data-action="app-modal-choice-cancel">&times;</button>
             </div>
             <div class="modal-body">
                 <p id="modal-app-choice-message" class="modal-helper-text"></p>
@@ -526,12 +505,12 @@
         </div>
     </div>
 
-    <!-- Modal: Importação de alunos -->
+    <!-- Modal: Importacao de alunos -->
     <div id="modal-importacao-alunos" class="modal" data-overlay-close="modal-importacao-alunos">
         <div class="modal-content modal-importacao-alunos-content">
             <div class="modal-header">
-                <h3>Importação de alunos</h3>
-                <button class="btn-close" data-action="close-modal" data-modal-id="modal-importacao-alunos">×</button>
+                <h3>Importacao de alunos</h3>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-importacao-alunos">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="importacao-alunos-card" style="margin: 0; box-shadow: none;">
@@ -544,7 +523,6 @@
                     <div class="importacao-alunos-apoio">
                         <a href="assets/modelos/modelo_alunos.xlsx" download>Baixar modelo da planilha</a>
                         <small class="importacao-alunos-hint">Abra no Excel ou Google Sheets e nao altere os nomes das colunas.</small>
-                        <small class="importacao-alunos-hint">Se o arquivo for backup da turma, use "Recuperar turma" em Gerenciar Turmas.</small>
                     </div>
                 </div>
             </div>
@@ -559,47 +537,25 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Nova Turma</h3>
-                <button class="btn-close" data-action="close-modal" data-modal-id="modal-nova-turma">×</button>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-nova-turma">&times;</button>
             </div>
-            <div class="modal-body">
-                <!-- MULTI ESCOLA: exibido somente quando config.multi_escola === true -->
-                <div class="form-group multi-escola-only hidden">
-                    <label>Escola</label>
-                    <select id="input-turma-escola">
-                        <option value="">Selecione uma escola...</option>
-                    </select>
-                </div>
-                <!-- MULTI ESCOLA -->
-
-                <div class="form-group">
+            <div class="modal-body">                <div class="form-group">
                     <label>Nome da Turma *</label>
-                    <input type="text" id="input-turma-nome" placeholder="Ex: 3º Ano A - Matemática" />
+                    <input type="text" id="input-turma-nome" placeholder="Ex: 3o Ano A - Matematica" />
                 </div>
                 <div class="form-group">
-                    <label>Descrição</label>
-                    <textarea id="input-turma-descricao" placeholder="Informações adicionais (opcional)"
+                    <label>Descricao</label>
+                    <textarea id="input-turma-descricao" placeholder="Informacoes adicionais (opcional)"
                         rows="3"></textarea>
                 </div>
                 <div class="form-group">
-                    <label class="toggle-field" for="input-turma-segundo-horario">
-                        <span class="toggle-field-copy">
-                            <span class="toggle-field-title">Segundo horário?</span>
-                            <small class="text-muted">Ative apenas se a turma costuma ter duas chamadas no mesmo dia.</small>
-                        </span>
-                        <span class="toggle-switch">
-                            <input type="checkbox" id="input-turma-segundo-horario" />
-                            <span class="toggle-slider" aria-hidden="true"></span>
-                        </span>
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label for="input-turma-politica-numero">Política de numeração dos alunos</label>
+                    <label for="input-turma-politica-numero">Politica de numeracao dos alunos</label>
                     <select id="input-turma-politica-numero">
-                        <option value="alphabetical_shift">Ordem alfabética com ajuste automático (recomendado)</option>
-                        <option value="append">Sempre adicionar no final (números estáveis)</option>
+                        <option value="alphabetical_shift">Ordem alfabetica com ajuste automatico (recomendado)</option>
+                        <option value="append">Sempre adicionar no final (numeros estaveis)</option>
                         <option value="manual">Manual (reordenar por arraste)</option>
                     </select>
-                    <small class="text-muted">Define como novos alunos recebem número de chamada nesta turma.</small>
+                    <small class="text-muted">Define como novos alunos recebem numero de chamada nesta turma.</small>
                 </div>
             </div>
             <div class="modal-footer">
@@ -614,54 +570,34 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Editar Turma</h3>
-                <button class="btn-close" data-action="close-modal" data-modal-id="modal-editar-turma">×</button>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-editar-turma">&times;</button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="input-editar-turma-id">
 
                 <div class="form-group">
                     <label>Nome da Turma *</label>
-                    <input type="text" id="input-editar-turma-nome" placeholder="Ex: 3º Ano A - Matemática" />
+                    <input type="text" id="input-editar-turma-nome" placeholder="Ex: 3o Ano A - Matematica" />
                 </div>
 
                 <div class="form-group">
-                    <label>Descrição</label>
-                    <textarea id="input-editar-turma-descricao" placeholder="Informações adicionais (opcional)"
+                    <label>Descricao</label>
+                    <textarea id="input-editar-turma-descricao" placeholder="Informacoes adicionais (opcional)"
                         rows="3"></textarea>
                 </div>
-
                 <div class="form-group">
-                    <label>Escola *</label>
-                    <select id="input-editar-turma-escola">
-                        <option value="">Selecione uma escola...</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="toggle-field" for="input-editar-turma-segundo-horario">
-                        <span class="toggle-field-copy">
-                            <span class="toggle-field-title">Segundo horário?</span>
-                            <small class="text-muted">Ative apenas se a turma costuma ter duas chamadas no mesmo dia.</small>
-                        </span>
-                        <span class="toggle-switch">
-                            <input type="checkbox" id="input-editar-turma-segundo-horario" />
-                            <span class="toggle-slider" aria-hidden="true"></span>
-                        </span>
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label for="input-editar-turma-politica-numero">Política de numeração dos alunos</label>
+                    <label for="input-editar-turma-politica-numero">Politica de numeracao dos alunos</label>
                     <select id="input-editar-turma-politica-numero">
-                        <option value="alphabetical_shift">Ordem alfabética com ajuste automático (recomendado)</option>
-                        <option value="append">Sempre adicionar no final (números estáveis)</option>
+                        <option value="alphabetical_shift">Ordem alfabetica com ajuste automatico (recomendado)</option>
+                        <option value="append">Sempre adicionar no final (numeros estaveis)</option>
                         <option value="manual">Manual (reordenar por arraste)</option>
                     </select>
-                    <small class="text-muted">Define como novos alunos recebem número de chamada nesta turma.</small>
+                    <small class="text-muted">Define como novos alunos recebem numero de chamada nesta turma.</small>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-action="close-modal" data-modal-id="modal-editar-turma">Cancelar</button>
-                <button class="btn btn-primary" data-action="turmas-salvar-edicao">Salvar Alterações</button>
+                <button class="btn btn-primary" data-action="turmas-salvar-edicao">Salvar Alteraes</button>
             </div>
         </div>
     </div>
@@ -671,14 +607,10 @@
         <div class="modal-content modal-gerenciar-turmas-content">
             <div class="modal-header">
                 <h3>Gerenciar Turmas</h3>
-                <button class="btn-close" data-action="close-modal" data-modal-id="modal-gerenciar-turmas">×</button>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-gerenciar-turmas">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="gerenciar-turmas-actions">
-                    <button class="btn btn-secondary btn-sm" data-action="turmas-recuperar-backup-global">
-                        Recuperar turma
-                    </button>
-                    <button class="btn btn-secondary btn-sm" data-action="turmas-toggle-selecao-gerenciar">
+                <div class="gerenciar-turmas-actions">                    <button class="btn btn-secondary btn-sm" data-action="turmas-toggle-selecao-gerenciar">
                         Selecionar
                     </button>
                     <button class="btn btn-secondary btn-sm" id="btn-gerenciar-turmas-selecionar-todas"
@@ -694,17 +626,6 @@
                         Cancelar
                     </button>
                 </div>
-                <div class="gerenciar-qrcodes-card">
-                    <div class="gerenciar-qrcodes-head">
-                        <h4>Enviar para Outro Professor</h4>
-                        <p>Compartilhe uma turma por arquivo `.cmf`, mantendo os mesmos QRCodes dos alunos.</p>
-                    </div>
-                    <div class="gerenciar-qrcodes-actions">
-                        <button class="btn btn-secondary btn-sm" data-action="turmas-importar-migracao-global">
-                            Receber arquivo do professor
-                        </button>
-                    </div>
-                </div>
                 <div id="lista-gerenciar-turmas" class="gerenciar-turmas-list"></div>
                 <div id="empty-gerenciar-turmas" class="empty-state" style="display:none; padding: 20px;">
                     <h3>Nenhuma turma cadastrada</h3>
@@ -719,7 +640,7 @@
             <div class="modal-header">
                 <h3 id="modal-aluno-titulo">Novo Aluno</h3>
                 <button class="btn-close"
-                    data-action="alunos-cancelar-modal">×</button>
+                    data-action="alunos-cancelar-modal">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group center-content" style="text-align: center; margin-bottom: 20px;">
@@ -738,25 +659,25 @@
                         <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M4 4h6v6H4z"/><path d="M14 4h6v6h-6z"/><path d="M4 14h6v6H4z"/><path d="M14 14h2"/><path d="M18 14h2"/><path d="M14 18h2"/><path d="M18 18h2"/></svg></span>Ler QR Existente
                     </button>
                     <br>
-                    <small class="text-muted">Importar dados de um QR Code já cadastrado</small>
+                    <small class="text-muted">Importar dados de um QR Code ja cadastrado</small>
                 </div>
                 <div class="form-group">
                     <label>Nome Completo *</label>
                     <input type="text" id="input-aluno-nome" placeholder="Ex: Maria da Silva" />
                 </div>
                 <div class="form-group">
-                    <label>Matrícula / ID *</label>
+                    <label>Matricula / ID *</label>
                     <input type="text" id="input-aluno-matricula" placeholder="Ex: 2024001" />
                 </div>
                 <div class="form-group">
-                    <label>Número de Chamada</label>
-                    <input type="number" id="input-aluno-numero" min="1" step="1" placeholder="Automático" />
-                    <small class="text-muted">Usado para lista de chamada. Não altera matrícula nem QRCode.</small>
+                    <label>Numero de Chamada</label>
+                    <input type="number" id="input-aluno-numero" min="1" step="1" placeholder="Automatico" />
+                    <small class="text-muted">Usado para lista de chamada. Nao altera matricula nem QRCode.</small>
                 </div>
 
                 <div id="aluno-pontos-section" class="aluno-pontos-section" style="display: none;">
                     <div class="aluno-pontos-header">
-                        <h4><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M7 8h6a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h8"/></svg></span>Pontuação do aluno</h4>
+                        <h4><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M7 8h6a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h8"/></svg></span>Pontuacao do aluno</h4>
                         <div class="aluno-pontos-header-actions">
                             <button type="button" class="btn btn-secondary btn-sm" data-action="alunos-abrir-evento-ponto">
                                 Adicionar Ponto
@@ -771,10 +692,10 @@
 
                 <div class="form-group">
                     <div class="obs-label-row">
-                        <label for="input-aluno-obs"><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></span>Observações</label>
+                        <label for="input-aluno-obs"><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></span>Observacoes</label>
                         <button type="button" id="btn-obs-visibilidade" class="btn-obs-eye"
                             data-action="alunos-toggle-obs"
-                            title="Ocultar/exibir esta observação do aluno">
+                            title="Ocultar/exibir esta observacao do aluno">
                             <svg id="obs-eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                 <circle cx="12" cy="12" r="3"/>
@@ -785,8 +706,8 @@
                             </svg>
                         </button>
                     </div>
-                    <small id="obs-oculta-hint" class="obs-oculta-hint" style="display:none;"><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>Observação marcada como privada e não aparece em relatórios para alunos</small>
-                    <textarea id="input-aluno-obs" rows="2" placeholder="Anotações sobre o aluno"></textarea>
+                    <small id="obs-oculta-hint" class="obs-oculta-hint" style="display:none;"><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>Observacao marcada como privada e nao aparece em relatorios para alunos</small>
+                    <textarea id="input-aluno-obs" rows="2" placeholder="Anotacoes sobre o aluno"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -803,7 +724,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Adicionar Foto</h3>
-                <button class="btn-close" data-action="close-modal" data-modal-id="modal-fonte-foto">×</button>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-fonte-foto">&times;</button>
             </div>
             <div class="modal-body">
                 <p class="text-muted" style="margin-bottom: 12px;">Como deseja adicionar a foto do aluno?</p>
@@ -827,7 +748,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modal-evento-ponto-titulo">Adicionar Ponto</h3>
-                <button class="btn-close" data-action="close-modal" data-modal-id="modal-evento-ponto">×</button>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-evento-ponto">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -835,7 +756,7 @@
                     <input type="number" id="input-evento-ponto-valor" min="0.1" step="0.1" placeholder="Ex: 5" />
                 </div>
                 <div class="form-group">
-                    <label for="input-evento-ponto-descricao">Descrição *</label>
+                    <label for="input-evento-ponto-descricao">Descricao *</label>
                     <textarea id="input-evento-ponto-descricao" rows="3" placeholder="Ex: Trabalho em grupo"></textarea>
                 </div>
             </div>
@@ -851,7 +772,7 @@
         <div class="modal-content modal-menu-content">
             <div class="modal-header">
                 <h3>Menu</h3>
-                <button class="btn-close" data-action="close-modal" data-modal-id="modal-menu">×</button>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-menu">&times;</button>
             </div>
             <div class="modal-body">
                 <button class="menu-item" data-action="menu-ir-turmas">
@@ -864,13 +785,13 @@
                     <span class="menu-icon" aria-hidden="true">
                         <svg class="icon-svg icon-20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.08V21a2 2 0 0 1-4 0v-.09a1.7 1.7 0 0 0-.4-1.08 1.7 1.7 0 0 0-1-.6 1.7 1.7 0 0 0-1.82.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.08-.4H2.9a2 2 0 0 1 0-4H3a1.7 1.7 0 0 0 1.08-.4 1.7 1.7 0 0 0 .6-1 1.7 1.7 0 0 0-.34-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6A1.7 1.7 0 0 0 10.4 2.9V2.9a2 2 0 0 1 4 0V3a1.7 1.7 0 0 0 .4 1.08 1.7 1.7 0 0 0 1 .6 1.7 1.7 0 0 0 1.82-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c0 .38.14.74.4 1a1.7 1.7 0 0 0 1.08.4h.09a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.08.4 1.7 1.7 0 0 0-.4 1Z"/></svg>
                     </span>
-                    <span>Configurações</span>
+                    <span>Configuracoes</span>
                 </button>
                 <button class="menu-item" data-action="app-abrir-sobre">
                     <span class="menu-icon" aria-hidden="true">
                         <svg class="icon-svg icon-20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10Z"/></svg>
                     </span>
-                    <span>Sobre o Chamada Fácil</span>
+                    <span>Sobre o Chamada Fcil</span>
                 </button>
                 <button class="menu-item" data-action="menu-abrir-ajuda">
                     <span class="menu-icon" aria-hidden="true">
@@ -887,26 +808,14 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-20" viewBox="0 0 24 24"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg></span>Gerenciar Escolas</h3>
-                <button class="btn-close" data-action="close-modal" data-modal-id="modal-gerenciar-escolas">×</button>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-gerenciar-escolas">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="form-group escolas-contexto-group">
-                    <label class="toggle-field" for="config-multi-escola">
-                        <span class="toggle-field-copy">
-                            <span class="toggle-field-title">Várias escolas</span>
-                            <small class="text-muted">Ative somente se precisar cadastrar e filtrar turmas por mais de uma escola.</small>
-                        </span>
-                        <span class="toggle-switch">
-                            <input type="checkbox" id="config-multi-escola" />
-                            <span class="toggle-slider" aria-hidden="true"></span>
-                        </span>
-                    </label>
-                </div>
-                <div class="modal-section-title">Cadastrar nova escola</div>
+                <div class="modal-section-title">Escola da versao Free</div>
                 <div class="form-group">
                     <label>Nome da Escola *</label>
                     <div style="display: flex; gap: 8px;">
-                        <input type="text" id="input-nova-escola" placeholder="Ex: Colégio São José" style="flex: 1;" />
+                        <input type="text" id="input-nova-escola" placeholder="Ex: Colegio Sao Jose" style="flex: 1;" />
                         <button class="btn btn-primary" data-action="escolas-adicionar">
                             Adicionar
                         </button>
@@ -925,16 +834,16 @@
                             <button type="button" class="btn btn-secondary btn-sm" id="btn-remover-foto-nova-escola" style="display:none;" data-action="escolas-remover-foto-nova">
                                 Remover
                             </button>
-                            <br><small class="text-muted">Será usada nos relatórios em PDF.</small>
+                            <br><small class="text-muted">Sera usada nos relatorios em PDF.</small>
                         </div>
                     </div>
                     <input type="file" id="input-escola-foto-nova" accept="image/*" style="display:none;"
                         data-change="escolas-processar-foto-nova">
                 </div>
 
-                <div class="modal-section-title modal-section-title--list">Escolas cadastradas</div>
+                <div class="modal-section-title modal-section-title--list">Escola cadastrada</div>
                 <div id="lista-escolas-gerenciar" class="escolas-list">
-                    <!-- Escolas serão inseridas aqui -->
+                    <!-- Escolas serao inseridas aqui -->
                 </div>
             </div>
         </div>
@@ -945,7 +854,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Editar Escola</h3>
-                <button class="btn-close" data-action="close-modal" data-modal-id="modal-editar-escola">×</button>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-editar-escola">&times;</button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="input-editar-escola-id">
@@ -983,34 +892,41 @@
     <div id="modal-sobre" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Sobre o Chamada Fácil</h3>
-                <button class="btn-close" data-action="close-modal" data-modal-id="modal-sobre">×</button>
+                <h3>Sobre o Chamada Facil</h3>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-sobre">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="about-section">
-                    <p><strong>Chamada Fácil</strong></p>
+                    <p><strong>Chamada Facil</strong></p>
                     <p>Sistema de chamada escolar com QR Code, focado em agilidade para professores.</p>
-                    <p style="margin-top: 12px;">Versão atual: <strong>Free</strong> <span style="color: var(--gray-500);">(<span data-app-version>v0.0.0-dev</span>)</span></p>
+                    <p style="margin-top: 12px;">Versao atual: <strong>Free</strong> <span style="color: var(--gray-500);">(<span data-app-version>v0.0.0-dev</span>)</span></p>
                 </div>
 
                 <div class="about-section">
-                    <div class="modal-section-title">Sobre a versão Free</div>
-                    <p>Esta é a versão Free do Chamada Fácil: gratuita, funcional e pensada para uso imediato.</p>
-                    <p>Ela receberá apenas atualizações essenciais de manutenção e estabilidade.</p>
-                    <p>As próximas evoluções do projeto serão lançadas nas versões Lite e Pro.</p>
+                    <div class="modal-section-title">Sobre a versao Free</div>
+                    <p>Esta e a versao Free do Chamada Facil: gratuita, funcional e pensada para uso imediato.</p>
+                    <p>Ela foi criada para funcionar offline, com foco no essencial: 1 escola, 1 turma e alunos ilimitados.</p>
+                    <p>Recebera apenas atualizacoes essenciais de manutencao e estabilidade.</p>
+                </div>
+
+                <div class="about-section">
+                    <div class="modal-section-title">Lite e Pro</div>
+                    <p>A Lite trara mais praticidade para o professor no uso individual do app, com novos recursos e melhorias de experiencia.</p>
+                    <p>A Pro avancara para recursos mais completos e futuras evolucoes do projeto.</p>
+                    <p>Quer receber noticias sobre as proximas versoes? Entre em contato por e-mail ou WhatsApp e peca para entrar na lista de interesse.</p>
                 </div>
 
                 <div class="about-section">
                     <div class="modal-section-title">Apoiar o projeto</div>
-                    <p>Se o app te ajuda no dia a dia, você pode apoiar o projeto com um cafezinho.</p>
+                    <p>Se o app te ajuda no dia a dia, voce pode apoiar o projeto com um cafezinho.</p>
                     <div class="about-actions">
                         <button class="btn btn-secondary btn-sm" data-action="app-copiar-pix-chave">Copiar chave Pix</button>
-                        <button class="btn btn-secondary btn-sm" data-action="app-copiar-pix-codigo">Copiar código Pix</button>
+                        <button class="btn btn-secondary btn-sm" data-action="app-copiar-pix-codigo">Copiar codigo Pix</button>
                     </div>
                 </div>
 
                 <div class="about-section">
-                    <div class="modal-section-title">Contato e sugestões</div>
+                    <div class="modal-section-title">Contato e sugestoes</div>
                     <p>
                         <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
                         contato@chamadafacil.net.br
@@ -1024,36 +940,23 @@
                         <button class="btn btn-secondary btn-sm" data-action="app-contato-whatsapp">Abrir WhatsApp</button>
                     </div>
                 </div>
-
-                <div class="about-section">
-                    <div class="modal-section-title">Lite e Pro</div>
-                    <p>Quer receber notícias sobre as próximas versões Lite e Pro?</p>
-                    <p>Entre em contato com a gente por e-mail ou WhatsApp e peça para entrar na lista de interesse.</p>
-                </div>
-
-                <div class="about-actions about-actions--footer">
-                    <a href="https://www.chamadafacil.net.br" target="_blank" rel="noopener noreferrer" class="btn btn-primary"
-                        style="text-decoration: none; display: inline-block;">
-                        <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10Z"/></svg></span>Site Oficial
-                    </a>
-                </div>
-                <p style="margin-top: 16px;">© 2026 - Todos os direitos reservados</p>
+                <p style="margin-top: 16px;">&copy; 2026 - Todos os direitos reservados</p>
             </div>
         </div>
     </div>
 
-    <!-- Modal: Relatórios -->
+    <!-- Modal: Relatorios -->
     <div id="modal-relatorios" class="modal">
         <div class="modal-content modal-relatorios-content">
             <div class="modal-header">
-                <h3><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-20" viewBox="0 0 24 24"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="6"/><rect x="12" y="7" width="3" height="9"/><rect x="17" y="5" width="3" height="11"/></svg></span>Relatórios</h3>
-                <button class="btn-close" data-action="close-modal" data-modal-id="modal-relatorios">×</button>
+                <h3><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-20" viewBox="0 0 24 24"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="6"/><rect x="12" y="7" width="3" height="9"/><rect x="17" y="5" width="3" height="11"/></svg></span>Relatorios</h3>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-relatorios">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="relatorio-secao">
-                    <h4 class="relatorio-secao-titulo"><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M8 2h8"/><path d="M9 2v2"/><path d="M15 2v2"/><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M8 11h8"/><path d="M8 15h5"/></svg></span>Relatório Mensal de Chamadas</h4>
+                    <h4 class="relatorio-secao-titulo"><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M8 2h8"/><path d="M9 2v2"/><path d="M15 2v2"/><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M8 11h8"/><path d="M8 15h5"/></svg></span>Relatorio Mensal de Chamadas</h4>
                     <p class="text-muted" style="font-size: 13px; margin-bottom: 10px;">
-                        Exporta a tabela de presença/falta do mês selecionado no Diário de Classe.
+                        Exporta a tabela de presenca/falta do mes selecionado no Diario de Classe.
                     </p>
                     <div class="relatorio-secao-acoes">
                         <button class="btn btn-secondary btn-sm" data-action="chamadas-exportar-relatorio-csv">
@@ -1068,9 +971,9 @@
                 <hr style="margin: 20px 0; border-color: var(--border);">
 
                 <div class="relatorio-secao">
-                    <h4 class="relatorio-secao-titulo"><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M7 8h6a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h8"/></svg></span>Pontuação</h4>
+                    <h4 class="relatorio-secao-titulo"><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M7 8h6a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h8"/></svg></span>Pontuacao</h4>
                     <p class="text-muted" style="font-size: 13px; margin-bottom: 10px;">
-                        Totalização da pontuação por aluno no mês selecionado no Diário de Classe.
+                        Totalizacao da pontuacao por aluno no mes selecionado no Diario de Classe.
                     </p>
                     <div class="relatorio-secao-acoes">
                         <button class="btn btn-secondary btn-sm" data-action="chamadas-gerar-pontos-pdf">
@@ -1083,12 +986,12 @@
         </div>
     </div>
 
-    <!-- Modal: Seleção de mês -->
+    <!-- Modal: Selecao de mes -->
     <div id="modal-seletor-mes" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Selecionar mês</h3>
-                <button class="btn-close" data-action="close-modal" data-modal-id="modal-seletor-mes">×</button>
+                <h3>Selecionar mes</h3>
+                <button class="btn-close" data-action="close-modal" data-modal-id="modal-seletor-mes">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -1096,11 +999,11 @@
                     <select id="seletor-mes-ano"></select>
                 </div>
                 <div class="form-group">
-                    <label for="seletor-mes-mes">Mês</label>
+                    <label for="seletor-mes-mes">Mes</label>
                     <select id="seletor-mes-mes">
                         <option value="01">Janeiro</option>
                         <option value="02">Fevereiro</option>
-                        <option value="03">Março</option>
+                        <option value="03">Marco</option>
                         <option value="04">Abril</option>
                         <option value="05">Maio</option>
                         <option value="06">Junho</option>
@@ -1152,6 +1055,10 @@
 </body>
 
 </html>
+
+
+
+
 
 
 

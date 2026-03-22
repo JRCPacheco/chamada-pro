@@ -73,6 +73,7 @@ const app = {
             case 'app-importar-backup': return this.importarBackup();
             case 'app-limpar-dados': return this.limparTodosDados();
             case 'app-abrir-sobre': return this.abrirSobre();
+            case 'app-abrir-cafe': return this.abrirModal('modal-cafe');
             case 'app-copiar-pix-chave': return this.copiarPixChave();
             case 'app-copiar-pix-codigo': return this.copiarPixCodigo();
             case 'app-contato-email': return this.abrirContatoEmail();
@@ -81,12 +82,11 @@ const app = {
             case 'menu-ir-config': this.mostrarTela('tela-config'); return this.fecharModal('modal-menu');
             case 'menu-abrir-ajuda': this.mostrarAjuda(); return this.fecharModal('modal-menu');
             case 'turmas-mostrar-nova': return turmas.mostrarModalNovaTurma();
+            case 'turmas-abrir-alunos-home': return turmas.abrirAlunosDaHome();
             case 'turmas-abrir-gerenciar': return turmas.abrirModalGerenciarTurmas();
             case 'turmas-editar-atual': return turmas.editarTurma(turmas.turmaAtual?.id);
             case 'turmas-exportar-backup-atual': return turmas.exportarBackupTurmaAtual();
             case 'turmas-recuperar-backup-atual': return turmas.recuperarBackupTurmaAtual();
-            case 'turmas-recuperar-backup-global': return turmas.recuperarBackupTurmaGlobal();
-            case 'turmas-importar-migracao-global': return turmas.importarMigracaoTurmaGlobal();
             case 'turmas-toggle-selecao-gerenciar': return turmas.alternarSelecaoGerenciarTurmas();
             case 'turmas-toggle-item-selecao-gerenciar': return turmas.alternarSelecaoItemGerenciarTurmas(el.dataset.turmaId);
             case 'turmas-selecionar-todas-gerenciar': return turmas.alternarSelecionarTodasGerenciarTurmas();
@@ -140,7 +140,6 @@ const app = {
             case 'chamadas-aplicar-seletor-mes': return chamadas.aplicarMesSeletor();
             case 'chamadas-toggle-resumo': return chamadas.toggleResumoMensal();
             case 'chamadas-toggle-tabela': return chamadas.toggleTabelaMensal();
-            case 'chamadas-compartilhar': return chamadas.compartilhar();
             case 'chamadas-exportar-csv': return chamadas.exportarCSV();
             case 'chamadas-exportar-relatorio-csv': return chamadas.exportarRelatorioMensalCSV();
             case 'chamadas-exportar-relatorio-pdf': return chamadas.exportarRelatorioMensalPDF();
@@ -218,6 +217,11 @@ const app = {
             }
         }
 
+        if (cfg.multi_escola !== false) {
+            cfg.multi_escola = false;
+            await db.put('config', cfg);
+        }
+
         this._configCache = cfg;
         return cfg;
     },
@@ -288,6 +292,7 @@ const app = {
 
         // Mostrar app
         document.getElementById('app').style.display = 'block';
+        this.criarCafeUiSeNecessario();
 
         // Carregar turmas
         this.mostrarTela('tela-turmas');
@@ -654,6 +659,43 @@ const app = {
         this.abrirModal('modal-sobre');
     },
 
+    criarCafeUiSeNecessario() {
+        const telaTurmas = document.getElementById('tela-turmas');
+        if (telaTurmas && !document.querySelector('.coffee-fab')) {
+            const btn = document.createElement('button');
+            btn.className = 'coffee-fab';
+            btn.setAttribute('data-action', 'app-abrir-cafe');
+            btn.setAttribute('aria-label', 'Hora do Cafe');
+            btn.setAttribute('title', 'Hora do Cafe');
+            btn.innerHTML = '<img src="assets/coffeecup.svg" alt="" aria-hidden="true" />';
+            telaTurmas.appendChild(btn);
+        }
+
+        if (!document.getElementById('modal-cafe')) {
+            const modal = document.createElement('div');
+            modal.id = 'modal-cafe';
+            modal.className = 'modal';
+            modal.setAttribute('data-overlay-close', 'modal-cafe');
+            modal.innerHTML = [
+                '<div class="modal-content modal-dialog-compact">',
+                '    <div class="modal-header">',
+                '        <h3>Apoiar o projeto</h3>',
+                '        <button class="btn-close" data-action="close-modal" data-modal-id="modal-cafe">&times;</button>',
+                '    </div>',
+                '    <div class="modal-body modal-cafe-body">',
+                '        <img src="assets/coffeecard.png" alt="Hora do Cafe" class="coffee-card-image" />',
+                '        <p>Se o Chamada Facil te ajuda no dia a dia, considere apoiar o projeto com um cafezinho.</p>',
+                '        <div class="about-actions">',
+                '            <button class="btn btn-secondary btn-sm" data-action="app-copiar-pix-chave">Copiar chave Pix</button>',
+                '            <button class="btn btn-secondary btn-sm" data-action="app-copiar-pix-codigo">Copiar codigo Pix</button>',
+                '        </div>',
+                '    </div>',
+                '</div>'
+            ].join('');
+            document.body.appendChild(modal);
+        }
+    },
+
     copiarPixChave() {
         utils.copiarParaClipboard(this.supportConfig.pixKey);
     },
@@ -730,10 +772,10 @@ const app = {
     async salvarConfig() {
         const cfg = await this._getAppConfig();
 
-        cfg.som = document.getElementById('config-som').checked;
-        cfg.vibracao = document.getElementById('config-vibracao').checked;
-        cfg.wakeLock = document.getElementById('config-wake-lock').checked;
-        cfg.multi_escola = document.getElementById('config-multi-escola').checked;
+        cfg.som = !!document.getElementById('config-som')?.checked;
+        cfg.vibracao = !!document.getElementById('config-vibracao')?.checked;
+        cfg.wakeLock = !!document.getElementById('config-wake-lock')?.checked;
+        cfg.multi_escola = false;
 
         await db.put('config', cfg);
         this._configCache = cfg;
@@ -882,10 +924,10 @@ const app = {
                 </div>
                 <div class=\"modal-body\">
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M4 19.5A2.5 2.5 0 0 1 6.5 17H20\"/><path d=\"M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z\"/></svg></span>Criar Turma</h4>
-                    <p>Clique em \"Adicionar turma\" para criar uma nova turma. Informe nome, descrição e escola (quando multi-escola estiver ativo).</p>
+                    <p>Clique em \"Adicionar turma\" para criar sua turma principal. Na versao Free, voce pode usar 1 escola e 1 turma.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M3 10.5 12 4l9 6.5\"/><path d=\"M5 10v9h14v-9\"/><path d=\"M9 19v-5h6v5\"/><path d=\"M9 10h.01\"/><path d=\"M15 10h.01\"/></svg></span>Gerenciar Escolas</h4>
-                    <p>No Menu, use \"Gerenciar Escolas\" para cadastrar ou editar escolas e definir logo. As turmas podem ser vinculadas a uma escola.</p>
+                    <p>Use o card \"Escolas\" para editar o nome e a logo da sua escola. A versao Free funciona com apenas 1 escola.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"3\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a3 3 0 0 1 0 5.75\"/></svg></span>Adicionar Alunos</h4>
                     <p>Entre na turma e adicione alunos manualmente ou importe um arquivo de planilha. Use também \"Baixar modelo da planilha\" para evitar erros.</p>
@@ -895,7 +937,7 @@ const app = {
                     <p>Na aba \"Diário de Classe\", acompanhe o histórico mensal de chamadas da turma. Você pode abrir detalhes, exportar histórico e gerenciar registros.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M12 6v6l4 2\"/><circle cx=\"12\" cy=\"12\" r=\"9\"/></svg></span>Segundo Horário</h4>
-                    <p>Ative \"Segundo horário\" na turma para permitir até 2 chamadas no mesmo dia.</p>
+                    <p>A versao Free mantem um fluxo simples com uma chamada por dia para cada turma.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M4 4h6v6H4z\"/><path d=\"M14 4h6v6h-6z\"/><path d=\"M4 14h6v6H4z\"/><path d=\"M14 14h2\"/><path d=\"M18 14h2\"/><path d=\"M14 18h2\"/><path d=\"M18 18h2\"/></svg></span>Gerar QR Codes</h4>
                     <p>Na aba \"Alunos\", clique em \"Gerar QR Codes\" para criar um PDF com os códigos dos alunos.</p>
@@ -904,10 +946,10 @@ const app = {
                     <p>Use o botão \"Chamada\" no canto superior direito da turma. Escaneie os QR Codes dos alunos presentes e finalize ao concluir.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M3 3v18h18\"/><rect x=\"7\" y=\"10\" width=\"3\" height=\"6\"/><rect x=\"12\" y=\"7\" width=\"3\" height=\"9\"/><rect x=\"17\" y=\"5\" width=\"3\" height=\"11\"/></svg></span>Exportações e Relatórios</h4>
-                    <p>Após finalizar, você pode compartilhar, exportar planilha e gerar relatórios (planilha/PDF).</p>
+                    <p>Apos finalizar, voce pode exportar os dados em CSV e acompanhar o diario de classe localmente.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z\"/><path d=\"M3 8.5V16l9 4 9-4V8.5\"/><path d=\"M12 13v7\"/></svg></span>Backup e Recuperação</h4>
-                    <p>Em Configurações, exporte backup completo da base. Também é possível recuperar backup para restaurar dados.</p>
+                    <p>A versao Free funciona offline e nao inclui backup ou compartilhamento de dados entre aparelhos.</p>
                 </div>
                 <div class=\"modal-footer\">
                     <button class=\"btn btn-primary\" data-action=\"close-nearest-modal\">Entendi</button>
@@ -1012,6 +1054,13 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
+
+
+
+
+
+
+
 
 
 

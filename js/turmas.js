@@ -1,4 +1,4 @@
-﻿// ===== TURMAS MODULE =====
+// ===== TURMAS MODULE =====
 // Gerenciamento de turmas
 // Migrado para IndexedDB
 
@@ -37,7 +37,7 @@ const turmas = {
 
         let turmasArray = [];
 
-        // Estratégia de carregamento baseada em filtro
+        // Estrategia de carregamento baseada em filtro
         if (multi_escola && filterEscola && filterEscola.value) {
             turmasArray = await db.getByIndex('turmas', 'escolaId', filterEscola.value);
         } else {
@@ -60,7 +60,7 @@ const turmas = {
             await this.renderizarTurmas(turmasArray);
         }
 
-        // Atualizar estatísticas
+        // Atualizar estatisticas
         await this.atualizarStats();
 
         // Busca em tempo real (debounce)
@@ -89,8 +89,8 @@ const turmas = {
             escolasAll.forEach(e => escolasMap[e.id] = e.nome);
         }
 
-        // PERFORMANCE FIX: Carregar TUDO uma vez, mapear em memória
-        // Evita N+1 queries (78 transações para 39 turmas -> 2 transações totais)
+        // PERFORMANCE FIX: Carregar TUDO uma vez, mapear em memoria
+        // Evita N+1 queries (78 transacoes para 39 turmas -> 2 transacoes totais)
         const todosAlunos = await db.getAll('alunos');
         const todasChamadas = await db.getAll('chamadas');
 
@@ -137,7 +137,7 @@ const turmas = {
                             ${iconTrash}
                         </button>
                     </div>
-                    <p>${turma.descricao ? utils.escapeHtml(turma.descricao) : 'Sem descrição'}</p>
+                    <p>${turma.descricao ? utils.escapeHtml(turma.descricao) : 'Sem descricao'}</p>
                     <div class="turma-meta">
                         <span>${iconUsers} ${totalAlunos} aluno${totalAlunos !== 1 ? 's' : ''}</span>
                         <span>${iconCalls} ${totalChamadas} chamada${totalChamadas !== 1 ? 's' : ''}</span>
@@ -222,10 +222,10 @@ const turmas = {
         }
     },
 
-    // Atualizar estatísticas gerais
+    // Atualizar estatisticas gerais
     async atualizarStats() {
         // Stats requer contagem global
-        // Isso pode ser pesado, mas para PWA local é ok
+        // Isso pode ser pesado, mas para PWA local - ok
         const allEscolas = await db.getAll('escolas');
         const allTurmas = await db.getAll('turmas');
         const allAlunos = await db.getAll('alunos');
@@ -237,6 +237,12 @@ const turmas = {
 
     // Mostrar modal de nova turma
     async mostrarModalNovaTurma() {
+        const turmasExistentes = await db.getAll('turmas');
+        if (turmasExistentes.length >= 1) {
+            utils.mostrarToast('A versao Free permite apenas 1 turma', 'warning');
+            return;
+        }
+
         const modal = document.getElementById('modal-nova-turma');
         modal.classList.add('active');
 
@@ -245,19 +251,6 @@ const turmas = {
         document.getElementById('input-turma-descricao').value = '';
         const politicaNumeroInput = document.getElementById('input-turma-politica-numero');
         if (politicaNumeroInput) politicaNumeroInput.value = 'alphabetical_shift';
-        const segundoHorarioInput = document.getElementById('input-turma-segundo-horario');
-        if (segundoHorarioInput) segundoHorarioInput.checked = false;
-
-        // MULTI ESCOLA: Popularizar dropdown de escolas
-        const config = await app._getAppConfig();
-        if (config.multi_escola) {
-            await escolas.renderizarDropdown('input-turma-escola');
-            const escolaPreferencialId = await escolas.obterEscolaPreferencialId();
-            const selectEscola = document.getElementById('input-turma-escola');
-            if (selectEscola && escolaPreferencialId) {
-                selectEscola.value = escolaPreferencialId;
-            }
-        }
 
         // Focar no primeiro campo
         setTimeout(() => {
@@ -267,21 +260,16 @@ const turmas = {
 
     // Salvar nova turma
     async salvarNovaTurma() {
+        const turmasExistentes = await db.getAll('turmas');
+        if (turmasExistentes.length >= 1) {
+            utils.mostrarToast('A versao Free permite apenas 1 turma', 'warning');
+            return;
+        }
+
         const nome = document.getElementById('input-turma-nome').value.trim();
         const descricao = document.getElementById('input-turma-descricao').value.trim();
 
-        // MULTI ESCOLA: Capturar escola_id
-        const config = await app._getAppConfig();
         let escolaId = 'default';
-
-        if (config.multi_escola) {
-            escolaId = document.getElementById('input-turma-escola').value;
-            if (!escolaId) {
-                utils.mostrarToast('Por favor, selecione uma escola', 'warning');
-                document.getElementById('input-turma-escola').focus();
-                return;
-            }
-        }
 
         if (!nome) {
             utils.mostrarToast('Por favor, informe o nome da turma', 'warning');
@@ -289,28 +277,27 @@ const turmas = {
             return;
         }
 
-        const segundoHorarioAtivo = !!document.getElementById('input-turma-segundo-horario')?.checked;
         const politicaNumeroChamada = (document.getElementById('input-turma-politica-numero')?.value || 'alphabetical_shift').trim();
 
         const novaTurma = {
             // id: 'turma_' + Date.now(),
             nome: nome,
             descricao: descricao,
-            escolaId: escolaId, // Usando camelCase conforme schema novo? Validar se db.js usa escolaId ou escola_id no index
-            segundoHorarioAtivo: segundoHorarioAtivo,
+            escolaId: escolaId,
+            segundoHorarioAtivo: false,
             politicaNumeroChamada: ['append', 'manual', 'alphabetical_shift'].includes(politicaNumeroChamada)
                 ? politicaNumeroChamada
                 : 'alphabetical_shift',
-            // O index no db.js é 'escolaId'. Mantendo consistencia
+            // O index no db.js - 'escolaId'. Mantendo consistencia
             criadaEm: new Date().toISOString()
-            // REMOVIDO: alunos: {} -> Alunos agora são store independente
+            // REMOVIDO: alunos: {} -> Alunos agora sao store independente
         };
 
         try {
             await db.add('turmas', novaTurma);
             app.fecharModal('modal-nova-turma');
 
-            // Atualizar lista (se falhar, apenas loga erro mas considera sucesso na criação)
+            // Atualizar lista (se falhar, apenas loga erro mas considera sucesso na criacao)
             try {
                 await this.listar();
             } catch (listError) {
@@ -331,18 +318,18 @@ const turmas = {
             this.turmaAtual = await db.get('turmas', turmaId);
 
             if (!this.turmaAtual) {
-                utils.mostrarToast('Turma não encontrada', 'error');
+                utils.mostrarToast('Turma nao encontrada', 'error');
                 return;
             }
 
             const iconSchool = '<svg class="icon-svg icon-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg>';
             const iconTurma = '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>';
 
-            // Atualizar informações da turma UI
+            // Atualizar informa��es da turma UI
             document.getElementById('turma-nome-detalhe').innerHTML =
                 `<span class="turma-headline-icon">${iconTurma}</span><span>${utils.escapeHtml(this.turmaAtual.nome)}</span>`;
             document.getElementById('turma-descricao-detalhe').textContent =
-                this.turmaAtual.descricao || 'Sem descrição';
+                this.turmaAtual.descricao || 'Sem descricao';
             this._atualizarControleSegundoHorarioDetalhe();
 
             // Counts e metadados da turma
@@ -363,17 +350,17 @@ const turmas = {
             document.getElementById('turma-total-alunos').textContent = alunosDaTurma.length;
             document.getElementById('turma-total-chamadas-realizadas').textContent = chamadasDaTurma.length;
 
-            // Atualizar título do header
+            // Atualizar titulo do header
             document.getElementById('header-title').textContent = 'Turma';
 
-            // Mostrar botão voltar
+            // Mostrar botao voltar
             document.getElementById('btn-back').style.display = 'block';
 
-            // Carregar alunos e histórico da turma atual.
+            // Carregar alunos e hist�rico da turma atual.
             if (typeof alunos.listar === 'function') alunos.listar();
             if (typeof chamadas.listarHistorico === 'function') chamadas.listarHistorico();
 
-            // Salvar estado para persistência (Lapidação)
+            // Salvar estado para persistencia (Lapidacao)
             sessionStorage.setItem('chamada_pro_ultima_turma', turmaId);
 
             // Mudar para tela de detalhes
@@ -398,13 +385,13 @@ const turmas = {
 
     async definirSegundoHorario(turmaId, novoValor) {
         if (!turmaId) {
-            utils.mostrarToast('Turma não encontrada', 'error');
+            utils.mostrarToast('Turma nao encontrada', 'error');
             return false;
         }
 
         const turma = await db.get('turmas', turmaId);
         if (!turma) {
-            utils.mostrarToast('Turma não encontrada', 'error');
+            utils.mostrarToast('Turma nao encontrada', 'error');
             return false;
         }
 
@@ -420,12 +407,12 @@ const turmas = {
         if (!novoValor) {
             const chamadasDaTurma = await db.getByIndex('chamadas', 'turmaId', turmaId);
             const possuiRegistrosSegundoHorario = chamadasDaTurma.some(c => c.slot === 2);
-            let mensagem = 'Deseja desativar o 2º horário desta turma?';
+            let mensagem = 'Deseja desativar o 2o horario desta turma?';
             if (possuiRegistrosSegundoHorario) {
-                mensagem += '\n\nEsta turma já tem registros no 2º horário. Eles não serão apagados, mas podem deixar de aparecer em alguns relatórios enquanto a opção estiver desativada.';
+                mensagem += '\n\nEsta turma ja tem registros no 2o horario. Eles nao serao apagados, mas podem deixar de aparecer em alguns relatorios enquanto a opcao estiver desativada.';
             }
             const confirmarMudanca = await app.confirmarAcao({
-                title: 'Desativar 2º horário',
+                title: 'Desativar 2o horario',
                 message: mensagem,
                 confirmText: 'Desativar',
                 cancelText: 'Cancelar'
@@ -446,7 +433,7 @@ const turmas = {
         }
 
         utils.mostrarToast(
-            novoValor ? '2º horário ativado para a turma' : '2º horário desativado para a turma',
+            novoValor ? '2o horario ativado para a turma' : '2o horario desativado para a turma',
             'success'
         );
         return true;
@@ -460,7 +447,7 @@ const turmas = {
         }
 
         if (typeof exportModule === 'undefined' || typeof exportModule.exportarTurmaJSON !== 'function') {
-            utils.mostrarToast('Módulo de exportação indisponível', 'error');
+            utils.mostrarToast('Modulo de exportacao indisponivel', 'error');
             return;
         }
 
@@ -474,7 +461,7 @@ const turmas = {
 
     async recuperarBackupTurmaAtual() {
         if (typeof exportModule === 'undefined' || typeof exportModule.importarTurmaJSON !== 'function') {
-            utils.mostrarToast('Módulo de recuperação indisponível', 'error');
+            utils.mostrarToast('Modulo de recuperacao indisponivel', 'error');
             return;
         }
 
@@ -482,7 +469,7 @@ const turmas = {
             const novaTurmaId = await exportModule.importarTurmaJSON();
             if (!novaTurmaId) return;
 
-            // Atualizar dropdowns de escola após recuperação (caso backup traga escola nova)
+            // Atualizar dropdowns de escola apos recuperacao (caso backup traga escola nova)
             if (typeof escolas?.renderizarDropdown === 'function') {
                 await escolas.renderizarDropdown('filter-escola');
                 await escolas.renderizarDropdown('input-turma-escola');
@@ -562,12 +549,10 @@ const turmas = {
                             </div>
                             ${selectHtml}
                         </div>
-                        <div class="gerenciar-turma-meta">${iconUsers} ${alunosQtd} alunos <span class="meta-dot">•</span> ${iconCalls} ${chamadasQtd} chamadas</div>
+                        <div class="gerenciar-turma-meta">${iconUsers} ${alunosQtd} alunos <span class="meta-dot">�</span> ${iconCalls} ${chamadasQtd} chamadas</div>
                         <div class="gerenciar-turma-actions">
                             <button class="btn btn-secondary btn-sm" data-action="turmas-abrir-item-gerenciar" data-turma-id="${turma.id}">Abrir</button>
                             <button class="btn btn-secondary btn-sm" data-action="turmas-editar-item-gerenciar" data-turma-id="${turma.id}">Editar</button>
-                            <button class="btn btn-secondary btn-sm" data-action="turmas-exportar-item-gerenciar" data-turma-id="${turma.id}">Backup</button>
-                            <button class="btn btn-secondary btn-sm" data-action="turmas-exportar-migracao-item-gerenciar" data-turma-id="${turma.id}">Enviar para Professor</button>
                             <button class="btn btn-danger btn-sm" data-action="turmas-excluir-item-gerenciar" data-turma-id="${turma.id}">Excluir</button>
                         </div>
                     </div>
@@ -629,7 +614,7 @@ const turmas = {
 
     async recuperarBackupTurmaGlobal() {
         if (typeof exportModule === 'undefined' || typeof exportModule.importarTurmaJSON !== 'function') {
-            utils.mostrarToast('Módulo de recuperação indisponível', 'error');
+            utils.mostrarToast('Modulo de recuperacao indisponivel', 'error');
             return;
         }
 
@@ -699,7 +684,7 @@ const turmas = {
 
         const confirmar = await app.confirmarAcao({
             title: 'Excluir turmas selecionadas',
-            message: `Excluir ${ids.length} turma(s) selecionada(s)? Esta ação não pode ser desfeita.`,
+            message: `Excluir ${ids.length} turma(s) selecionada(s)? Esta acao nao pode ser desfeita.`,
             confirmText: 'Excluir selecionadas',
             cancelText: 'Cancelar'
         });
@@ -729,7 +714,7 @@ const turmas = {
             this.gerenciarSelecaoAtiva = false;
             await this.listar();
             await this.renderizarModalGerenciarTurmas();
-            utils.mostrarToast('Turmas excluídas com sucesso', 'success');
+            utils.mostrarToast('Turmas excluidas com sucesso', 'success');
         } catch (error) {
             console.error('Erro ao excluir turmas selecionadas:', error);
             utils.mostrarToast('Erro ao excluir turmas selecionadas', 'error');
@@ -751,7 +736,7 @@ const turmas = {
     async exportarItemGerenciarTurmas(turmaId) {
         if (!turmaId) return;
         if (typeof exportModule === 'undefined' || typeof exportModule.exportarTurmaJSON !== 'function') {
-            utils.mostrarToast('Módulo de exportação indisponível', 'error');
+            utils.mostrarToast('Modulo de exportacao indisponivel', 'error');
             return;
         }
         await exportModule.exportarTurmaJSON(turmaId);
@@ -764,6 +749,17 @@ const turmas = {
             return;
         }
         await exportModule.exportarTurmaProfessorJSON(turmaId);
+    },
+
+    async abrirAlunosDaHome() {
+        const turmasAll = await db.getAll('turmas');
+        if (!turmasAll.length) {
+            utils.mostrarToast('Crie uma turma primeiro para gerenciar os alunos', 'warning');
+            return;
+        }
+
+        await this.abrirDetalhes(turmasAll[0].id);
+        app.mudarTab('alunos');
     },
 
     async excluirItemGerenciarTurmas(turmaId) {
@@ -781,30 +777,21 @@ const turmas = {
     async mostrarModalEditarTurma(id) {
         const turma = await db.get('turmas', id);
         if (!turma) {
-            utils.mostrarToast('Turma não encontrada', 'error');
+            utils.mostrarToast('Turma nao encontrada', 'error');
             return;
         }
 
         const modal = document.getElementById('modal-editar-turma');
         if (!modal) return;
 
-        await escolas.renderizarDropdown('input-editar-turma-escola');
-
         document.getElementById('input-editar-turma-id').value = turma.id;
         document.getElementById('input-editar-turma-nome').value = turma.nome || '';
         document.getElementById('input-editar-turma-descricao').value = turma.descricao || '';
-        document.getElementById('input-editar-turma-segundo-horario').checked = !!turma.segundoHorarioAtivo;
         const politicaNumeroEdit = document.getElementById('input-editar-turma-politica-numero');
         if (politicaNumeroEdit) {
             politicaNumeroEdit.value = ['append', 'manual', 'alphabetical_shift'].includes(turma.politicaNumeroChamada)
                 ? turma.politicaNumeroChamada
                 : 'alphabetical_shift';
-        }
-
-        const selectEscola = document.getElementById('input-editar-turma-escola');
-        if (selectEscola) {
-            selectEscola.value = turma.escolaId || 'default';
-            if (!selectEscola.value) selectEscola.value = 'default';
         }
 
         modal.classList.add('active');
@@ -814,20 +801,18 @@ const turmas = {
     async salvarEdicaoTurma() {
         const turmaId = document.getElementById('input-editar-turma-id')?.value;
         if (!turmaId) {
-            utils.mostrarToast('Turma não encontrada', 'error');
+            utils.mostrarToast('Turma nao encontrada', 'error');
             return;
         }
 
         const turma = await db.get('turmas', turmaId);
         if (!turma) {
-            utils.mostrarToast('Turma não encontrada', 'error');
+            utils.mostrarToast('Turma nao encontrada', 'error');
             return;
         }
 
         const novoNome = (document.getElementById('input-editar-turma-nome')?.value || '').trim();
         const novaDescricao = (document.getElementById('input-editar-turma-descricao')?.value || '').trim();
-        const novaEscolaId = (document.getElementById('input-editar-turma-escola')?.value || '').trim();
-        const novoSegundoHorario = !!document.getElementById('input-editar-turma-segundo-horario')?.checked;
         const novaPoliticaNumero = (document.getElementById('input-editar-turma-politica-numero')?.value || 'alphabetical_shift').trim();
 
         if (!novoNome) {
@@ -836,27 +821,16 @@ const turmas = {
             return;
         }
 
-        if (!novaEscolaId) {
-            utils.mostrarToast('Por favor, selecione uma escola', 'warning');
-            document.getElementById('input-editar-turma-escola')?.focus();
-            return;
-        }
-
-        const valorSegundoHorarioAtual = !!turma.segundoHorarioAtivo;
         const politicaNumeroAtual = ['append', 'manual', 'alphabetical_shift'].includes(turma.politicaNumeroChamada)
             ? turma.politicaNumeroChamada
             : 'alphabetical_shift';
         turma.nome = novoNome;
         turma.descricao = novaDescricao;
-        turma.escolaId = novaEscolaId;
+        turma.escolaId = 'default';
         turma.politicaNumeroChamada = ['append', 'manual', 'alphabetical_shift'].includes(novaPoliticaNumero)
             ? novaPoliticaNumero
             : 'alphabetical_shift';
         await db.put('turmas', turma);
-
-        if (valorSegundoHorarioAtual !== novoSegundoHorario) {
-            await this.definirSegundoHorario(turmaId, novoSegundoHorario);
-        }
         if (politicaNumeroAtual !== turma.politicaNumeroChamada && turma.politicaNumeroChamada === 'alphabetical_shift') {
             if (typeof alunos?.recalcularNumeracaoTurma === 'function') {
                 await alunos.recalcularNumeracaoTurma(turmaId, true);
@@ -883,7 +857,7 @@ const turmas = {
                 message: 'Atualize apenas o nome exibido para esta turma.',
                 label: 'Nome da turma',
                 value: turma.nome || '',
-                placeholder: 'Ex: 3º Ano A - Matemática',
+                placeholder: 'Ex: 3o Ano A - Matematica',
                 confirmText: 'Salvar nome',
                 cancelText: 'Cancelar',
                 validate: (value) => String(value || '').trim() ? true : 'Informe um nome para a turma'
@@ -906,7 +880,7 @@ const turmas = {
         }
     },
 
-    // Excluir turma (botão da UI)
+    // Excluir turma (botao da UI)
     async excluirTurma(turmaId) {
         if (!turmaId) {
             utils.mostrarToast('Nenhuma turma selecionada', 'error');
@@ -916,7 +890,7 @@ const turmas = {
         if (!this.turmaAtual || this.turmaAtual.id !== turmaId) {
             this.turmaAtual = await db.get('turmas', turmaId);
             if (!this.turmaAtual) {
-                utils.mostrarToast('Turma não encontrada', 'error');
+                utils.mostrarToast('Turma nao encontrada', 'error');
                 return;
             }
         }
@@ -924,7 +898,7 @@ const turmas = {
         await this.confirmarExcluirTurma();
     },
 
-    // Confirmar exclusão de turma
+    // Confirmar exclusao de turma
     async confirmarExcluirTurma() {
         if (!this.turmaAtual) {
             utils.mostrarToast('Nenhuma turma selecionada', 'error');
@@ -935,13 +909,13 @@ const turmas = {
         const alunosDaTurma = await db.getByIndex('alunos', 'turmaId', this.turmaAtual.id);
         const chamadasDaTurma = await db.getByIndex('chamadas', 'turmaId', this.turmaAtual.id);
 
-        const mensagem = `⚠️ **EXCLUSÃO IRREVERSÍVEL** ⚠️\n\n` +
+        const mensagem = `?? **EXCLUSAO IRREVERSIVEL** ??\n\n` +
             `Tem certeza que deseja excluir a turma "${this.turmaAtual.nome}"?\n\n` +
-            `📌 **Serão excluídos permanentemente:**\n` +
-            `• ${alunosDaTurma.length} aluno(s) cadastrado(s)\n` +
-            `• ${chamadasDaTurma.length} registro(s) de chamada\n` +
-            `• Todos os dados associados\n\n` +
-            `Esta ação NÃO pode ser desfeita!`;
+            `?? **Serao excluidos permanentemente:**\n` +
+            `- ${alunosDaTurma.length} aluno(s) cadastrado(s)\n` +
+            `- ${chamadasDaTurma.length} registro(s) de chamada\n` +
+            `- Todos os dados associados\n\n` +
+            `Esta acao NAO pode ser desfeita!`;
 
         const confirmarExclusao = await app.confirmarAcao({
             title: 'Excluir turma',
@@ -975,7 +949,7 @@ const turmas = {
 
             await Promise.all(deletePromises);
 
-            utils.mostrarToast('Turma e todos os dados associados foram excluídos', 'success');
+            utils.mostrarToast('Turma e todos os dados associados foram excluidos', 'success');
 
             // Limpar estado atual
             this.turmaAtual = null;
@@ -984,10 +958,10 @@ const turmas = {
             await this.listar();
             app.mostrarTela('tela-turmas');
 
-            // Limpar título do header
+            // Limpar titulo do header
             document.getElementById('header-title').textContent = 'Turmas';
 
-            // Esconder botão voltar
+            // Esconder botao voltar
             document.getElementById('btn-back').style.display = 'none';
 
         } catch (error) {
@@ -998,7 +972,7 @@ const turmas = {
 
     // Deletar turma (mantido para compatibilidade, redireciona para cascade)
     async deletar(turmaId) {
-        // Redireciona para logica completa se tiver confirmação simples, mas ideal é usar confirmarExcluirTurma
+        // Redireciona para logica completa se tiver confirmacao simples, mas ideal - usar confirmarExcluirTurma
         const confirmar = await app.confirmarAcao({
             title: 'Excluir turma',
             message: 'Tem certeza que deseja excluir esta turma?',
@@ -1016,6 +990,8 @@ const turmas = {
         await this.listar();
     }
 };
+
+
 
 
 
