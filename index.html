@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
@@ -6,7 +6,7 @@
     <meta http-equiv="Content-Security-Policy"
         content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; manifest-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' blob:; worker-src 'self' blob:; child-src 'self' blob:">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Chamada Facil - Scanner de Presenca</title>
+    <title>Chamada Facil - Scanner de presença</title>
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#212F52">
@@ -14,7 +14,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Chamada Facil">
-    <meta name="description" content="Sistema inteligente de controle de presenca via QR Code para professores">
+    <meta name="description" content="Sistema inteligente de controle de presença via QR Code para professores">
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
@@ -54,33 +54,33 @@
                 <img src="assets/logo1024wt.svg" alt="Chamada Facil" class="logo-img">
                 <h1><span class="onboarding-wordmark-top">Chamada</span> <span class="onboarding-wordmark-bottom">Facil</span></h1>
                 <div class="app-version-badge app-version-badge--onboarding">Free</div>
-                <p class="subtitle">Chamada escolar simples, rapida e offline</p>
+                <p class="subtitle">Chamada escolar simples, rápida e offline</p>
             </div>
 
             <div class="onboarding-highlight-card">
                 <div class="onboarding-highlight-content">
-                    <h3>Versao Free</h3>
-                    <p>Agilizada com QR Code para facilitar o registro de presencas.</p>
-                    <p>Nesta versao, voce pode cadastrar 1 escola, 1 turma e alunos ilimitados.</p>
-                    <p>As versoes Lite e Pro chegarao depois com novos recursos e evolucoes do app.</p>
+                    <h3>Versão Free</h3>
+                    <p>Agilizada com QR Code para facilitar o registro de presenças.</p>
+                    <p>Nesta versão, você pode cadastrar 1 escola, 1 turma e alunos ilimitados.</p>
+                    <p>As versões Lite e Pro chegarão depois com novos recursos e evoluções do app.</p>
                 </div>
             </div>
 
             <div class="onboarding-profile">
                 <label for="onboarding-professor-nome">Nome do professor(a) (opcional)</label>
                 <input type="text" id="onboarding-professor-nome" maxlength="80" placeholder="Ex: Ana Souza" />
-                <small class="text-muted">Sera usado para identificacao em relatorios e PDF.</small>
+                <small class="text-muted">Será usado para identificação em relatórios e PDF.</small>
             </div>
 
             <div class="onboarding-profile">
                 <label for="onboarding-escola-nome">Qual a sua escola? *</label>
-                <input type="text" id="onboarding-escola-nome" maxlength="100" placeholder="Ex: Colegio Sao Jose" />
-                <small class="text-muted">Campo obrigatorio para vincular suas turmas.</small>
+                <input type="text" id="onboarding-escola-nome" maxlength="100" placeholder="Ex: Colégio São José" />
+                <small class="text-muted">Campo obrigatório para vincular suas turmas.</small>
             </div>
 
             <div class="onboarding-actions">
                 <button class="btn btn-primary onboarding-cta" data-action="app-concluir-onboarding">
-                    Comear Agora
+                    Começar Agora
                 </button>
             </div>
         </div>
@@ -223,7 +223,7 @@
                     <div class="alunos-context-row">
                         <div class="alunos-politica-control">
                             <label for="alunos-politica-select">Politica:</label>
-                            <select id="alunos-politica-select" data-change="alunos-mudar-politica-rapida">
+                            <select id="alunos-politica-select" data-change="alunos-mudar-politica-rápida">
                                 <option value="alphabetical_shift">Ordem alfabetica</option>
                                 <option value="append">Final da fila</option>
                                 <option value="manual">Manual</option>
@@ -327,9 +327,9 @@
                 <div class="chamada-info-card">
                     <h3 id="scanner-turma-nome"></h3>
                     <p id="scanner-data-hora"></p>
-                    <div class="presencas-counter">
-                        <span class="counter-label">Presencas:</span>
-                        <span class="counter-value" id="contador-presencas">0</span>
+                    <div class="presenças-counter">
+                        <span class="counter-label">presenças:</span>
+                        <span class="counter-value" id="contador-presenças">0</span>
                     </div>
                 </div>
             </div>
@@ -351,10 +351,10 @@
                 </button>
             </div>
 
-            <div class="presencas-live-list">
-                <h4>Presencas Confirmadas</h4>
-                <div id="lista-presencas-live">
-                    <!-- Presencas aparecerao aqui em tempo real -->
+            <div class="presenças-live-list">
+                <h4>presenças Confirmadas</h4>
+                <div id="lista-presenças-live">
+                    <!-- presenças aparecerao aqui em tempo real -->
                 </div>
             </div>
 
@@ -437,8 +437,8 @@
 
                 <div class="form-group" style="margin-bottom: 12px;">
                     <label for="config-professor-nome">Nome do professor(a)</label>
-                    <input type="text" id="config-professor-nome" maxlength="80" placeholder="Nao informado" />
-                    <small class="text-muted">Usado para identificacao em relatorios/PDF.</small>
+                    <input type="text" id="config-professor-nome" maxlength="80" placeholder="Não informado" />
+                    <small class="text-muted">Usado para identificação em relatórios/PDF.</small>
                 </div>
 
                 <div class="config-profile-actions">
@@ -486,7 +486,7 @@
     <div id="modal-app-choice" class="modal" data-overlay-close="modal-app-choice">
         <div class="modal-content modal-dialog-compact">
             <div class="modal-header">
-                <h3 id="modal-app-choice-title">Escolha uma acao</h3>
+                <h3 id="modal-app-choice-title">Escolha uma ação</h3>
                 <button class="btn-close" data-action="app-modal-choice-cancel">&times;</button>
             </div>
             <div class="modal-body">
@@ -500,11 +500,11 @@
         </div>
     </div>
 
-    <!-- Modal: Importacao de alunos -->
+    <!-- Modal: Importação de alunos -->
     <div id="modal-importacao-alunos" class="modal" data-overlay-close="modal-importacao-alunos">
         <div class="modal-content modal-importacao-alunos-content">
             <div class="modal-header">
-                <h3>Importacao de alunos</h3>
+                <h3>Importação de alunos</h3>
                 <button class="btn-close" data-action="close-modal" data-modal-id="modal-importacao-alunos">&times;</button>
             </div>
             <div class="modal-body">
@@ -517,7 +517,7 @@
                     </button>
                     <div class="importacao-alunos-apoio">
                         <a href="assets/modelos/modelo_alunos.xlsx" download>Baixar modelo da planilha</a>
-                        <small class="importacao-alunos-hint">Abra no Excel ou Google Sheets e nao altere os nomes das colunas.</small>
+                        <small class="importacao-alunos-hint">Abra no Excel ou Google Sheets e não altere os nomes das colunas.</small>
                     </div>
                 </div>
             </div>
@@ -661,13 +661,13 @@
                     <input type="text" id="input-aluno-nome" placeholder="Ex: Maria da Silva" />
                 </div>
                 <div class="form-group">
-                    <label>Matricula / ID *</label>
+                    <label>Matrícula / ID *</label>
                     <input type="text" id="input-aluno-matricula" placeholder="Ex: 2024001" />
                 </div>
                 <div class="form-group">
                     <label>Numero de Chamada</label>
                     <input type="number" id="input-aluno-numero" min="1" step="1" placeholder="Automatico" />
-                    <small class="text-muted">Usado para lista de chamada. Nao altera matricula nem QRCode.</small>
+                    <small class="text-muted">Usado para lista de chamada. Não altera matrícula nem QRCode.</small>
                 </div>
 
                 <div id="aluno-pontos-section" class="aluno-pontos-section" style="display: none;">
@@ -701,7 +701,7 @@
                             </svg>
                         </button>
                     </div>
-                    <small id="obs-oculta-hint" class="obs-oculta-hint" style="display:none;"><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>Observacao marcada como privada e nao aparece em relatorios para alunos</small>
+                    <small id="obs-oculta-hint" class="obs-oculta-hint" style="display:none;"><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>Observação marcada como privada e não aparece em relatórios para alunos</small>
                     <textarea id="input-aluno-obs" rows="2" placeholder="Anotacoes sobre o aluno"></textarea>
                 </div>
             </div>
@@ -806,11 +806,11 @@
                 <button class="btn-close" data-action="close-modal" data-modal-id="modal-gerenciar-escolas">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="modal-section-title">Escola da versao Free</div>
+                <div class="modal-section-title">Escola da Versão Free</div>
                 <div class="form-group">
                     <label>Nome da Escola *</label>
                     <div style="display: flex; gap: 8px;">
-                        <input type="text" id="input-nova-escola" placeholder="Ex: Colegio Sao Jose" style="flex: 1;" />
+                        <input type="text" id="input-nova-escola" placeholder="Ex: Colégio São José" style="flex: 1;" />
                         <button class="btn btn-primary" data-action="escolas-adicionar">
                             Adicionar
                         </button>
@@ -829,7 +829,7 @@
                             <button type="button" class="btn btn-secondary btn-sm" id="btn-remover-foto-nova-escola" style="display:none;" data-action="escolas-remover-foto-nova">
                                 Remover
                             </button>
-                            <br><small class="text-muted">Sera usada nos relatorios em PDF.</small>
+                            <br><small class="text-muted">Será usada nos relatórios em PDF.</small>
                         </div>
                     </div>
                     <input type="file" id="input-escola-foto-nova" accept="image/*" style="display:none;"
@@ -894,35 +894,35 @@
                 <div class="about-section">
                     <p><strong>Chamada Facil</strong></p>
                     <p>Sistema de chamada escolar com QR Code, focado em agilidade para professores.</p>
-                    <p style="margin-top: 12px;">Versao atual: <strong>Free</strong> <span style="color: var(--gray-500);">(<span data-app-version>v0.0.0-dev</span>)</span></p>
+                    <p style="margin-top: 12px;">Versão atual: <strong>Free</strong> <span style="color: var(--gray-500);">(<span data-app-version>v0.0.0-dev</span>)</span></p>
                 </div>
 
                 <div class="about-section">
-                    <div class="modal-section-title">Sobre a versao Free</div>
-                    <p>Esta e a versao Free do Chamada Facil: gratuita, funcional e pensada para uso imediato.</p>
+                    <div class="modal-section-title">Sobre a Versão Free</div>
+                    <p>Esta é a Versão Free do Chamada Facil: gratuita, funcional e pensada para uso imediato.</p>
                     <p>Ela foi criada para funcionar offline, com foco no essencial: 1 escola, 1 turma e alunos ilimitados.</p>
-                    <p>Recebera apenas atualizacoes essenciais de manutencao e estabilidade.</p>
+                    <p>Receberá apenas atualizações essenciais de manutenção e estabilidade.</p>
                 </div>
 
                 <div class="about-section">
                     <div class="modal-section-title">Lite e Pro</div>
-                    <p>A Lite trara mais praticidade para o professor no uso individual do app, com novos recursos e melhorias de experiencia.</p>
-                    <p>A Pro avancara para recursos mais completos e futuras evolucoes do projeto.</p>
-                    <p>As proximas versoes Lite e Pro serao apresentadas na landing page do Chamada Facil.</p>
+                    <p>A Lite trará mais praticidade para o professor no uso individual do app, com novos recursos e melhorias de experiência.</p>
+                    <p>A Pro avançará para recursos mais completos e futuras evoluções do projeto.</p>
+                    <p>As próximas versões Lite e Pro serão apresentadas na landing page do Chamada Facil.</p>
                     <div class="about-actions"><a class="btn btn-secondary btn-sm" href="https://www.chamadafacil.net.br" target="_blank" rel="noopener noreferrer">Site oficial</a></div>
                 </div>
 
                 <div class="about-section">
                     <div class="modal-section-title">Apoiar o projeto</div>
-                    <p>Se o app te ajuda no dia a dia, voce pode apoiar o projeto com um cafezinho.</p>
+                    <p>Se o app te ajuda no dia a dia, considere apoiar o projeto com um cafezinho.</p>
                     <div class="about-actions">
                         <button class="btn btn-secondary btn-sm" data-action="app-copiar-pix-chave">Copiar chave Pix</button>
-                        <button class="btn btn-secondary btn-sm" data-action="app-copiar-pix-codigo">Copiar codigo Pix</button>
+                        <button class="btn btn-secondary btn-sm" data-action="app-copiar-pix-codigo">Copiar código Pix</button>
                     </div>
                 </div>
 
                 <div class="about-section">
-                    <div class="modal-section-title">Contato e sugestoes</div>
+                    <div class="modal-section-title">Contato e sugestões</div>
                     <p>
                         <span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
                         contato@chamadafacil.net.br
@@ -952,7 +952,7 @@
                 <div class="relatorio-secao">
                     <h4 class="relatorio-secao-titulo"><span class="icon-inline" aria-hidden="true"><svg class="icon-svg icon-16" viewBox="0 0 24 24"><path d="M8 2h8"/><path d="M9 2v2"/><path d="M15 2v2"/><rect x="4" y="4" width="16" height="18" rx="2"/><path d="M8 11h8"/><path d="M8 15h5"/></svg></span>Relatorio Mensal de Chamadas</h4>
                     <p class="text-muted" style="font-size: 13px; margin-bottom: 10px;">
-                        Exporta a tabela de presenca/falta do mes selecionado no Diario de Classe.
+                        Exporta a tabela de presença/falta do mes selecionado no Diario de Classe.
                     </p>
                     <div class="relatorio-secao-acoes">
                         <button class="btn btn-secondary btn-sm" data-action="chamadas-exportar-relatorio-csv">
@@ -1050,6 +1050,8 @@
 </body>
 
 </html>
+
+
 
 
 

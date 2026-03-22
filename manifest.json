@@ -1,7 +1,7 @@
 {
-  "name": "Chamada Facil",
-  "short_name": "Chamada Facil",
-  "description": "Sistema inteligente de controle de presença via QR Code para professores",
+  "name": "Chamada Facil Free",
+  "short_name": "Chamada Free",
+  "description": "Versao Free do Chamada Facil: chamada escolar offline com QR Code para professores.",
   "id": "./",
   "start_url": "./",
   "scope": "./",
@@ -30,31 +30,5 @@
     }
   ],
   "categories": ["education", "productivity", "utilities"],
-  "screenshots": [],
-  "shortcuts": [
-    {
-      "name": "Nova Chamada",
-      "short_name": "Chamada",
-      "description": "Iniciar uma nova chamada",
-      "url": "./?action=nova-chamada",
-      "icons": [
-        {
-          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><text y='.9em' font-size='90'>📷</text></svg>",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "Minhas Turmas",
-      "short_name": "Turmas",
-      "description": "Ver minhas turmas",
-      "url": "./?action=turmas",
-      "icons": [
-        {
-          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><text y='.9em' font-size='90'>📚</text></svg>",
-          "sizes": "96x96"
-        }
-      ]
-    }
-  ]
+  "screenshots": []
 }

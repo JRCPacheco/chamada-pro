@@ -1,4 +1,4 @@
-// ===== TURMAS MODULE =====
+﻿// ===== TURMAS MODULE =====
 // Gerenciamento de turmas
 // Migrado para IndexedDB
 
@@ -239,7 +239,7 @@ const turmas = {
     async mostrarModalNovaTurma() {
         const turmasExistentes = await db.getAll('turmas');
         if (turmasExistentes.length >= 1) {
-            utils.mostrarToast('A versao Free permite apenas 1 turma', 'warning');
+            utils.mostrarToast('A versão Free permite apenas 1 turma', 'warning');
             return;
         }
 
@@ -262,7 +262,7 @@ const turmas = {
     async salvarNovaTurma() {
         const turmasExistentes = await db.getAll('turmas');
         if (turmasExistentes.length >= 1) {
-            utils.mostrarToast('A versao Free permite apenas 1 turma', 'warning');
+            utils.mostrarToast('A versão Free permite apenas 1 turma', 'warning');
             return;
         }
 
@@ -318,14 +318,14 @@ const turmas = {
             this.turmaAtual = await db.get('turmas', turmaId);
 
             if (!this.turmaAtual) {
-                utils.mostrarToast('Turma nao encontrada', 'error');
+                utils.mostrarToast('Turma não encontrada', 'error');
                 return;
             }
 
             const iconSchool = '<svg class="icon-svg icon-16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 4l9 6.5"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/><path d="M9 10h.01"/><path d="M15 10h.01"/></svg>';
             const iconTurma = '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>';
 
-            // Atualizar informa��es da turma UI
+            // Atualizar informaï¿½ï¿½es da turma UI
             document.getElementById('turma-nome-detalhe').innerHTML =
                 `<span class="turma-headline-icon">${iconTurma}</span><span>${utils.escapeHtml(this.turmaAtual.nome)}</span>`;
             document.getElementById('turma-descricao-detalhe').textContent =
@@ -356,7 +356,7 @@ const turmas = {
             // Mostrar botao voltar
             document.getElementById('btn-back').style.display = 'block';
 
-            // Carregar alunos e hist�rico da turma atual.
+            // Carregar alunos e histï¿½rico da turma atual.
             if (typeof alunos.listar === 'function') alunos.listar();
             if (typeof chamadas.listarHistorico === 'function') chamadas.listarHistorico();
 
@@ -385,13 +385,13 @@ const turmas = {
 
     async definirSegundoHorario(turmaId, novoValor) {
         if (!turmaId) {
-            utils.mostrarToast('Turma nao encontrada', 'error');
+            utils.mostrarToast('Turma não encontrada', 'error');
             return false;
         }
 
         const turma = await db.get('turmas', turmaId);
         if (!turma) {
-            utils.mostrarToast('Turma nao encontrada', 'error');
+            utils.mostrarToast('Turma não encontrada', 'error');
             return false;
         }
 
@@ -409,7 +409,7 @@ const turmas = {
             const possuiRegistrosSegundoHorario = chamadasDaTurma.some(c => c.slot === 2);
             let mensagem = 'Deseja desativar o 2o horario desta turma?';
             if (possuiRegistrosSegundoHorario) {
-                mensagem += '\n\nEsta turma ja tem registros no 2o horario. Eles nao serao apagados, mas podem deixar de aparecer em alguns relatorios enquanto a opcao estiver desativada.';
+                mensagem += '\n\nEsta turma já tem registros no 2º horário. Eles não serão apagados, mas podem deixar de aparecer em alguns relatórios enquanto a opção estiver desativada.';
             }
             const confirmarMudanca = await app.confirmarAcao({
                 title: 'Desativar 2o horario',
@@ -503,7 +503,7 @@ const turmas = {
                             </div>
                             ${selectHtml}
                         </div>
-                        <div class="gerenciar-turma-meta">${iconUsers} ${alunosQtd} alunos <span class="meta-dot">�</span> ${iconCalls} ${chamadasQtd} chamadas</div>
+                        <div class="gerenciar-turma-meta">${iconUsers} ${alunosQtd} alunos <span class="meta-dot">•</span> ${iconCalls} ${chamadasQtd} chamadas</div>
                         <div class="gerenciar-turma-actions">
                             <button class="btn btn-secondary btn-sm" data-action="turmas-abrir-item-gerenciar" data-turma-id="${turma.id}">Abrir</button>
                             <button class="btn btn-secondary btn-sm" data-action="turmas-editar-item-gerenciar" data-turma-id="${turma.id}">Editar</button>
@@ -575,7 +575,7 @@ const turmas = {
 
         const confirmar = await app.confirmarAcao({
             title: 'Excluir turmas selecionadas',
-            message: `Excluir ${ids.length} turma(s) selecionada(s)? Esta acao nao pode ser desfeita.`,
+            message: `Excluir ${ids.length} turma(s) selecionada(s)? Esta ação não pode ser desfeita.`,
             confirmText: 'Excluir selecionadas',
             cancelText: 'Cancelar'
         });
@@ -650,7 +650,7 @@ const turmas = {
     async mostrarModalEditarTurma(id) {
         const turma = await db.get('turmas', id);
         if (!turma) {
-            utils.mostrarToast('Turma nao encontrada', 'error');
+            utils.mostrarToast('Turma não encontrada', 'error');
             return;
         }
 
@@ -674,13 +674,13 @@ const turmas = {
     async salvarEdicaoTurma() {
         const turmaId = document.getElementById('input-editar-turma-id')?.value;
         if (!turmaId) {
-            utils.mostrarToast('Turma nao encontrada', 'error');
+            utils.mostrarToast('Turma não encontrada', 'error');
             return;
         }
 
         const turma = await db.get('turmas', turmaId);
         if (!turma) {
-            utils.mostrarToast('Turma nao encontrada', 'error');
+            utils.mostrarToast('Turma não encontrada', 'error');
             return;
         }
 
@@ -763,7 +763,7 @@ const turmas = {
         if (!this.turmaAtual || this.turmaAtual.id !== turmaId) {
             this.turmaAtual = await db.get('turmas', turmaId);
             if (!this.turmaAtual) {
-                utils.mostrarToast('Turma nao encontrada', 'error');
+                utils.mostrarToast('Turma não encontrada', 'error');
                 return;
             }
         }
@@ -863,6 +863,7 @@ const turmas = {
         await this.listar();
     }
 };
+
 
 
 
