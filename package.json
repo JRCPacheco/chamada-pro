@@ -1,0 +1,32 @@
+{
+    "name": "chamada-facil-free",
+    "version": "0.9.4-beta",
+    "description": "Versão Free do Chamada Fácil: chamada escolar offline com QR Code para professores.",
+    "main": "sw.js",
+    "directories": {
+        "doc": "docs"
+    },
+    "scripts": {
+        "cap:doctor": "npx cap doctor",
+        "cap:sync": "npx cap sync",
+        "cap:copy": "npx cap copy",
+        "cap:open:android": "npx cap open android"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/JRCPacheco/chamada-pro.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "commonjs",
+    "bugs": {
+        "url": "https://github.com/JRCPacheco/chamada-pro/issues"
+    },
+    "homepage": "https://github.com/JRCPacheco/chamada-pro#readme",
+    "devDependencies": {
+        "@capacitor/android": "^8.2.0",
+        "@capacitor/cli": "^8.2.0",
+        "@capacitor/core": "^8.2.0"
+    }
+}

@@ -9,3 +9,16 @@ dist/
 
 # Local checkpoint de retomada (nao publicar)
 docs/TRANSFER-STATUS.md
+
+# Capacitor / Android generated artifacts
+www/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+*.iml
+
+# OS / temp
+Thumbs.db
+.DS_Store
