@@ -737,7 +737,7 @@ const alunos = {
 
         const numeroDesejado = this._parseNumeroChamada(numeroInput);
         if (Number.isNaN(numeroDesejado)) {
-            utils.mostrarToast('Numero de chamada invalido', 'warning');
+            utils.mostrarToast('Número de chamada inválido', 'warning');
             document.getElementById('input-aluno-numero')?.focus();
             return;
         }
@@ -802,13 +802,13 @@ const alunos = {
                     const conflito = alunosTurma.find((a) => a.id !== original.id && Number(a.numeroChamada) === numeroDesejado);
                     if (conflito) {
                         const confirmarTroca = await app.confirmarAcao({
-                            title: 'Trocar numeros de chamada',
-                            message: `O numero ${numeroDesejado} ja pertence a ${conflito.nome}. Deseja trocar os numeros entre eles?`,
-                            confirmText: 'Trocar numeros',
+                            title: 'Trocar números de chamada',
+                            message: `O número ${numeroDesejado} já pertence a ${conflito.nome}. Deseja trocar os números entre eles?`,
+                            confirmText: 'Trocar números',
                             cancelText: 'Cancelar'
                         });
                         if (!confirmarTroca) {
-                            utils.mostrarToast('Escolha outro numero de chamada', 'warning');
+                            utils.mostrarToast('Escolha outro número de chamada', 'warning');
                             return;
                         }
                         trocaNumeroPendente = { alunoConflitoId: conflito.id, numeroOriginal: numeroAtual };
@@ -1605,6 +1605,7 @@ const alunos = {
         }
     }
 };
+
 
 
 

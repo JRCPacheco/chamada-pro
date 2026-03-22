@@ -198,7 +198,7 @@ const app = {
             this._configCache = cfg;
             console.log("[config] default criado");
         } else {
-            // MigraÃ§Ã£o leve para incluir novas chaves sem quebrar configs antigas
+            // Migracao leve para incluir novas chaves sem quebrar configs antigas
             let changed = false;
             Object.keys(CONFIG_DEFAULTS.app).forEach((k) => {
                 if (cfg[k] === undefined) {
@@ -220,7 +220,7 @@ const app = {
         return cfg;
     },
 
-    // Inicializar aplicaÃ§Ã£o
+    // Inicializar aplicacao
     async init() {
         if (this._initRunning) {
             console.warn("[app] init jÃ¡ em execuÃ§Ã£o");
@@ -357,9 +357,9 @@ const app = {
             // Atualizar header
             this.atualizarHeader(telaId);
 
-            // Garante dados mais recentes ao abrir ConfiguraÃ§Ãµes
+            // Garante dados mais recentes ao abrir Configuracoes
             if (telaId === 'tela-config') {
-                this.carregarConfig().catch((e) => console.error('Erro ao carregar configuraÃ§Ãµes:', e));
+                this.carregarConfig().catch((e) => console.error('Erro ao carregar configurações:', e));
             }
 
             // Scroll para o topo
@@ -396,7 +396,7 @@ const app = {
                 btnBack.style.display = 'block';
                 break;
             case 'tela-config':
-                headerTitle.textContent = 'ConfiguraÃ§Ãµes';
+                headerTitle.textContent = 'Configurações';
                 btnBack.style.display = 'block';
                 break;
         }
@@ -454,7 +454,7 @@ const app = {
             };
         });
 
-        // ConfiguraÃ§Ãµes
+        // Configuracoes
         await this.setupConfigListeners();
 
         // Prevenir zoom em inputs
@@ -604,7 +604,7 @@ const app = {
             return Promise.resolve(null);
         }
 
-        titleEl.textContent = title || 'Escolha uma aÃ§Ã£o';
+        titleEl.textContent = title || 'Escolha uma ação';
         messageEl.textContent = message || '';
 
         buttons.forEach((btn, index) => {
@@ -629,7 +629,7 @@ const app = {
         });
     },
 
-    async confirmarAcao({ title = 'Confirmar aÃ§Ã£o', message = '', confirmText = 'Continuar', cancelText = 'Cancelar' }) {
+    async confirmarAcao({ title = 'Confirmar ação', message = '', confirmText = 'Continuar', cancelText = 'Cancelar' }) {
         const resposta = await this.abrirModalEscolha({
             title,
             message,
@@ -678,7 +678,7 @@ const app = {
                 '    </div>',
                 '    <div class="modal-body modal-cafe-body">',
                 '        <img src="assets/coffeecard.png" alt="Hora do Café" class="coffee-card-image" />',
-                '        <p>Se o Chamada Facil te ajuda no dia a dia, considere apoiar o projeto com um cafezinho.</p>',
+                '        <p>Se o Chamada Fácil te ajuda no dia a dia, considere apoiar o projeto com um cafezinho.</p>',
                 '        <div class="about-actions">',
                 '            <button class="btn btn-secondary btn-sm" data-action="app-copiar-pix-chave">Copiar chave Pix</button>',
                 '            <button class="btn btn-secondary btn-sm" data-action="app-copiar-pix-codigo">Copiar código Pix</button>',
@@ -773,7 +773,7 @@ const app = {
 
         await db.put('config', cfg);
         this._configCache = cfg;
-        utils.mostrarToast('ConfiguraÃ§Ãµes salvas', 'success');
+        utils.mostrarToast('Configurações salvas', 'success');
     },
 
     async salvarNomeProfessor() {
@@ -806,7 +806,7 @@ const app = {
     },
 
 
-    // Aplicar configuraÃ§Ãµes de Interface (Multi Escola)
+    // Aplicar configuracoes de Interface (Multi Escola)
     async aplicarConfiguracoesInterface() {
         const { multi_escola } = await this._getAppConfig();
 
@@ -846,14 +846,14 @@ const app = {
                     filterSelect.value = escolaPreferencialId;
                 }
 
-                // Remover listener antigo se existir para evitar duplicaÃ§Ã£o ou conflitos
+                // Remover listener antigo se existir para evitar duplicacao ou conflitos
                 filterSelect.onchange = null;
 
                 filterSelect.onchange = () => {
                     turmas.filtrarPorEscola(filterSelect.value);
                 };
 
-                // Menos cliques: ao ativar multi-escola, inicia filtrando pela escola padrÃ£o.
+                // Menos cliques: ao ativar multi-escola, inicia filtrando pela escola padrao.
                 await turmas.filtrarPorEscola(filterSelect.value || escolaPreferencialId || '');
             }
         } else {
@@ -862,7 +862,7 @@ const app = {
                 filterSelect.value = '';
                 filterSelect.onchange = null;
             }
-            // Atualizar lista de turmas para mostrar tudo (sem o badge que o renderizarTurmas jÃ¡ trata)
+            // Atualizar lista de turmas para mostrar tudo (sem o badge que o renderizarTurmas ja trata)
             if (this.telaAtual === 'tela-turmas') {
                 turmas.listar();
             }
@@ -921,7 +921,7 @@ const app = {
                 </div>
                 <div class=\"modal-body\">
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M4 19.5A2.5 2.5 0 0 1 6.5 17H20\"/><path d=\"M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z\"/></svg></span>Criar Turma</h4>
-                    <p>Clique em \"Adicionar turma\" para criar sua turma principal. Na versão Free, voce pode usar 1 escola e 1 turma.</p>
+                    <p>Clique em \"Adicionar turma\" para criar sua turma principal. Na versão Free, você pode usar 1 escola e 1 turma.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M3 10.5 12 4l9 6.5\"/><path d=\"M5 10v9h14v-9\"/><path d=\"M9 19v-5h6v5\"/><path d=\"M9 10h.01\"/><path d=\"M15 10h.01\"/></svg></span>Gerenciar Escolas</h4>
                     <p>Use o card \"Escolas\" para editar o nome e a logo da sua escola. A versão Free funciona com apenas 1 escola.</p>
@@ -934,7 +934,7 @@ const app = {
                     <p>Na aba \"Diário de Classe\", acompanhe o histórico mensal de chamadas da turma. Você pode abrir detalhes, exportar histórico e gerenciar registros.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M12 6v6l4 2\"/><circle cx=\"12\" cy=\"12\" r=\"9\"/></svg></span>Segundo Horário</h4>
-                    <p>A versão Free mantem um fluxo simples com uma chamada por dia para cada turma.</p>
+                    <p>A versão Free mantém um fluxo simples com uma chamada por dia para cada turma.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M4 4h6v6H4z\"/><path d=\"M14 4h6v6h-6z\"/><path d=\"M4 14h6v6H4z\"/><path d=\"M14 14h2\"/><path d=\"M18 14h2\"/><path d=\"M14 18h2\"/><path d=\"M18 18h2\"/></svg></span>Gerar QR Codes</h4>
                     <p>Na aba "Alunos", clique em "Gerar QR Codes" para criar um PDF com os códigos dos alunos. Depois, imprima e distribua os QRCodes para uso na chamada.</p>
@@ -946,7 +946,7 @@ const app = {
                     <p>Após finalizar, você pode exportar os dados em CSV e acompanhar o diário de classe localmente.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M3 8.5 12 4l9 4.5-9 4.5-9-4.5Z\"/><path d=\"M3 8.5V16l9 4 9-4V8.5\"/><path d=\"M12 13v7\"/></svg></span>Backup e Recuperação</h4>
-                    <p>A versão Free funciona offline e nao inclui backup ou compartilhamento de dados entre aparelhos.</p>
+                    <p>A versão Free funciona offline e não inclui backup ou compartilhamento de dados entre aparelhos.</p>
                 </div>
                 <div class=\"modal-footer\">
                     <button class=\"btn btn-primary\" data-action=\"close-nearest-modal\">Entendi</button>
@@ -1035,7 +1035,7 @@ if ('serviceWorker' in navigator) {
                     });
                 });
 
-                // Busca atualizaÃ§Ã£o apÃ³s registrar, sem interromper usuÃ¡rio.
+                // Busca atualização após registrar, sem interromper usuário.
                 registration.update().catch(() => { });
 
                 setInterval(() => {
@@ -1051,6 +1051,8 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
+
+
 
 
 

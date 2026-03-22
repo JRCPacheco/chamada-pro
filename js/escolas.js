@@ -1,4 +1,4 @@
-// ===== ESCOLAS MODULE =====
+Ôªø// ===== ESCOLAS MODULE =====
 // Gerenciamento de escolas (Multi-School Support)
 // Migrado para IndexedDB
 
@@ -47,7 +47,7 @@ const escolas = {
                         <strong>${utils.escapeHtml(escola.nome)}</strong>
                         <div class="escola-item-meta">
                             ${temTurmas ? `<span class="count-badge">${turmasDaEscola.length} turma${turmasDaEscola.length !== 1 ? 's' : ''}</span>` : '<span class="count-badge empty">Sem turmas</span>'}
-                            ${isDefault ? '<span class="badge-default">Padr„o</span>' : ''}
+                            ${isDefault ? '<span class="badge-default">Padr√£o</span>' : ''}
                         </div>
                     </div>
                     <div class="escola-item-actions">
@@ -141,7 +141,7 @@ const escolas = {
         const escolasExistentes = await db.getAll('escolas');
 
         if (escolasExistentes.length >= 1) {
-            utils.mostrarToast('A versao Free permite apenas 1 escola', 'warning');
+            utils.mostrarToast('A vers√£o Free permite apenas 1 escola', 'warning');
             return;
         }
 
@@ -151,13 +151,13 @@ const escolas = {
             return;
         }
 
-        // Validar nome ˙nico (case-insensitive)
+        // Validar nome √∫nico (case-insensitive)
         const escolasArray = await db.getAll('escolas');
         const nomeNormalizado = nome.toLowerCase();
         const jaExiste = escolasArray.some(e => e.nome.toLowerCase() === nomeNormalizado);
 
         if (jaExiste) {
-            utils.mostrarToast('J· existe uma escola com este nome', 'warning');
+            utils.mostrarToast('J√° existe uma escola com este nome', 'warning');
             input.focus();
             return;
         }
@@ -181,7 +181,7 @@ const escolas = {
         const possuiEscola = escolasArray.length >= 1;
         if (input) {
             input.disabled = possuiEscola;
-            input.placeholder = possuiEscola ? 'A versao Free permite apenas 1 escola' : 'Ex: Colegio Sao Jose';
+            input.placeholder = possuiEscola ? 'A vers√£o Free permite apenas 1 escola' : 'Ex: Col√©gio S√£o Jos√©';
         }
 
             await this.listarEscolas();
@@ -220,7 +220,7 @@ const escolas = {
         if (input) input.value = '';
     },
 
-    // Processar foto para ediÁ„o de escola
+    // Processar foto para edi√ß√£o de escola
     processarFotoEditar(file) {
         this._processarFoto(file, (base64) => {
             this.fotoEditarTemp = base64;
@@ -270,12 +270,12 @@ const escolas = {
         reader.readAsDataURL(file);
     },
 
-    // Abrir modal de ediÁ„o (com suporte a foto)
+    // Abrir modal de edi√ß√£o (com suporte a foto)
     async abrirModalEditar(id) {
         try {
             const escola = await db.get('escolas', id);
             if (!escola) {
-                utils.mostrarToast('Escola n„o encontrada', 'error');
+                utils.mostrarToast('Escola n√£o encontrada', 'error');
                 return;
             }
 
@@ -297,11 +297,11 @@ const escolas = {
             app.abrirModal('modal-editar-escola');
         } catch (e) {
             console.error(e);
-            utils.mostrarToast('Erro ao abrir ediÁ„o', 'error');
+            utils.mostrarToast('Erro ao abrir edi√ß√£o', 'error');
         }
     },
 
-    // Salvar ediÁ„o de escola (com foto)
+    // Salvar edi√ß√£o de escola (com foto)
     async salvarEdicaoEscola() {
         const id = document.getElementById('input-editar-escola-id').value;
         const novoNome = (document.getElementById('input-editar-escola-nome').value || '').trim();
@@ -314,14 +314,14 @@ const escolas = {
         try {
             const escola = await db.get('escolas', id);
             if (!escola) {
-                utils.mostrarToast('Escola n„o encontrada', 'error');
+                utils.mostrarToast('Escola n√£o encontrada', 'error');
                 return;
             }
 
             const escolasArray = await db.getAll('escolas');
             const jaExiste = escolasArray.some(e => e.id !== id && e.nome.toLowerCase() === novoNome.toLowerCase());
             if (jaExiste) {
-                utils.mostrarToast('J· existe uma escola com este nome', 'warning');
+                utils.mostrarToast('J√° existe uma escola com este nome', 'warning');
                 return;
             }
 
@@ -342,19 +342,19 @@ const escolas = {
 
     // Excluir escola
     async excluirEscola(id) {
-        // Bloquear exclus„o da escola padr„o
+        // Bloquear exclusao da escola padrao
         if (id === 'default') {
-            utils.mostrarToast('A escola padr„o n„o pode ser excluÌda', 'warning');
+            utils.mostrarToast('A escola Padr√£o n√É¬£o pode ser exclu√É¬≠da', 'warning');
             return;
         }
 
         try {
-            // Verificar se h· turmas vinculadas usando INDEX
+            // Verificar se h√° turmas vinculadas usando INDEX
             const turmasVinculadas = await db.getByIndex('turmas', 'escolaId', id);
 
             if (turmasVinculadas.length > 0) {
                 utils.mostrarToast(
-                    `N„o È possÌvel excluir: existem ${turmasVinculadas.length} turma${turmasVinculadas.length !== 1 ? 's' : ''} vinculada${turmasVinculadas.length !== 1 ? 's' : ''} a esta escola`,
+                    `N√£o √© poss√≠vel excluir: existem ${turmasVinculadas.length} turma${turmasVinculadas.length !== 1 ? 's' : ''} vinculada${turmasVinculadas.length !== 1 ? 's' : ''} a esta escola`,
                     'warning'
                 );
                 return;
@@ -363,7 +363,7 @@ const escolas = {
             // Excluir escola
             await db.delete('escolas', id);
 
-            utils.mostrarToast('Escola excluÌda', 'success');
+            utils.mostrarToast('Escola exclu√≠da', 'success');
             await this.listarEscolas();
             await this.atualizarTodosDropdowns();
         } catch (e) {
@@ -378,7 +378,7 @@ const escolas = {
         if (!select) return;
 
         const escolasArray = await db.getAll('escolas');
-        const selectedValue = select.value; // Preservar seleÁ„o atual
+        const selectedValue = select.value; // Preservar sele√ß√£o atual
 
         // Popular options
         const options = escolasArray.map(escola => {
@@ -386,14 +386,14 @@ const escolas = {
             return `<option value="${escola.id}">${utils.escapeHtml(escola.nome)}${sufixoAtual}</option>`;
         }).join('');
 
-        // Se for filtro, adicionar opÁ„o "Todas"
+        // Se for filtro, adicionar op√ß√£o "Todas"
         if (selectId === 'filter-escola') {
             select.innerHTML = `<option value="">Todas as Escolas</option>${options}`;
         } else {
             select.innerHTML = `<option value="">Selecione uma escola...</option>${options}`;
         }
 
-        // Restaurar seleÁ„o se possÌvel
+        // Restaurar sele√ß√£o se poss√≠vel
         if (selectedValue) {
             select.value = selectedValue;
         }
@@ -432,11 +432,12 @@ const escolas = {
         const escolasExistentes = await db.getAll('escolas');
         if (input) {
             input.disabled = escolasExistentes.length >= 1;
-            input.placeholder = escolasExistentes.length >= 1 ? 'A versao Free permite apenas 1 escola' : 'Ex: Colegio Sao Jose';
+            input.placeholder = escolasExistentes.length >= 1 ? 'A vers√£o Free permite apenas 1 escola' : 'Ex: Col√©gio S√£o Jos√©';
         }
 
     }
 };
+
 
 
 

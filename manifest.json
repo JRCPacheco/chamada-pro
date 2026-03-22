@@ -1,7 +1,7 @@
-{
-  "name": "Chamada Facil Free",
-  "short_name": "Chamada Free",
-  "description": "Versao Free do Chamada Facil: chamada escolar offline com QR Code para professores.",
+﻿{
+  "name": "Chamada Fácil Free",
+  "short_name": "Chamada Fácil",
+  "description": "Versão Free do Chamada Fácil: chamada escolar offline com QR Code para professores.",
   "id": "./",
   "start_url": "./",
   "scope": "./",
@@ -32,3 +32,4 @@
   "categories": ["education", "productivity", "utilities"],
   "screenshots": []
 }
+

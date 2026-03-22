@@ -642,7 +642,7 @@ const chamadas = {
 
         const parsed = this._parseAnoMes(inputMes.value);
         if (!parsed) {
-            btnMes.textContent = 'Selecionar mes';
+            btnMes.textContent = 'Selecionar mês';
             return;
         }
 
@@ -713,7 +713,7 @@ const chamadas = {
 
         if (resumo) resumo.hidden = !this.resumoMensalVisivel;
         if (tabela) tabela.style.display = this.tabelaMensalVisivel ? 'block' : 'none';
-        if (btnResumo) btnResumo.textContent = this.resumoMensalVisivel ? 'Ocultar resumo de frequencia' : 'Ver resumo de frequencia';
+        if (btnResumo) btnResumo.textContent = this.resumoMensalVisivel ? 'Ocultar resumo de frequência' : 'Ver resumo de frequência';
         if (btnTabela) btnTabela.textContent = this.tabelaMensalVisivel ? 'Ocultar tabela' : 'Ver tabela completa';
     },
 
@@ -1009,8 +1009,8 @@ const chamadas = {
             this.renderizarResumoCards(relatorio);
             this.renderizarRelatorioMensal(relatorio);
         } catch (error) {
-            console.error('Erro ao atualizar relatorio mensal:', error);
-            utils.mostrarToast('Erro ao gerar relatorio mensal', 'error');
+            console.error('Erro ao atualizar relatório mensal:', error);
+            utils.mostrarToast('Erro ao gerar relatório mensal', 'error');
         }
     },
 
@@ -1194,7 +1194,7 @@ const chamadas = {
 
     exportarRelatorioMensalCSV(relatorio = this.relatorioMensalAtual) {
         if (!relatorio) {
-            utils.mostrarToast('Gere o relatorio mensal primeiro', 'warning');
+            utils.mostrarToast('Gere o relatório mensal primeiro', 'warning');
             return;
         }
 
@@ -1239,7 +1239,7 @@ const chamadas = {
 
     async exportarRelatorioMensalPDF(relatorio = this.relatorioMensalAtual) {
         if (!relatorio) {
-            utils.mostrarToast('Gere o relatorio mensal primeiro', 'warning');
+            utils.mostrarToast('Gere o relatório mensal primeiro', 'warning');
             return;
         }
 
@@ -1291,7 +1291,7 @@ const chamadas = {
             let primeiraPagina = true;
             horarios.forEach(({ slot, titulo }) => {
                 const canvas = this.gerarCanvasRelatorioMensal(relatorio, slot);
-                const title = `Relatorio Mensal - ${relatorio.turmaNome} - ${relatorio.mesPad}/${relatorio.ano} - ${titulo}`;
+                const title = `Relatório Mensal - ${relatorio.turmaNome} - ${relatorio.mesPad}/${relatorio.ano} - ${titulo}`;
                 const ratio = drawW / canvas.width;
                 const maxSlicePx = Math.max(1, Math.floor(usableH / ratio));
 
@@ -1489,4 +1489,6 @@ const chamadas = {
         }
     }
 };
+
+
 
