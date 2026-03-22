@@ -891,9 +891,22 @@ const app = {
             return;
         }
 
-        setTimeout(() => {
-            location.reload();
-        }, 1500);
+        try {
+            await db.transaction(['config', 'escolas', 'turmas', 'alunos', 'chamadas', 'eventos_nota'], 'readwrite', (tx) => {
+                ['config', 'escolas', 'turmas', 'alunos', 'chamadas', 'eventos_nota'].forEach((storeName) => {
+                    tx.objectStore(storeName).clear();
+                });
+            });
+            localStorage.removeItem('primeiro_acesso');
+            localStorage.removeItem('telaAtual');
+            localStorage.removeItem('turmaAtualId');
+            setTimeout(() => {
+                location.reload();
+            }, 500);
+        } catch (error) {
+            console.error('Erro ao limpar todos os dados:', error);
+            utils.mostrarToast('Erro ao limpar os dados do aplicativo', 'error');
+        }
     },
 
     // Mostrar ajuda
@@ -924,7 +937,7 @@ const app = {
                     <p>A versao Free mantem um fluxo simples com uma chamada por dia para cada turma.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M4 4h6v6H4z\"/><path d=\"M14 4h6v6h-6z\"/><path d=\"M4 14h6v6H4z\"/><path d=\"M14 14h2\"/><path d=\"M18 14h2\"/><path d=\"M14 18h2\"/><path d=\"M18 18h2\"/></svg></span>Gerar QR Codes</h4>
-                    <p>Na aba \"Alunos\", clique em \"Gerar QR Codes\" para criar um PDF com os códigos dos alunos.</p>
+                    <p>Na aba "Alunos", clique em "Gerar QR Codes" para criar um PDF com os codigos dos alunos. Depois, imprima e distribua os QRCodes para uso na chamada.</p>
 
                     <h4><span class=\"icon-inline\" aria-hidden=\"true\"><svg class=\"icon-svg icon-16\" viewBox=\"0 0 24 24\"><path d=\"M4 4h6v6H4z\"/><path d=\"M14 4h6v6h-6z\"/><path d=\"M4 14h6v6H4z\"/><path d=\"M14 14h2\"/><path d=\"M18 14h2\"/><path d=\"M14 18h2\"/><path d=\"M18 18h2\"/></svg></span>Fazer Chamada</h4>
                     <p>Use o botão \"Chamada\" no canto superior direito da turma. Escaneie os QR Codes dos alunos presentes e finalize ao concluir.</p>

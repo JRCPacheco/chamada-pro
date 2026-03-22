@@ -2564,6 +2564,7 @@ body {
 .escola-item-info {
     flex: 1;
     font-size: 15px;
+    margin-left: 12px;
 }
 
 .escola-item-info strong {
@@ -3075,3 +3076,4 @@ body {
         font-size: 38px;
     }
 }
+
