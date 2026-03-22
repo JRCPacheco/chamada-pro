@@ -69,8 +69,6 @@ const app = {
             case 'app-voltar-para-turma': return this.voltarParaTurma();
             case 'app-salvar-professor': return this.salvarNomeProfessor();
             case 'app-remover-professor': return this.removerNomeProfessor();
-            case 'app-exportar-backup': return this.exportarBackup();
-            case 'app-importar-backup': return this.importarBackup();
             case 'app-limpar-dados': return this.limparTodosDados();
             case 'app-abrir-sobre': return this.abrirSobre();
             case 'app-abrir-cafe': return this.abrirModal('modal-cafe');
@@ -85,8 +83,6 @@ const app = {
             case 'turmas-abrir-alunos-home': return turmas.abrirAlunosDaHome();
             case 'turmas-abrir-gerenciar': return turmas.abrirModalGerenciarTurmas();
             case 'turmas-editar-atual': return turmas.editarTurma(turmas.turmaAtual?.id);
-            case 'turmas-exportar-backup-atual': return turmas.exportarBackupTurmaAtual();
-            case 'turmas-recuperar-backup-atual': return turmas.recuperarBackupTurmaAtual();
             case 'turmas-toggle-selecao-gerenciar': return turmas.alternarSelecaoGerenciarTurmas();
             case 'turmas-toggle-item-selecao-gerenciar': return turmas.alternarSelecaoItemGerenciarTurmas(el.dataset.turmaId);
             case 'turmas-selecionar-todas-gerenciar': return turmas.alternarSelecionarTodasGerenciarTurmas();
@@ -94,8 +90,6 @@ const app = {
             case 'turmas-cancelar-selecao-gerenciar': return turmas.cancelarSelecaoGerenciarTurmas();
             case 'turmas-abrir-item-gerenciar': return turmas.abrirItemGerenciarTurmas(el.dataset.turmaId);
             case 'turmas-editar-item-gerenciar': return turmas.editarItemGerenciarTurmas(el.dataset.turmaId);
-            case 'turmas-exportar-item-gerenciar': return turmas.exportarItemGerenciarTurmas(el.dataset.turmaId);
-            case 'turmas-exportar-migracao-item-gerenciar': return turmas.exportarMigracaoItemGerenciarTurmas(el.dataset.turmaId);
             case 'turmas-excluir-item-gerenciar': return turmas.excluirItemGerenciarTurmas(el.dataset.turmaId);
             case 'turmas-excluir-atual': return turmas.excluirTurma(turmas.turmaAtual?.id);
             case 'turmas-salvar-nova': return turmas.salvarNovaTurma();
@@ -873,16 +867,6 @@ const app = {
                 turmas.listar();
             }
         }
-    },
-
-    // Exportar backup
-    exportarBackup() {
-        exportModule.exportarBackup();
-    },
-
-    // Importar backup
-    importarBackup() {
-        exportModule.importarBackup();
     },
 
     // Limpar todos os dados

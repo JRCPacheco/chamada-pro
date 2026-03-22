@@ -439,52 +439,6 @@ const turmas = {
         return true;
     },
 
-    async exportarBackupTurmaAtual() {
-        const turmaId = this.turmaAtual?.id;
-        if (!turmaId) {
-            utils.mostrarToast('Nenhuma turma selecionada', 'warning');
-            return;
-        }
-
-        if (typeof exportModule === 'undefined' || typeof exportModule.exportarTurmaJSON !== 'function') {
-            utils.mostrarToast('Modulo de exportacao indisponivel', 'error');
-            return;
-        }
-
-        try {
-            await exportModule.exportarTurmaJSON(turmaId);
-        } catch (error) {
-            console.error('Erro ao exportar turma:', error);
-            utils.mostrarToast('Erro ao exportar backup da turma', 'error');
-        }
-    },
-
-    async recuperarBackupTurmaAtual() {
-        if (typeof exportModule === 'undefined' || typeof exportModule.importarTurmaJSON !== 'function') {
-            utils.mostrarToast('Modulo de recuperacao indisponivel', 'error');
-            return;
-        }
-
-        try {
-            const novaTurmaId = await exportModule.importarTurmaJSON();
-            if (!novaTurmaId) return;
-
-            // Atualizar dropdowns de escola apos recuperacao (caso backup traga escola nova)
-            if (typeof escolas?.renderizarDropdown === 'function') {
-                await escolas.renderizarDropdown('filter-escola');
-                await escolas.renderizarDropdown('input-turma-escola');
-                await escolas.renderizarDropdown('input-editar-turma-escola');
-            }
-
-            await this.sincronizarFiltroComTurmaImportada(novaTurmaId);
-            await this.listar();
-            await this.abrirDetalhes(novaTurmaId);
-        } catch (error) {
-            console.error('Erro ao recuperar turma:', error);
-            utils.mostrarToast('Erro ao recuperar backup da turma', 'error');
-        }
-    },
-
     async abrirModalGerenciarTurmas() {
         this.gerenciarSelecaoAtiva = false;
         this.gerenciarSelecionadas.clear();
@@ -549,7 +503,7 @@ const turmas = {
                             </div>
                             ${selectHtml}
                         </div>
-                        <div class="gerenciar-turma-meta">${iconUsers} ${alunosQtd} alunos <span class="meta-dot">•</span> ${iconCalls} ${chamadasQtd} chamadas</div>
+                        <div class="gerenciar-turma-meta">${iconUsers} ${alunosQtd} alunos <span class="meta-dot">ï¿½</span> ${iconCalls} ${chamadasQtd} chamadas</div>
                         <div class="gerenciar-turma-actions">
                             <button class="btn btn-secondary btn-sm" data-action="turmas-abrir-item-gerenciar" data-turma-id="${turma.id}">Abrir</button>
                             <button class="btn btn-secondary btn-sm" data-action="turmas-editar-item-gerenciar" data-turma-id="${turma.id}">Editar</button>
@@ -612,69 +566,6 @@ const turmas = {
         await this.renderizarModalGerenciarTurmas();
     },
 
-    async recuperarBackupTurmaGlobal() {
-        if (typeof exportModule === 'undefined' || typeof exportModule.importarTurmaJSON !== 'function') {
-            utils.mostrarToast('Modulo de recuperacao indisponivel', 'error');
-            return;
-        }
-
-        try {
-            const novaTurmaId = await exportModule.importarTurmaJSON();
-            if (!novaTurmaId) return;
-            if (typeof escolas?.renderizarDropdown === 'function') {
-                await escolas.renderizarDropdown('filter-escola');
-                await escolas.renderizarDropdown('input-turma-escola');
-                await escolas.renderizarDropdown('input-editar-turma-escola');
-            }
-            await this.sincronizarFiltroComTurmaImportada(novaTurmaId);
-            await this.listar();
-            await this.renderizarModalGerenciarTurmas();
-        } catch (error) {
-            console.error('Erro ao recuperar turma:', error);
-            utils.mostrarToast('Erro ao recuperar backup da turma', 'error');
-        }
-    },
-
-    async importarMigracaoTurmaGlobal() {
-        if (typeof exportModule === 'undefined' || typeof exportModule.importarTurmaProfessorJSON !== 'function') {
-            utils.mostrarToast('Modulo de recebimento de arquivo da turma indisponivel', 'error');
-            return;
-        }
-
-        try {
-            const resultado = await exportModule.importarTurmaProfessorJSON();
-            const novaTurmaId = resultado?.novaTurmaId;
-            if (!novaTurmaId) return;
-
-            if (typeof escolas?.renderizarDropdown === 'function') {
-                await escolas.renderizarDropdown('filter-escola');
-                await escolas.renderizarDropdown('input-turma-escola');
-                await escolas.renderizarDropdown('input-editar-turma-escola');
-            }
-
-            await this.sincronizarFiltroComTurmaImportada(novaTurmaId);
-            await this.listar();
-            await this.renderizarModalGerenciarTurmas();
-        } catch (error) {
-            console.error('Erro ao receber arquivo da turma:', error);
-            utils.mostrarToast('Erro ao receber arquivo da turma', 'error');
-        }
-    },
-
-    async sincronizarFiltroComTurmaImportada(turmaId) {
-        if (!turmaId) return;
-
-        const filterEscola = document.getElementById('filter-escola');
-        if (!filterEscola) return;
-
-        const turma = await db.get('turmas', turmaId);
-        if (!turma?.escolaId) return;
-
-        if (filterEscola.value && filterEscola.value !== turma.escolaId) {
-            filterEscola.value = turma.escolaId;
-        }
-    },
-
     async excluirSelecionadasGerenciarTurmas() {
         const ids = Array.from(this.gerenciarSelecionadas);
         if (!ids.length) {
@@ -731,24 +622,6 @@ const turmas = {
         if (!turmaId) return;
         app.fecharModal('modal-gerenciar-turmas');
         await this.mostrarModalEditarTurma(turmaId);
-    },
-
-    async exportarItemGerenciarTurmas(turmaId) {
-        if (!turmaId) return;
-        if (typeof exportModule === 'undefined' || typeof exportModule.exportarTurmaJSON !== 'function') {
-            utils.mostrarToast('Modulo de exportacao indisponivel', 'error');
-            return;
-        }
-        await exportModule.exportarTurmaJSON(turmaId);
-    },
-
-    async exportarMigracaoItemGerenciarTurmas(turmaId) {
-        if (!turmaId) return;
-        if (typeof exportModule === 'undefined' || typeof exportModule.exportarTurmaProfessorJSON !== 'function') {
-            utils.mostrarToast('Modulo de compartilhamento entre professores indisponivel', 'error');
-            return;
-        }
-        await exportModule.exportarTurmaProfessorJSON(turmaId);
     },
 
     async abrirAlunosDaHome() {
@@ -990,6 +863,7 @@ const turmas = {
         await this.listar();
     }
 };
+
 
 
 
