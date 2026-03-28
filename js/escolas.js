@@ -344,7 +344,7 @@ const escolas = {
     async excluirEscola(id) {
         // Bloquear exclusao da escola padrao
         if (id === 'default') {
-            utils.mostrarToast('A escola Padrão nÃ£o pode ser excluÃ­da', 'warning');
+            utils.mostrarToast('A escola Padrão não pode ser excluída', 'warning');
             return;
         }
 
