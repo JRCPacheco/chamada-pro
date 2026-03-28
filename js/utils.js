@@ -1,5 +1,5 @@
 // ===== UTILS MODULE =====
-// Funções utilitárias e helpers
+// FunÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes utilitÃƒÆ’Ã‚Â¡rias e helpers
 
 const utils = {
 
@@ -20,7 +20,7 @@ const utils = {
     },
 
     // DEPRECATED: Usar uuid() para novos IDs
-    // Mantido apenas para compatibilidade com código legacy
+    // Mantido apenas para compatibilidade com cÃƒÆ’Ã‚Â³digo legacy
     gerarId() {
         return this.uuid();
     },
@@ -52,7 +52,7 @@ const utils = {
         return (partes[0].charAt(0) + partes[partes.length - 1].charAt(0)).toUpperCase();
     },
 
-    // Gerar cor aleatória baseada em string
+    // Gerar cor aleatÃƒÆ’Ã‚Â³ria baseada em string
     getCorFromString(str) {
         if (!str) return '#4A90E2';
         let hash = 0;
@@ -92,7 +92,7 @@ const utils = {
     // Vibrar dispositivo
     vibrar(padrao = [100]) {
         // Acessar cache de config do app (se carregado)
-        // Se app não estiver pronto, assume defaults (true)
+        // Se app nÃƒÆ’Ã‚Â£o estiver pronto, assume defaults (true)
         const config = (typeof app !== 'undefined' && app._configCache) ? app._configCache : { vibracao: true };
 
         if (config.vibracao && navigator.vibrate) {
@@ -100,7 +100,7 @@ const utils = {
         }
     },
 
-    // Tocar som de confirmação
+    // Tocar som de confirmaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o
     tocarSom(tipo = 'success') {
         const config = (typeof app !== 'undefined' && app._configCache) ? app._configCache : { som: true };
 
@@ -127,7 +127,7 @@ const utils = {
         }
     },
 
-    // Confirmar ação
+    // Confirmar aÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o
     // Sanitizar string para usar como ID
     sanitizeId(str) {
         return str.toLowerCase()
@@ -142,7 +142,7 @@ const utils = {
     copiarParaClipboard(texto) {
         if (navigator.clipboard) {
             navigator.clipboard.writeText(texto)
-                .then(() => this.mostrarToast('Copiado para área de transferência', 'success'))
+                .then(() => this.mostrarToast('Copiado para ÃƒÆ’Ã‚Â¡rea de transferÃƒÆ’Ã‚Âªncia', 'success'))
                 .catch(() => this.mostrarToast('Erro ao copiar', 'error'));
         } else {
             // Fallback para navegadores antigos
@@ -154,7 +154,7 @@ const utils = {
             textarea.select();
             try {
                 document.execCommand('copy');
-                this.mostrarToast('Copiado para área de transferência', 'success');
+                this.mostrarToast('Copiado para ÃƒÆ’Ã‚Â¡rea de transferÃƒÆ’Ã‚Âªncia', 'success');
             } catch (err) {
                 this.mostrarToast('Erro ao copiar', 'error');
             }
@@ -243,9 +243,62 @@ const utils = {
                 return false;
             }
         } else {
-            this.mostrarToast('Compartilhamento não suportado neste navegador', 'warning');
+            this.mostrarToast('Compartilhamento nÃƒÆ’Ã‚Â£o suportado neste navegador', 'warning');
             return false;
         }
+    },
+
+    async exportarPdf(doc, filename, successMessage = 'PDF gerado com sucesso!') {
+        const capacitor = window.Capacitor;
+        const plugins = capacitor?.Plugins || {};
+        const isNative = typeof capacitor?.isNativePlatform === 'function'
+            ? capacitor.isNativePlatform()
+            : (typeof capacitor?.getPlatform === 'function' && capacitor.getPlatform() !== 'web');
+
+        if (isNative && plugins.Filesystem && plugins.Share) {
+            try {
+                const dataUri = doc.output('datauristring');
+                const base64 = String(dataUri).split(',')[1];
+                const path = `pdf/${filename}`;
+
+                await plugins.Filesystem.writeFile({
+                    path,
+                    data: base64,
+                    directory: 'CACHE',
+                    recursive: true
+                });
+
+                const uriResult = await plugins.Filesystem.getUri({
+                    path,
+                    directory: 'CACHE'
+                });
+
+                try {
+                    await plugins.Share.share({
+                        title: filename,
+                        text: 'PDF gerado com sucesso.',
+                        files: [uriResult.uri],
+                        dialogTitle: 'Abrir ou enviar PDF'
+                    });
+                } catch (shareError) {
+                    await plugins.Share.share({
+                        title: filename,
+                        text: 'PDF gerado com sucesso.',
+                        url: uriResult.uri,
+                        dialogTitle: 'Abrir ou enviar PDF'
+                    });
+                }
+
+                this.mostrarToast(successMessage, 'success');
+                return { native: true, uri: uriResult.uri };
+            } catch (error) {
+                console.error('Erro ao exportar PDF nativo:', error);
+            }
+        }
+
+        doc.save(filename);
+        this.mostrarToast(successMessage, 'success');
+        return { native: false, uri: null };
     },
 
     // Ordenar array por campo
@@ -260,7 +313,7 @@ const utils = {
         });
     },
 
-    // Formatar número de telefone
+    // Formatar nÃƒÆ’Ã‚Âºmero de telefone
     formatarTelefone(tel) {
         const cleaned = tel.replace(/\D/g, '');
         if (cleaned.length === 11) {
@@ -297,7 +350,7 @@ const utils = {
     gerarCSV(dados, colunas) {
         let csv = '\uFEFF'; // BOM para UTF-8
 
-        // Cabeçalho
+        // CabeÃƒÆ’Ã‚Â§alho
         csv += colunas.map(c => c.label).join(';') + '\n';
 
         // Dados
@@ -321,14 +374,14 @@ const utils = {
         let faltasCount = 0;
 
         chamadas.forEach(chamada => {
-            // Proteção contra estrutura inesperada
+            // ProteÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o contra estrutura inesperada
             if (!Array.isArray(chamada.presencas)) return;
 
             const dataChamada = new Date(chamada.data);
 
-            // Verificar se é do mês/ano solicitado
+            // Verificar se ÃƒÆ’Ã‚Â© do mÃƒÆ’Ã‚Âªs/ano solicitado
             if (dataChamada.getMonth() === mesAtual && dataChamada.getFullYear() === anoAtual) {
-                // Procurar presença do aluno nesta chamada
+                // Procurar presenÃƒÆ’Ã‚Â§a do aluno nesta chamada
                 const presencaAluno = chamada.presencas.find(p => p.matricula === matricula);
 
                 // Compatibilidade com registros antigos
@@ -344,7 +397,7 @@ const utils = {
         return faltasCount;
     },
 
-    // Gerar ID único para QR Code
+    // Gerar ID ÃƒÆ’Ã‚Âºnico para QR Code
     gerarQrId() {
         return "qr_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     },
@@ -356,11 +409,11 @@ const utils = {
             if (turma && turma.escolaId) {
                 const escola = await db.get('escolas', turma.escolaId);
                 if (escola && escola.foto) {
-                    return escola.foto; // já é base64
+                    return escola.foto; // jÃƒÆ’Ã‚Â¡ ÃƒÆ’Ã‚Â© base64
                 }
             }
         } catch (e) {
-            console.warn('Erro ao buscar logo da escola, usando padrão:', e);
+            console.warn('Erro ao buscar logo da escola, usando padrÃƒÆ’Ã‚Â£o:', e);
         }
         // Fallback: logo do site
         return qrgen.carregarLogo('assets/logo1024.svg');

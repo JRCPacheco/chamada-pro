@@ -1,6 +1,6 @@
-﻿:root {
+:root {
 
-    /* Paleta Chamada FÃ¡cil */
+    /* Paleta Chamada FÃƒÆ’Ã‚Â¡cil */
     --primary: #1a4f86;
     --primary-gradient: linear-gradient(145deg, #1a4f86 0%, #3f6f9d 52%, #244f7e 100%);
     --primary-dark: #0b3766;
@@ -17,7 +17,7 @@
     --light: #f8fafc;
     --white: #ffffff;
 
-    /* Grays especÃ­ficos para UI moderna */
+    /* Grays especÃƒÆ’Ã‚Â­ficos para UI moderna */
     --gray-100: #f1f5f9;
     --gray-200: #e2e8f0;
     --gray-300: #cbd5e1;
@@ -312,7 +312,7 @@ body {
     color: #ffffff;
 }
 
-/* Wordmark: visÃ­vel sÃ³ na tela principal */
+/* Wordmark: visÃƒÆ’Ã‚Â­vel sÃƒÆ’Ã‚Â³ na tela principal */
 .header-wordmark {
     display: none;
     flex-direction: column;
@@ -342,7 +342,7 @@ body {
     letter-spacing: 0.03em;
 }
 
-/* Ãcones do header ficam brancos */
+/* ÃƒÆ’Ã‚Âcones do header ficam brancos */
 .app-header .btn-icon {
     color: #ffffff;
 }
@@ -469,7 +469,7 @@ body {
     border-color: #c7d5e6;
 }
 
-/* stat-cards sÃ£o apenas informativos, sem aparÃªncia de clicÃ¡vel */
+/* stat-cards sÃƒÆ’Ã‚Â£o apenas informativos, sem aparÃƒÆ’Ã‚Âªncia de clicÃƒÆ’Ã‚Â¡vel */
 
 .stat-icon {
     display: flex;
@@ -1281,7 +1281,7 @@ body {
     flex-shrink: 0;
 }
 
-/* ===== HISTÃ“RICO LIST ===== */
+/* ===== HISTÃƒÆ’Ã¢â‚¬Å“RICO LIST ===== */
 .historico-list {
     padding: 0 20px 100px;
 }
@@ -1453,7 +1453,7 @@ body {
     text-align: center;
 }
 
-/* ===== DIÃRIO DE CLASSE ===== */
+/* ===== DIÃƒÆ’Ã‚ÂRIO DE CLASSE ===== */
 .diario-classe-section {
     border-bottom: 1px solid var(--gray-200);
     padding-bottom: 8px;
@@ -1925,7 +1925,7 @@ body {
     gap: 12px;
 }
 
-/* ===== CONFIGURAÃ‡Ã•ES ===== */
+/* ===== CONFIGURAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã¢â‚¬Â¢ES ===== */
 .config-section {
     background: white;
     margin: 20px;
@@ -2279,11 +2279,18 @@ body {
     background: transparent;
     display: flex;
     align-items: center;
+    justify-content: flex-start;
     gap: 16px;
     cursor: pointer;
     font-size: 16px;
+    text-align: left;
     transition: var(--transition);
     border-radius: var(--border-radius-sm);
+}
+
+.menu-item span:last-child {
+    flex: 1;
+    text-align: left;
 }
 
 .menu-item:hover {
@@ -2484,7 +2491,7 @@ body {
     box-shadow: 0 2px 8px rgba(33, 47, 82, 0.3);
 }
 
-/* Badge "PadrÃ£o" no gerenciamento */
+/* Badge "PadrÃƒÆ’Ã‚Â£o" no gerenciamento */
 .badge-default {
     display: inline-block;
     background: var(--gray-200);
@@ -2707,7 +2714,7 @@ body {
 }
 
 
-/* BotÃ£o Adicionar Turma: pill centralizado, largura total */
+/* BotÃƒÆ’Ã‚Â£o Adicionar Turma: pill centralizado, largura total */
 .adicionar-turma-wrapper {
     padding: 0 20px 4px;
 }
@@ -2740,7 +2747,7 @@ body {
     transform: scale(0.98);
 }
 
-/* ===== MODAL RELATÃ“RIOS ===== */
+/* ===== MODAL RELATÃƒÆ’Ã¢â‚¬Å“RIOS ===== */
 .modal-relatorios-content {
     max-width: 800px;
 }
@@ -2895,7 +2902,7 @@ body {
     flex-shrink: 0;
 }
 
-/* ===== ALUNO CARD HOVER (clicÃ¡vel para editar) ===== */
+/* ===== ALUNO CARD HOVER (clicÃƒÆ’Ã‚Â¡vel para editar) ===== */
 .aluno-card {
     transition: var(--transition);
 }
@@ -2927,7 +2934,7 @@ body {
     border-radius: 50%;
 }
 
-/* ===== OBSERVAÃ‡Ã•ES â€” toggle olho ===== */
+/* ===== OBSERVAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã¢â‚¬Â¢ES ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â toggle olho ===== */
 .obs-label-row {
     display: flex;
     align-items: center;
@@ -2987,7 +2994,7 @@ body {
 .coffee-fab {
     position: fixed;
     right: 18px;
-    bottom: 18px;
+    bottom: calc(14px + env(safe-area-inset-bottom));
     width: 54px;
     height: 54px;
     border: 0;

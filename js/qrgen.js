@@ -1,5 +1,5 @@
-// ===== QR CODE GENERATOR MODULE =====
-// Geração de QR Codes em PDF
+﻿// ===== QR CODE GENERATOR MODULE =====
+// GeraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de QR Codes em PDF
 
 const qrgen = {
 
@@ -39,7 +39,7 @@ const qrgen = {
             // Carregar Logo (escola ou fallback do site)
             const logoData = await utils.carregarLogoParaPDF(turma);
 
-            // Configurações
+            // ConfiguraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes
             const pageWidth = doc.internal.pageSize.getWidth();
             const pageHeight = doc.internal.pageSize.getHeight();
             const cols = 4;
@@ -49,7 +49,7 @@ const qrgen = {
             const bottomMargin = 12;
             const spacingX = 4;
             const spacingY = 3;
-            // Calcular espaçamento horizontal para centralizar
+            // Calcular espaÃƒÆ’Ã‚Â§amento horizontal para centralizar
             const contentWidth = pageWidth - (2 * marginX);
             const contentHeight = pageHeight - firstRowY - bottomMargin;
             const cellWidth = (contentWidth - (spacingX * (cols - 1))) / cols;
@@ -63,7 +63,7 @@ const qrgen = {
             // Ordenar alunos por nome
             alunos.sort((a, b) => a.nome.localeCompare(b.nome));
 
-            // Função helper para adicionar título da página
+            // FunÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o helper para adicionar tÃƒÆ’Ã‚Â­tulo da pÃƒÆ’Ã‚Â¡gina
             const addPageTitle = () => {
                 // Logo e Marca (Topo Esquerda)
                 if (logoData) {
@@ -76,7 +76,7 @@ const qrgen = {
                     doc.text('Chamada Fácil', 10 + logoSize + 2, 18);
                 }
 
-                // Título da Turma (Alinhado à Direita)
+                // TÃƒÆ’Ã‚Â­tulo da Turma (Alinhado ÃƒÆ’Ã‚Â  Direita)
                 doc.setTextColor(0, 0, 0);
                 doc.setFontSize(14);
                 doc.setFont(undefined, 'bold');
@@ -84,22 +84,22 @@ const qrgen = {
 
                 doc.setFontSize(9);
                 doc.setFont(undefined, 'normal');
-                // Subtítulo apenas na primeira página
+                // SubtÃƒÆ’Ã‚Â­tulo apenas na primeira pÃƒÆ’Ã‚Â¡gina
                 if (currentPage === 1) {
                     doc.text('QR Codes para Chamada (layout 4x6)', pageWidth - 10, 22, { align: 'right' });
                 }
             };
 
-            // Adicionar título na primeira página
+            // Adicionar tÃƒÆ’Ã‚Â­tulo na primeira pÃƒÆ’Ã‚Â¡gina
             addPageTitle();
 
-            // Container temporário OMITIDO pois nova lib gera DataURL direto
+            // Container temporÃƒÆ’Ã‚Â¡rio OMITIDO pois nova lib gera DataURL direto
 
             // Loop sequencial
             for (let i = 0; i < alunos.length; i++) {
                 const aluno = alunos[i];
 
-                // Nova página se necessário (exceto para o primeiro aluno)
+                // Nova pÃƒÆ’Ã‚Â¡gina se necessÃƒÆ’Ã‚Â¡rio (exceto para o primeiro aluno)
                 if (i > 0 && currentRow >= rows) {
                     doc.addPage();
                     currentPage++;
@@ -108,7 +108,7 @@ const qrgen = {
                     addPageTitle();
                 }
 
-                // Calcular posição
+                // Calcular posiÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o
                 const cellX = marginX + (currentCol * (cellWidth + spacingX));
                 const cellY = firstRowY + (currentRow * (cellHeight + spacingY));
                 const x = cellX + ((cellWidth - qrSize) / 2);
@@ -124,11 +124,11 @@ const qrgen = {
 
                 const texto = "CF1|" + JSON.stringify(dados);
 
-                // Proteção Overflow Extremo
+                // ProteÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o Overflow Extremo
                 if (texto.length > 180) {
                     console.warn(`Payload muito grande para aluno ${aluno.id}: ${texto.length} chars`);
-                    // Tenta truncar o nome ainda mais se necessário, ou lança erro
-                    // Vamos truncar violentamente para garantir geração
+                    // Tenta truncar o nome ainda mais se necessÃƒÆ’Ã‚Â¡rio, ou lanÃƒÆ’Ã‚Â§a erro
+                    // Vamos truncar violentamente para garantir geraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o
                     dados[2] = dados[2].slice(0, 30);
                     // Recalcula texto
                 }
@@ -159,7 +159,7 @@ const qrgen = {
                         align: 'center'
                     });
 
-                    // Adicionar matrícula abaixo do nome
+                    // Adicionar matrÃƒÆ’Ã‚Â­cula abaixo do nome
                     const nameHeight = splitName.length * 3.2;
 
                     doc.setFontSize(6.2);
@@ -180,7 +180,7 @@ const qrgen = {
                     doc.setTextColor(0, 0, 0);
                 }
 
-                // Avançar posição
+                // AvanÃƒÆ’Ã‚Â§ar posiÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o
                 currentCol++;
                 if (currentCol >= cols) {
                     currentCol = 0;
@@ -191,8 +191,7 @@ const qrgen = {
             // Salvar PDF
             const filename = `qrcodes_${turma.nome}.pdf`
                 .replace(/[^a-z0-9.-]/gi, '_');
-            doc.save(filename);
-            utils.mostrarToast('PDF (4x6) gerado com sucesso!', 'success');
+            await utils.exportarPdf(doc, filename, 'PDF (4x6) gerado com sucesso!');
 
         } catch (error) {
             console.error('Erro ao gerar PDF:', error);
@@ -210,16 +209,14 @@ const qrgen = {
             <div class="modal-content" style="max-width: 400px; text-align: center;">
                 <div class="modal-header">
                     <h3>QR Code - ${utils.escapeHtml(nome)}</h3>
-                    <button class="btn-close" data-action="close-nearest-modal">×</button>
+                    <button class="btn-close" data-action="close-nearest-modal">\u00D7</button>
                 </div>
                 <div class="modal-body">
                     <div id="qr-individual-container" style="display: flex; justify-content: center; margin: 20px 0;">
                         <canvas id="qr-canvas"></canvas>
                     </div>
-                    <p><strong>Matrícula:</strong> ${utils.escapeHtml(matricula)}</p>
-                    <button class="btn btn-primary" id="btn-baixar-qr">
-                        📥 Baixar Imagem
-                    </button>
+                    <p><strong>Matr\u00EDcula:</strong> ${utils.escapeHtml(matricula)}</p>
+                    <button class="btn btn-primary" id="btn-baixar-qr">Baixar Imagem</button>
                 </div>
             </div>
         `;
@@ -253,4 +250,6 @@ const qrgen = {
         document.body.removeChild(a);
     }
 };
+
+
 

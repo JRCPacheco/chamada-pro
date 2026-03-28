@@ -1,5 +1,5 @@
 ﻿// ===== CHAMADAS MODULE =====
-// Gerenciamento de chamadas e histórico
+// Gerenciamento de chamadas e histÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rico
 // Migrado para IndexedDB
 
 const chamadas = {
@@ -9,7 +9,7 @@ const chamadas = {
     relatorioMensalInicializado: false,
     resumoMensalVisivel: false,
     tabelaMensalVisivel: false,
-    alunosCache: {}, // Cache temporário de alunos para visualização
+    alunosCache: {}, // Cache temporÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio de alunos para visualizaÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o
     historicoSelecaoAtiva: false,
     chamadasSelecionadas: new Set(),
 
@@ -143,7 +143,7 @@ const chamadas = {
         await this.listarHistorico();
     },
 
-    // Listar histórico de chamadas
+    // Listar histÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rico de chamadas
     async listarHistorico() {
         if (!turmas.turmaAtual) return;
 
@@ -154,7 +154,7 @@ const chamadas = {
 
             // Buscar dados
             let chamadasArray = await db.getByIndex('chamadas', 'turmaId', turmas.turmaAtual.id);
-            // Ordenar por início da sessão (decrescente), fallback para data legacy
+            // Ordenar por inÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­cio da sessÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o (decrescente), fallback para data legacy
             const toMs = (chamada) => {
                 const ref = chamada.iniciadoEm || chamada.criadoEm || chamada.data;
                 const ms = new Date(ref).getTime();
@@ -162,7 +162,7 @@ const chamadas = {
             };
             chamadasArray.sort((a, b) => toMs(b) - toMs(a));
 
-            // Buscar total de alunos da turma para cálculo de %
+            // Buscar total de alunos da turma para cÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡lculo de %
             const alunosTurma = await db.getByIndex('alunos', 'turmaId', turmas.turmaAtual.id);
             const totalAlunos = alunosTurma.length;
 
@@ -180,19 +180,19 @@ const chamadas = {
 
             await this.atualizarRelatorioMensal();
         } catch (error) {
-            console.error("Erro ao listar histórico:", error);
-            utils.mostrarToast("Erro ao carregar histórico", "error");
+            console.error("Erro ao listar histÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rico:", error);
+            utils.mostrarToast("Erro ao carregar histÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rico", "error");
         }
     },
 
-    // Renderizar histórico
+    // Renderizar histÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rico
     renderizarHistorico(chamadasArray, totalAlunos) {
         const container = document.getElementById('lista-historico');
         const selecaoAtiva = this.historicoSelecaoAtiva;
 
         container.innerHTML = chamadasArray.map(chamada => {
             // Contar presentes (P)
-            // Suporte híbrido: 'registros' (novo) vs 'presencas' (legacy array)
+            // Suporte hÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­brido: 'registros' (novo) vs 'presencas' (legacy array)
             let presentes = 0;
 
             if (chamada.registros) {
@@ -202,7 +202,7 @@ const chamadas = {
             }
 
             const percentual = utils.calcularPercentual(presentes, totalAlunos);
-            const dataExibicao = chamada.data; // Já é YYYY-MM-DD ou ISO
+            const dataExibicao = chamada.data; // JÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© YYYY-MM-DD ou ISO
             const horaRef = chamada.iniciadoEm || chamada.criadoEm || '';
             const horaExibicao = horaRef ? utils.formatarHora(new Date(horaRef)) : '--:--';
             const marcada = this.chamadasSelecionadas.has(chamada.id);
@@ -275,7 +275,7 @@ const chamadas = {
                 const alunosTurma = await db.getByIndex('alunos', 'turmaId', chamada.turmaId);
                 const turma = await db.get('turmas', chamada.turmaId);
 
-                // Mapear alunos para acesso rápido
+                // Mapear alunos para acesso rÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡pido
                 this.alunosCache = {};
                 alunosTurma.forEach(a => this.alunosCache[a.id] = a);
 
@@ -296,10 +296,10 @@ const chamadas = {
         let presentes = 0;
         let faltas = 0;
 
-        // Normalizar registros para array processável
+        // Normalizar registros para array processÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡vel
         let registrosProcessados = [];
 
-        // Função helper para obter nome
+        // FunÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o helper para obter nome
         const getNome = (aluno) => aluno.nome;
 
         todosAlunos.forEach(aluno => {
@@ -324,7 +324,7 @@ const chamadas = {
 
             if (status === 'P') presentes++;
             else {
-                status = 'F'; // Força 'F' para contagem
+                status = 'F'; // ForÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§a 'F' para contagem
                 faltas++;
             }
 
@@ -337,7 +337,7 @@ const chamadas = {
 
         const percentual = utils.calcularPercentual(presentes, totalAlunos);
 
-        // Atualizar informações
+        // Atualizar informaÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµes
         const horaRef = chamada.iniciadoEm || chamada.criadoEm || '';
         const horaExibicao = horaRef ? utils.formatarHora(new Date(horaRef)) : '--:--';
         document.getElementById('resumo-info').textContent =
@@ -361,7 +361,7 @@ const chamadas = {
 
         listaPresentes.innerHTML = listaPresentesHtml || '<p class="text-muted">Nenhum aluno presente</p>';
 
-        // Lista de ausentes (faltas não justificadas)
+        // Lista de ausentes (faltas nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o justificadas)
         const listaAusentes = document.getElementById('resumo-lista-ausentes');
         const listaAusentesHtml = registrosProcessados
             .filter(r => r.status === 'F')
@@ -515,7 +515,7 @@ const chamadas = {
         }
     },
 
-    // Exportar histórico completo
+    // Exportar histÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rico completo
     async exportarHistorico() {
         if (!turmas.turmaAtual) return;
 
@@ -582,7 +582,7 @@ const chamadas = {
                 { field: 'matricula', label: 'Matrícula' },
                 { field: 'nome', label: 'Nome' },
                 { field: 'status', label: 'Status' },
-                { field: 'horaPresenca', label: 'Hora Presença' }
+                { field: 'horaPresenca', label: 'Hora Presen\u00E7a' }
             ];
 
             const csv = utils.gerarCSV(dados, colunas);
@@ -694,7 +694,7 @@ const chamadas = {
         const ano = Number(selectAno.value);
         const mes = Number(selectMes.value);
         if (!Number.isInteger(ano) || !Number.isInteger(mes) || mes < 1 || mes > 12) {
-            utils.mostrarToast('Selecao de mes invalida', 'warning');
+            utils.mostrarToast('Seleção de mês inválida', 'warning');
             return;
         }
 
@@ -729,7 +729,7 @@ const chamadas = {
         }
 
         app.abrirModal('modal-relatorios');
-        // Garante que o relatório está carregado (caso o usuário não tenha visitado o Diário de Classe ainda)
+        // Garante que o relatÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â³rio estÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ carregado (caso o usuÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o tenha visitado o DiÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡rio de Classe ainda)
         this.inicializarRelatorioMensalUI();
         if (!this.relatorioMensalAtual) {
             await this.atualizarRelatorioMensal();
@@ -820,7 +820,7 @@ const chamadas = {
                 linhasAlunos.push({ aluno, eventos: eventosMes, total });
             }
 
-            // Logo (escola ou padrão)
+            // Logo (escola ou padrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o)
             const logoData = await utils.carregarLogoParaPDF(turma);
 
             const { jsPDF } = window.jspdf;
@@ -829,7 +829,7 @@ const chamadas = {
             const pageH = doc.internal.pageSize.getHeight();
             let y = 10;
 
-            // Cabeçalho
+            // CabeÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§alho
             if (logoData) {
                 doc.addImage(logoData, 'PNG', 10, y, 14, 14);
                 doc.setFontSize(14);
@@ -937,8 +937,8 @@ const chamadas = {
             }
 
             const turmaSlug = (turma.nome || 'turma').replace(/[^a-z0-9._-]/gi, '_');
-            doc.save(`pontos_extras_${turmaSlug}_${ano}_${mesPad}.pdf`);
-            utils.mostrarToast('PDF de pontos gerado!', 'success');
+            await utils.exportarPdf(doc, `pontos_extras_${turmaSlug}_${ano}_${mesPad}.pdf`, 'PDF de pontos gerado!');
+            
         } catch (e) {
             console.error('Erro ao gerar PDF de pontos:', e);
             utils.mostrarToast('Erro ao gerar PDF de pontos', 'error');
@@ -1205,7 +1205,7 @@ const chamadas = {
         };
 
         const montarBloco = (titulo, matriz) => {
-            const header = ['Numero', 'Aluno', 'Matricula', ...diasDoMes, 'Total P', 'Total F'];
+            const header = ['Número', 'Aluno', 'Matrícula', ...diasDoMes, 'Total P', 'Total F'];
             const linhas = [titulo, header.map(esc).join(';')];
             alunosOrdenados.forEach(aluno => {
                 const linha = matriz[aluno.id];
@@ -1234,7 +1234,7 @@ const chamadas = {
         const turmaSlug = (turmaNome || 'turma').replace(/[^a-z0-9._-]/gi, '_');
         const filename = `relatorio_mensal_${turmaSlug}_${ano}_${mesPad}.csv`;
         utils.downloadFile(filename, csv, 'text/csv;charset=utf-8;');
-        utils.mostrarToast('Relatorio mensal CSV exportado', 'success');
+        utils.mostrarToast('Relatório mensal CSV exportado', 'success');
     },
 
     async exportarRelatorioMensalPDF(relatorio = this.relatorioMensalAtual) {
@@ -1276,17 +1276,17 @@ const chamadas = {
                 }
             };
 
-            // Logo (escola ou padrão)
+            // Logo (escola ou padrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o)
             const turmaParaLogo = turmas.turmaAtual || { escolaId: relatorio.turmaId };
             const logoDataMensal = await utils.carregarLogoParaPDF(turmaParaLogo);
             const escolaDaTurma = turmaParaLogo?.escolaId ? await db.get('escolas', turmaParaLogo.escolaId) : null;
             const usaLogoEscola = !!(escolaDaTurma && escolaDaTurma.foto);
             const nomeEscolaHeader = String(escolaDaTurma?.nome || '').trim();
-
             const horarios = [{ slot: 1, titulo: '1º Horário' }];
             if (relatorio.segundoHorarioAtivo) {
                 horarios.push({ slot: 2, titulo: '2º Horário' });
             }
+
 
             let primeiraPagina = true;
             horarios.forEach(({ slot, titulo }) => {
@@ -1301,7 +1301,7 @@ const chamadas = {
                     if (!primeiraPagina) {
                         doc.addPage('a4', 'landscape');
                     }
-                    // Logo no cabeçalho de cada página
+                    // Logo no cabeÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§alho de cada pÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡gina
                     if (logoDataMensal) {
                         doc.addImage(logoDataMensal, 'PNG', 10, 4, 10, 10);
                     }
@@ -1348,7 +1348,7 @@ const chamadas = {
                     sliceCanvas.width = canvas.width;
                     sliceCanvas.height = sliceH;
                     const sctx = sliceCanvas.getContext('2d');
-                    sctx.drawImage(canvas, 0, offsetY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+
 
                     const drawH = sliceH * ratio;
                     doc.addImage(sliceCanvas.toDataURL('image/png'), 'PNG', 10, imageTopY, drawW, drawH);
@@ -1362,8 +1362,7 @@ const chamadas = {
 
             const turmaSlug = (relatorio.turmaNome || 'turma').replace(/[^a-z0-9._-]/gi, '_');
             const filename = `relatorio_mensal_${turmaSlug}_${relatorio.ano}_${relatorio.mesPad}.pdf`;
-            doc.save(filename);
-            utils.mostrarToast('Relatorio mensal PDF exportado', 'success');
+            await utils.exportarPdf(doc, filename, 'Relatório mensal PDF exportado');
         } catch (error) {
             console.error('Erro ao exportar PDF mensal:', error);
             utils.mostrarToast('Erro ao exportar PDF mensal', 'error');
@@ -1489,6 +1488,8 @@ const chamadas = {
         }
     }
 };
+
+
 
 
 
