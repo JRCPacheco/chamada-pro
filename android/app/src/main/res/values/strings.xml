@@ -1,8 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Chamada Fácil Free</string>
-    <string name="title_activity_main">Chamada Fácil Free</string>
-    <string name="package_name">br.net.chamadafacil.free</string>
-    <string name="custom_url_scheme">br.net.chamadafacil.free</string>
+    <string name='app_name'>Chamada Fácil</string>
+    <string name='title_activity_main'>Chamada Fácil</string>
+    <string name='package_name'>br.net.chamadafacil.free</string>
+    <string name='custom_url_scheme'>br.net.chamadafacil.free</string>
 </resources>
-

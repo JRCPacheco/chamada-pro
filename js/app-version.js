@@ -1,6 +1,7 @@
-// Fonte unica de versao do app (UI e release notes)
+﻿// Fonte unica de versao do app (UI e release notes)
 const APP_META = Object.freeze({
-    version: '0.9.4',
-    stage: 'beta',
-    label: 'v0.9.4-beta'
+    version: '1.0.0',
+    stage: '',
+    label: 'v1.0.0'
 });
+
